@@ -1,6 +1,6 @@
 # nikopechThesis/Genomic Data Integration
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/fpsom/nikopechThesis.git/master?urlpath=rstudio)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/nikopech/data-integration-model.git/master?urlpath=rstudio)
 
 ## Getting Started
 
