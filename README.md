@@ -1,4 +1,4 @@
-# nikopechThesis/Genomic Data Integration
+# Genomic Data Integration
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/nikopech/data-integration-model.git/master?urlpath=rstudio)
 
