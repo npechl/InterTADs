@@ -10,10 +10,10 @@ Before running the algorithm, the following steps need to be followed
 
 In order to run the integration algorithm, the following packages are required:
 
-- IlluminaHumanMethylation450kanno.ilmn12.hg19 
-(https://bioconductor.org/packages/release/data/annotation/html/IlluminaHumanMethylation450kanno.ilmn12.hg19.html)
-- biomaRt
-(https://bioconductor.org/packages/release/bioc/html/biomaRt.html)
+- IlluminaHumanMethylation450kanno.ilmn12.hg19 (https://bioconductor.org/packages/release/data/annotation/html/IlluminaHumanMethylation450kanno.ilmn12.hg19.html)
+- GenomicFeatures (https://bioconductor.org/packages/release/bioc/html/GenomicFeatures.html)
+- systemPipeR (https://bioconductor.org/packages/release/bioc/html/systemPipeR.html)
+- biomaRt (https://bioconductor.org/packages/release/bioc/html/biomaRt.html)
 - vcfR (https://cran.r-project.org/web/packages/vcfR/index.html)
 - stringr / stringi
 - data.table
