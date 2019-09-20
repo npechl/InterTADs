@@ -46,15 +46,13 @@ bioCombine(biodata, colCmb = NULL, scale = 100, chromosomes = NULL, txdb)
 | ```chromosomes``` | string          | NULL     | Chromosome that is going to be used (given as a number, not 'chr1').|  
 | ```txdb``` | TxDB object | required     | Database to be used for getting genomic features (gene id, gene locus).| 
 
-* ```biodata```: It is a list of strings that shows all paths to file-inputs. Each element of the list must be a table.
-* ```colCmb```: It is a table showing information about the column connection that is going to be applied between input tables.
+* ```biodata```: Α list of strings that shows all paths to file-inputs. Each element of the list must be a unique table.
+* ```colCmb```: Α table used for column connection between input tables:
   + First column refers to the index of the table to which operations are going to be applied.
   + Second column contains all column names that are going be processed.
   + Third column contains the operation that is going to be applied.
   + Fourth column contains weights that are going to be used.
   + Fifth column contains new names for the columns.
-
-## Usage
 
 ## License
 
