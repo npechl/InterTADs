@@ -1,0 +1,15 @@
+install.packages("BiocManager")
+
+library(BiocManager)
+BiocManager::install()
+BiocManager::install("biomaRt")
+BiocManager::install("IlluminaHumanMethylation450kanno.ilmn12.hg19")
+BiocManager::install("karyoploteR")
+
+install.packages("vcfR")
+install.packages("data.table")
+install.packages("gtools")
+install.packages("stringr")
+install.packages("stringi")
+install.packages("png")
+install.packages("magick")
