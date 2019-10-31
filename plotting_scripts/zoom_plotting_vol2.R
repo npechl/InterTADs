@@ -13,7 +13,7 @@ library(magick)
 file_name = "biodata_pre_integration_14.csv"
 pre_data = read.csv(file_name, sep = ";")
 
-image_folder_name = "plotting_chr14_IRF2BPL"
+image_folder_name = "temp"
 image_folder_name = paste(image_folder_name, "/", sep = "")
 
 # chromosomes to visualize
@@ -24,8 +24,8 @@ patient = colnames(pre_data)[8:length(pre_data)]
 # patient = which(colnames(pre_data) %in% patient)
 
 # specific region to zoom
-start = 77490886
-end = 77495034
+start = 60000000
+end = 80000000
 
 if((end - start) >= 1000000){
   cx = 0.5
