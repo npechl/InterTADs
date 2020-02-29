@@ -1,4 +1,4 @@
-map_entrez_ids <- function(entrez.ids){
+map_entrez_ids <- function(entrez.ids, tech = "h19"){
   library(org.Hs.eg.db)
   library(annotables)
   library(data.table)
@@ -17,7 +17,12 @@ map_entrez_ids <- function(entrez.ids){
   mapping = mapping[which(!(is.na(mapping$hgnc.symbol))), ] 
   
   if(length(not.found) > 0){
-    x = grch37
+    if(tech == "h19"){
+      x = grch37
+    } else {
+      x = grch38
+    }
+    
     x = as.data.table(x)
     x = x[,c(2,3)] 
     colnames(x) = c("entrez.id", "hgnc.symbol") 

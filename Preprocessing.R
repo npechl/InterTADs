@@ -1,13 +1,16 @@
 ########## Loading libraries ##########
-library(IlluminaHumanMethylation450kanno.ilmn12.hg19)
-library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+# library(IlluminaHumanMethylation450kanno.ilmn12.hg19)
 library(systemPipeR)
 library(data.table)
 library(stringr)
-library(biomaRt)
+# library(biomaRt)
+library(dplyr)
 
 library(org.Hs.eg.db)
-library(EnsDb.Hsapiens.v79)
+# library(EnsDb.Hsapiens.v79)
+
+library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+library(TxDb.Hsapiens.UCSC.hg38.knownGene)
 
 source("helpers.R")
 
@@ -15,6 +18,8 @@ start_time = Sys.time()
 
 ############ Inputs ############
 dir_name = "Data Integration"
+
+tech = "h19"
 
 meta = fread(paste(dir_name, "/meta-data.csv", sep = ""))
 files = colnames(meta)
@@ -80,7 +85,10 @@ biodata = rbindlist(biodata, use.names = FALSE)
 
 ############ Getting genomic features ############ 
 
-txdb = TxDb.Hsapiens.UCSC.hg19.knownGene
+txdb = ifelse(tech == "h19", 
+              TxDb.Hsapiens.UCSC.hg19.knownGene, 
+              TxDb.Hsapiens.UCSC.hg38.knownGene)
+
 feat = genFeatures(txdb, reduce_ranges = FALSE, verbose = FALSE)
 
 gr = GRanges(seqnames = Rle(paste("chr", biodata$chromosome_name, sep = "")),
