@@ -18,12 +18,12 @@ image_folder_name = "output_visualizations"
 dir.create(image_folder_name, showWarnings = FALSE)
 image_folder_name = paste(image_folder_name, "/", sep = "")
 
-# by = "FDR"
-# tad_to_visual = tad.sign[which(tad.sign$FDR == max(tad.sign$FDR)), ]$tad_name
+by = "FDR"
+tad_to_visual = tad.sign[which(tad.sign$FDR == max(tad.sign$FDR)), ]$tad_name
 
-by = "diff"
-t = abs(full.tads$diff)
-tad_to_visual = full.tads[which(t == max(t)), ]$tad_name
+# by = "diff"
+# t = abs(full.tads$diff)
+# tad_to_visual = full.tads[which(t == max(t)), ]$tad_name
 
 full.vtads = full.tads[which(full.tads$tad_name %in% tad_to_visual), ]
 
@@ -38,7 +38,7 @@ tick.distance = (end - start)/5
 
 ####################### Reading data ##########################
 
-columns = c("ID", "chromosome_name", "start_position", "end_position", meta$newNames, "diff")
+columns = c("ID", "chromosome_name", "start_position", "end_position", meta$newNames)
 
 range = full.vtads$end_position - full.vtads$start_position
 
@@ -47,9 +47,10 @@ rain_data = full.vtads[which(range == 1), ..columns]
 box_data = full.vtads[which(range > 1), ..columns]
 
 ############################## Plotting ##############################
+dir.create(paste(image_folder_name, "patients/", sep = ""), showWarnings = FALSE)
 
 for(i in columns[5:length(columns)]){
-  png(filename = paste(image_folder_name, i, "_", by, ".png", sep = ""), width = 900, height = 900)
+  png(filename = paste(image_folder_name, "patients/", i, "_max_", by, ".png", sep = ""), width = 1150, height = 900)
 
   kp = plotKaryotype(genome = "hg19", plot.type = 4, zoom = region, cex = 1.5)
   kpDataBackground(kp, data.panel = 1)
@@ -58,18 +59,23 @@ for(i in columns[5:length(columns)]){
   if(nrow(rain_data) > 0){
     rain_color = ifelse(rain_data[ ,..i] <= 30, "green4", ifelse(rain_data[ ,..i] <= 70, "blue", "red"))
     numeric.vector = as.numeric(unlist(rain_data[,..i]))
+    numeric.vector = numeric.vector / 100
     kpPoints(kp, chr = rain_data$chr,
-             x = rain_data$end_position, y = numeric.vector / max(numeric.vector),
+             x = rain_data$end_position, y = numeric.vector,
              col = rain_color, cex = 0.8)
   }
 
   if(nrow(box_data) > 0){
-    kpAxis(kp, r0 = 1.55, r1 = 2, ymin = 0, ymax = max(box_data[ ,..i]))
+    lb = c(0, max(box_data[ ,..i]) / 2, max(box_data[ ,..i]))
+    lb = round(lb, digits = 2)
+    lb = paste(lb, "%", sep = " ")
+    kpAxis(kp, r0 = 0, r1 = 1, ymin = 0, ymax = max(box_data[ ,..i]), side = 2, labels = lb)
     numeric.vector = as.numeric(unlist(box_data[,..i]))
+    numeric.vector = numeric.vector / max(numeric.vector)
 
     kpBars(kp, chr = box_data$chr,
            x0 = box_data$start_position, x1 = box_data$end_position,
-           y1 = (numeric.vector / max(numeric.vector)), border = "slateblue4")
+           y1 = numeric.vector, border = "slateblue4")
   }
   
   kpAddLabels(kp, labels = paste(tad_to_visual, collapse = ","), side = "left", srt = 90, label.margin = 0.03, cex = 1.5)
@@ -77,3 +83,4 @@ for(i in columns[5:length(columns)]){
   dev.off()
 }
 
+rm("t", "lb", "i", "columns", "rain_color", "numeric.vector")
