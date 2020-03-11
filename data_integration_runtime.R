@@ -156,17 +156,17 @@ for(i in keep){
 results = rbindlist(results)
 
 plot(x = results$num_rows, 
-     y = results$user.self, 
+     y = results$elapsed, 
      type = "l", ylab = "sec", xlab = "number of rows", 
-     col = "gold3")
+     col = "red", lwd = 2, cex.axis = 1.2)
 
 lines(x = results$num_rows, 
       y = results$sys.self,  
-      type = "l", col = "blue")
+      type = "l", col = "blue", lwd = 2)
 
 lines(x = results$num_rows, 
-      y = results$elapsed,  
-      type = "l", col = "red")
+      y = results$user.self,  
+      type = "l", col = "gold3", lwd = 2)
 
 legend("topleft", inset=0.05, legend=c("Elapsed", "System time", "User time"),
-       col=c("red", "blue", "gold3"), lwd = 1, cex=0.8)
+       col=c("red", "blue", "gold3"), lwd = 2, cex=0.8)

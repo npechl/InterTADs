@@ -3,28 +3,22 @@ library(tidyverse)
 library(GenomicRanges)
 library(ggplot2)
 library(gplots)
+library(data.table)
 
 start_tad_time = Sys.time()
 
 ########### Inputs ########## 
 
-dir_name = "Data Integration"
+dir_name = "Data integration"
+output_folder = "output_tables"
+image_output_folder = "output_visualizations"
 
-# data.all = read.csv(paste(dir_name, "/integrated_table.csv", sep = ""))
-data.all = fread(paste(dir_name, "/integrated_table.csv", sep = ""))
-
-# TAD = read.csv(paste(dir_name, "/hglft_genome_2dab_ec1330.bed", sep = ""), 
-#                header = F, sep = "\t", check.names = FALSE)
+data.all = fread(paste(output_folder, "/integrated_table.csv", sep = ""))
 
 TAD = fread(paste(dir_name, "/hglft_genome_2dab_ec1330.bed", sep = ""), 
             header = F, sep = "\t", check.names = FALSE)
 
-# meta = read.csv(paste(dir_name, "/meta-data.csv", sep = ""))
 meta = fread(paste(dir_name, "/meta-data.csv", sep = ""))
-
-#4. set up the groups of interest
-# group1 = "ss6"
-# group2 = "ss8"
 
 groups = meta$groups
 groups = as.character(groups)
@@ -58,12 +52,10 @@ gr2 = with(data.over, GRanges(chr, IRanges(start = start, end = end, names = nam
 
 # Completely overlapping
 type1 = findOverlaps(query = gr1, subject = gr2)
-# type1.df = data.frame(TAD[queryHits(type1),], data.over[subjectHits(type1),])
 
 type1.df = cbind(TAD[queryHits(type1),], data.over[subjectHits(type1),])
 type1.df = type1.df[,c(2,3,4,8)]
 colnames(type1.df) = c("tad_start", "tad_end", "tad_name", "name.1")
-# test <- type1.df[duplicated(type1.df$name.1), ]
 
 # merge the values
 full <- merge(type1.df, data.all, by.x = "name.1", by.y = "name")
@@ -72,18 +64,13 @@ full = full[,..keep]
 
 # test for NAs, remove them for the statistical analysis
 full[is.na(full)] <- 0
-
-# average values between groups
-# annotation.1 <- annotation[which(annotation$SUBSET == group1),]
-# annotation.2 <- annotation[which(annotation$SUBSET == group2),]
+full$Gene_id[which(full$Gene_id == 0)] = "NA"
 
 list1 = meta[which(meta$groups == group1), ]$newNames
 list2 = meta[which(meta$groups == group2), ]$newNames
 
-# list1 <- as.character(annotation.1$RNAseq)
 full.1 <- full[,..list1]
 
-# list2 <- as.character(annotation.2$RNAseq)
 full.2 <- full[,..list2]
 
 full$diff <- apply(full.2, 1, mean, na.rm = TRUE) - apply(full.1, 1, mean, na.rm = TRUE)
@@ -100,7 +87,6 @@ tad_sum <- group_by(full, tad_name) %>% summarise(count = n(),
 
 tad_sum$ttest <- numeric(length = nrow(tad_sum))
 tad_sum$wilcoxon <- numeric(length = nrow(tad_sum))
-# tad_sum = as.data.frame(tad_sum)
 tad_sum = as.data.table(tad_sum)
 
 # parametric t.test
@@ -154,52 +140,78 @@ tad_sign <- tad_sum[which(tad_sum$FDR < FDR_criterion & tad_sum$mean > criterion
 # final file - export
 full.tads <- merge(tad_sign, full, by.x = "tad_name", by.y = "tad_name")
 
-# # plot for 1 example
-# tad.test <- full %>% filter(name == "TAD1361")
-# # colnames(tad.test)
-# # row.names(heat.data)<- tad.test$name.1
-# 
-# tad.test.1 <- as.matrix(unlist(tad.test[,list1]))
-# tad.test.1 <- as.data.frame(tad.test.1)
-# tad.test.1$status <- paste(group1)
-# tad.test.2 <- as.matrix(unlist(tad.test[,list2]))
-# tad.test.2 <- as.data.frame(tad.test.2)
-# tad.test.2$status <- paste(group2)
-# 
-# tad.test.plot <- rbind(tad.test.1, tad.test.2)
-# 
-# ggplot(tad.test.plot, aes(x=status, y=V1, fill=status)) + 
-#   geom_jitter(position=position_jitter(0.1), shape=21, color="gray61", size=1.5) +
-#   #scale_fill_manual(values=c("orange", "steelblue2","chartreuse", "yellow","red", "black", "grey")) +
-#   theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
-#   stat_summary(fun.y = median, fun.ymin = median, fun.ymax = median, geom = "crossbar", width = 0.5)
-# 
-# ###heatmap
-# 
-# tad.test <- full %>% filter(name == "TAD2060")
-# # colnames(tad.test)
-# heat.data <- tad.test[,as.character(annotation$RNAseq)]
-# row.names(heat.data) <- tad.test$ID
-# 
-# heatmap.2(as.matrix(heat.data),  
-#           dendrogram = "both",  
-#           notecol = "black", 
-#           density = "density", 
-#           trace = "none", 
-#           margins = c(8, 13), 
-#           col = greenred(75))
+genes.found = full.tads$Gene_id
+genes.found = str_split(genes.found, "\\|")
+genes.found = unlist(genes.found)
+genes.found = genes.found[genes.found != "NA"]
+
+########### Generating output images ########### 
+dir.create(image_output_folder, showWarnings = FALSE)
+
+tad_to_visual = c()
+tad_to_visual = c(tad_to_visual,
+                  tad_sign[which(tad_sign$FDR == min(tad_sign$FDR)), ]$tad_name)
+tad_to_visual = c(tad_to_visual,
+                  tad_sign[which(tad_sign$mean == max(tad_sign$mean)), ]$tad_name)
+
+for(i in tad_to_visual){
+  tad.test <- full %>% filter(tad_name == i)
+  tad.test.1 <- as.matrix(unlist(tad.test[,list1]))
+  tad.test.1 <- as.data.frame(tad.test.1)
+  tad.test.1$status <- paste(group1)
+  tad.test.2 <- as.matrix(unlist(tad.test[,list2]))
+  tad.test.2 <- as.data.frame(tad.test.2)
+  tad.test.2$status <- paste(group2)
+  
+  tad.test.plot <- rbind(tad.test.1, tad.test.2)
+  
+  png(filename = paste(image_output_folder, "/", i, ".png", sep = ""), 
+      width = 600, height = 820)
+  
+  gr = ggplot(tad.test.plot, aes(x = status, y = V1, fill = status)) + 
+    geom_jitter(position = position_jitter(0.1), 
+                shape = 21, color = "gray61", size = 1.5) +
+    theme_bw() + 
+    theme(panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(), 
+          legend.position = "none",
+          axis.text.x = element_text(size = 15),
+          axis.text.y = element_text(size = 15),
+          axis.title.y = element_text(size = 20)) +
+    labs(y = i, x = "") +
+    stat_summary(fun.y = median, fun.ymin = median, fun.ymax = median, 
+                 geom = "crossbar", width = 0.5)
+  
+  print(gr)
+  
+  dev.off()
+}
+
+########### Clear enviroment ########### 
 
 end_tad_time = Sys.time()
 
 rm(list=setdiff(ls(), c("data.all", "full", "full.tads", "tad_sign", "tad_sum", 
                         "dir_name", "end_tad_time", "start_tad_time",
-                        "paired_data", "groups", "FDR_criterion")))
+                        "paired_data", "groups", "FDR_criterion", "genes.found", "output_folder")))
+
+tad_sign = tad_sign[,c("tad_name", "count", "mean", "FDR")]
+
+keep = colnames(full.tads)
+keep = which(!(keep %in% c("IQR", "ttest", "wilcoxon")))
+full.tads = full.tads[,..keep]
 
 ########### Generating outputs ###########  
+dir.create(output_folder, showWarnings = FALSE)
 
-write.table(full, paste(dir_name, "/integrated_table_with_tads.csv", sep = ""), row.names = FALSE, sep = "\t")
-write.table(tad_sum, paste(dir_name, "/tad_statistics.csv", sep = ""), row.names = FALSE, sep = "\t")
-
-write.table(full.tads, paste(dir_name, "/integrated_table_with_sign_tads.csv", sep = ""), row.names = FALSE, sep = "\t")
-write.table(tad_sign, paste(dir_name, "/sign_tad_statistics.csv", sep = ""), row.names = FALSE, sep = "\t")
+write.table(full, paste(output_folder, "/integrated_table_with_tads.csv", sep = ""), 
+            row.names = FALSE, sep = "\t", quote = FALSE)
+write.table(tad_sum, paste(output_folder, "/tad_statistics.csv", sep = ""), 
+            row.names = FALSE, sep = "\t", quote = FALSE)
+write.table(full.tads, paste(output_folder, "/integrated_table_with_sign_tads.csv", sep = ""), 
+            row.names = FALSE, sep = "\t", quote = FALSE)
+write.table(tad_sign, paste(output_folder, "/sign_tad_statistics.csv", sep = ""), 
+            row.names = FALSE, sep = "\t", quote = FALSE)
+write.table(genes.found, paste(output_folder, "/genes_found.txt", sep = ""), 
+            row.names = FALSE, col.names = FALSE, quote = FALSE)
 
