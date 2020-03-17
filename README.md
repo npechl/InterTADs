@@ -26,7 +26,7 @@ There are three main scripts for integrating your multi-omics data:
 
 For the Data Integration part, all datasets are separated into two folders, ```freq``` and ```counts```, based on the information they are carrying (frequency or score count values). 
 
-The two folders are placed into a directory, along with a meta-data file which provides information about the mapping between the columns for each dataset. For more details regarding the structure of this file please see [here](Data_Integration/meta-data.csv)
+The two folders are placed into a directory, along with a meta-data file which provides information about the mapping between the columns for each dataset. For more details regarding the structure of this file please see [here](Data_Integration/meta-data.csv).
 
 The script allows the user to define different folder (or file) names. Moreover, the user can choose a folder name for the output table and a option about the Human Genome that is being used (accepted values are [`hg19`](https://www.ncbi.nlm.nih.gov/assembly/GCF_000001405.13/) or [`hg38`](https://www.ncbi.nlm.nih.gov/assembly/GCF_000001405.39)).
 
