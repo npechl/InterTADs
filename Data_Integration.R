@@ -1,13 +1,10 @@
 ########## Loading libraries ##########
-# library(IlluminaHumanMethylation450kanno.ilmn12.hg19)
 library(systemPipeR)
 library(data.table)
 library(stringr)
-# library(biomaRt)
 library(dplyr)
 
 library(org.Hs.eg.db)
-# library(EnsDb.Hsapiens.v79)
 
 library(TxDb.Hsapiens.UCSC.hg19.knownGene)
 library(TxDb.Hsapiens.UCSC.hg38.knownGene)
@@ -17,17 +14,21 @@ source("helpers.R")
 start_time = Sys.time()
 
 ############ Inputs ############
-dir_name = "Data Integration"
+dir_name = "Data_Integration"
 output_folder = "output_tables"
 
 tech = "hg19"
 
 meta = fread(paste(dir_name, "/meta-data.csv", sep = ""))
-files = colnames(meta)
-files = files[which(!(files %in% c("groups", "newNames")))]
+who = meta == ""
+who = apply(who, 1, sum)
+meta = meta[which(who == 0), ]
 
 counts = list.files(paste(dir_name, "/counts", sep = ""))
 freq = list.files(paste(dir_name, "/freq", sep = ""))
+
+files = colnames(meta)
+files = files[which(!(files %in% c("groups", "newNames")))]
 
 names = meta$newNames
 
@@ -46,9 +47,8 @@ for(i in 1:length(freq)){
   colnames(new) = c("ID", "chromosome_name", "start_position", "end_position", names)
   
   new$chromosome_name = str_remove(new$chromosome_name, "chr")
-  new$chromosome_name = str_remove(new$chromosome_name, "Chr")
   
-  if(max(new[,5:ncol(new)]) == 1){
+  if(max(new[,5:ncol(new)]) <= 1){
     new[,5:ncol(new)] = 100 * new[,5:ncol(new)]
   }
   
@@ -66,7 +66,6 @@ for(i in 1:length(counts)){
   colnames(new) = c("ID", "chromosome_name", "start_position", "end_position", names)
   
   new$chromosome_name = str_remove(new$chromosome_name, "chr")
-  new$chromosome_name = str_remove(new$chromosome_name, "Chr")
   
   temp = new[,5:ncol(new)]
   
@@ -93,14 +92,14 @@ if(tech == "hg19"){
 }
 
 feat = genFeatures(txdb, reduce_ranges = FALSE, verbose = FALSE)
+feat = feat@unlistData
 
 gr = GRanges(seqnames = Rle(paste("chr", biodata$chromosome_name, sep = "")),
              ranges = IRanges(start = as.numeric(biodata$start_position),
                               end = as.numeric(biodata$end_position)))
 
-overlaps = findOverlaps(gr, feat@unlistData)
+overlaps = findOverlaps(gr, feat)
 
-feat = feat@unlistData
 feat = as.data.table(feat)
 feat = feat[,c("feature_by", "featuretype")]
 feat$feature_by = as.character(feat$feature_by)
@@ -116,22 +115,44 @@ genes = unique(biodata$feature_by)
 genes = genes[which(genes != "NA")]
 genes = genes[!str_detect(genes, "INTER")]
 
-mapping = map_entrez_ids(entrez.ids = genes)
+mapping = map_entrez_ids(entrez.ids = genes, tech = tech)
 
-map = BiocGenerics::match(biodata$feature_by, mapping$entrez.id)
+map = base::match(biodata$feature_by, mapping$entrez.id)
 biodata$feature_by = mapping[map, ]$hgnc.symbol
 
-features = biodata %>% group_by(ID) %>% dplyr::select(ID, feature_by, featuretype) %>% summarise(Gene_id = paste(feature_by, collapse = "|"),
-                                                                                                 Gene_feature = paste(featuretype, collapse = "|"))
+unique.ids = unique(biodata$ID)
+iterations = seq(from = 0, to = (length(unique.ids) - 1), by = 200000)
+iterations = c(iterations, length(unique.ids))
 
-features = as.data.table(features)
+total = list()
 
-who = which(!duplicated(biodata$ID))
-biodata = biodata[who, ]
+for(i in 1:(length(iterations) - 1)){
+  
+  temp = unique.ids[(iterations[i] + 1):(iterations[i + 1])]
+  
+  temp = biodata[which(biodata$ID %in% temp), ]
+  
+  features = temp %>% 
+             dplyr::group_by(ID) %>% 
+             dplyr::select(ID, feature_by, featuretype) %>% 
+             dplyr::summarise(Gene_id = paste(feature_by, collapse = "|"),
+                              Gene_feature = paste(featuretype, collapse = "|"))
+  
+  features = as.data.table(features)
+  
+  who = which(!duplicated(temp$ID))
+  temp = temp[who, ]
+  
+  map = base::match(features$ID, temp$ID)
+  temp[map, ]$feature_by = features$Gene_id
+  temp[map, ]$featuretype = features$Gene_feature
+  
+  total[[i]] = temp
+}
 
-map = match(features$ID, biodata$ID)
-biodata[map, ]$feature_by = features$Gene_id
-biodata[map, ]$featuretype = features$Gene_feature
+biodata = rbindlist(total)
+
+rm(total)
 
 names = colnames(biodata)
 names = str_replace(names, "feature_by", "Gene_id")
@@ -139,13 +160,12 @@ names = str_replace(names, "featuretype", "Gene_locus")
 
 colnames(biodata) = names
 
-genes = str_split(biodata$Gene_id, "\\|")
-genes = unlist(genes)
-
-rm(list=setdiff(ls(), c("biodata", "meta", "genes", "start_time", "dir_name", "output_folder")))
+rm(list=setdiff(ls(), c("biodata", "meta", "start_time", "dir_name", "output_folder")))
 
 end_time = Sys.time()
+
 ############ Generating outputs ############ 
+
 dir.create(output_folder, showWarnings = FALSE)
 
 write.table(biodata, paste(output_folder, "/integrated_table.csv", sep = ""), 

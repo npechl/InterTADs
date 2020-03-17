@@ -9,7 +9,7 @@ start_tad_time = Sys.time()
 
 ########### Inputs ########## 
 
-dir_name = "Data integration"
+dir_name = "Data_Integration"
 output_folder = "output_tables"
 image_output_folder = "output_visualizations"
 
@@ -19,6 +19,9 @@ TAD = fread(paste(dir_name, "/hglft_genome_2dab_ec1330.bed", sep = ""),
             header = F, sep = "\t", check.names = FALSE)
 
 meta = fread(paste(dir_name, "/meta-data.csv", sep = ""))
+who = meta == ""
+who = apply(who, 1, sum)
+meta = meta[which(who == 0), ]
 
 groups = meta$groups
 groups = as.character(groups)
@@ -35,7 +38,7 @@ FDR_criterion = 0.05
 ########### Processing ########### 
 
 # generate a barcode 
-data.all$name <- paste0(data.all$ID, data.all$VarAnnotation, data.all$Gene_id)
+data.all$name <- paste0(data.all$ID, data.all$Gene_id)
 
 # reordering
 data.over <- data.all[,c("name", "chromosome_name", "start_position", "end_position")]
@@ -63,8 +66,8 @@ keep = c("chromosome_name", "tad_name", "tad_start", "tad_end", "ID", "start_pos
 full = full[,..keep]
 
 # test for NAs, remove them for the statistical analysis
-full[is.na(full)] <- 0
-full$Gene_id[which(full$Gene_id == 0)] = "NA"
+# full[is.na(full)] <- 0
+# full$Gene_id[which(full$Gene_id == 0)] = "NA"
 
 list1 = meta[which(meta$groups == group1), ]$newNames
 list2 = meta[which(meta$groups == group2), ]$newNames
@@ -81,14 +84,17 @@ full <- full[which(round(abs(full$diff))>0),]
 ###########  TADS ########### 
 
 # Statistics
-tad_sum <- group_by(full, tad_name) %>% summarise(count = n(), 
-                                              mean = mean(abs(diff), na.rm = TRUE),
-                                              IQR = IQR(diff, na.rm = TRUE))
+tad_sum <- dplyr::group_by(full, tad_name) %>% 
+           dplyr::summarise(count = n(), 
+                            mean = mean(abs(diff), na.rm = TRUE),
+                            IQR = IQR(diff, na.rm = TRUE))
 
 tad_sum$ttest <- numeric(length = nrow(tad_sum))
 tad_sum$wilcoxon <- numeric(length = nrow(tad_sum))
 tad_sum = as.data.table(tad_sum)
 
+tad_sum$ttest = NA
+tad_sum$wilcoxon = NA
 # parametric t.test
 # non-parametric wilcoxon
 
@@ -112,6 +118,15 @@ if(paired.data){
     tad.1 <- tad[,..list1]
     tad.2 <- tad[,..list2]
     
+    one.run = function(x) return(length(unique(x)) == 1)
+    
+    same.values.1 = sum(apply(tad.1, 1, one.run))
+    same.values.2 = sum(apply(tad.2, 1, one.run))
+    
+    if(same.values.1 == nrow(tad.1) && same.values.2 == nrow(tad.2)){
+      next
+    }
+    
     statistics1 <- t.test(tad.1, tad.2, na.rm = TRUE)
     statistics4 <- wilcox.test(unlist(tad.1), unlist(tad.2), na.rm = TRUE, correct = FALSE)
     
@@ -119,6 +134,8 @@ if(paired.data){
     tad_sum[i,6] <- statistics4$p.value
   }
 }
+
+tad_sum = tad_sum[which(!is.na(tad_sum$ttest)), ]
 
 # test for FDR - based on paired wilc test [,7] because study group <30 cases
 
@@ -169,18 +186,17 @@ for(i in tad_to_visual){
       width = 600, height = 820)
   
   gr = ggplot(tad.test.plot, aes(x = status, y = V1, fill = status)) + 
-    geom_jitter(position = position_jitter(0.1), 
-                shape = 21, color = "gray61", size = 1.5) +
-    theme_bw() + 
-    theme(panel.grid.major = element_blank(), 
-          panel.grid.minor = element_blank(), 
-          legend.position = "none",
-          axis.text.x = element_text(size = 15),
-          axis.text.y = element_text(size = 15),
-          axis.title.y = element_text(size = 20)) +
-    labs(y = i, x = "") +
-    stat_summary(fun.y = median, fun.ymin = median, fun.ymax = median, 
-                 geom = "crossbar", width = 0.5)
+       geom_jitter(position = position_jitter(0.1), shape = 21, color = "gray61", size = 1.5) +
+       theme_bw() + 
+       theme(panel.grid.major = element_blank(), 
+             panel.grid.minor = element_blank(), 
+             legend.position = "none",
+             axis.text.x = element_text(size = 15),
+             axis.text.y = element_text(size = 15),
+             axis.title.y = element_text(size = 20)) +
+       labs(y = i, x = "") +
+       stat_summary(fun = mean, fun.min = mean, fun.max = mean, 
+                    geom = "crossbar", width = 0.5)
   
   print(gr)
   

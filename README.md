@@ -1,3 +1,65 @@
 # Genomic Data Integration
 
-Genomic data integration model
+XXX is an open-source tool written in [R](https://www.r-project.org/), for integrating multi-omics data (e.g. DNA methylation, expression, mutation) from the same physical source (e.g. patient) taking into account the chromatin configuration of the genome, i.e. the topologically associating domains (TADs).
+
+## Installation
+
+Before running any scripts, make sure the following packages are installed in your machine:
+```
+install.packages(c("data.table", "tidyverse", "stringr", "ggplot2", "gplots", "dplyr", "png"))
+```
+...and from [Bioconductor](https://www.bioconductor.org/):
+```
+BiocManager::install(c("TxDb.Hsapiens.UCSC.hg19.knownGene", "TxDb.Hsapiens.UCSC.hg38.knownGene", 
+                       "GenomicRanges", "org.Hs.eg.db", "systemPipeR", "karyoploteR"))
+```
+
+## Usage
+
+There are three main scripts for integrating your multi-omics data:
+
+* ```Data_Integration.R```
+* ```TADiff.R```
+* ```Visualization.R```
+
+### Data Integration
+
+For the Data Integration part, all datasets are separated into two folders, ```freq``` and ```counts```, based on the information they are carrying (frequency or score count values). 
+
+The two folders are placed into a directory, along with a meta-data file which provides information about the mapping between the columns for each dataset. For more details regarding the structure of this file please see [here](Data_Integration/meta-data.csv)
+
+The script allows the user to define different folder (or file) names. Moreover, the user can choose a folder name for the output table and a option about the Human Genome that is being used (accepted values are [`hg19`](https://www.ncbi.nlm.nih.gov/assembly/GCF_000001405.13/) or [`hg38`](https://www.ncbi.nlm.nih.gov/assembly/GCF_000001405.39)).
+
+Once every input is provided run the script:
+
+```
+source("Data_Integration.R")
+```
+
+### TADiff
+
+For the TADiff part, the paths to the input and output folders must be provided. Also a [BED](https://genome.ucsc.edu/FAQ/FAQformat.html#format1) file is needed containing information about the TADs. 
+
+There also options for choosing if the datasets refer to paired data or not, and for choosing the FDR criterion that is going to be applied.
+
+To run the script:
+
+```
+source("TADiff.R")
+```
+
+### Visualization
+
+For the visualization of the results paths to input and output data needs to be provided:
+
+```
+source("Visualization.R")
+```
+
+## Contributing
+
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+
+## License
+
+This project is licensed under the [MIT](https://opensource.org/licenses/MIT) License - see the [LICENSE](LICENSE) file for details
