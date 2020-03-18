@@ -83,6 +83,16 @@ for(i in 1:length(counts)){
 
 biodata = rbindlist(biodata, use.names = FALSE)
 
+########### Filtering ########### 
+
+biodata = biodata[which(biodata$chromosome_name %in% as.character(1:22)), ]
+
+zero.ids = rep(0, length(names))
+zero.ids = paste(zero.ids, collapse = "")
+
+data.num.ids = unite(data = biodata[,..names], col = ids, sep = "")
+biodata = biodata[which(data.num.ids != zero.ids), ]
+
 ############ Getting genomic features ############ 
 
 if(tech == "hg19"){

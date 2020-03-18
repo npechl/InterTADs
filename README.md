@@ -1,6 +1,6 @@
 # Genomic Data Integration
 
-XXX is an open-source tool written in [R](https://www.r-project.org/), for integrating multi-omics data (e.g. DNA methylation, expression, mutation) from the same physical source (e.g. patient) taking into account the chromatin configuration of the genome, i.e. the topologically associating domains (TADs).
+InterTADs is an open-source tool written in [R](https://www.r-project.org/), for integrating multi-omics data (e.g. DNA methylation, expression, mutation) from the same physical source (e.g. patient) taking into account the chromatin configuration of the genome, i.e. the topologically associating domains (TADs).
 
 ## Installation
 
