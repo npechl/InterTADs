@@ -56,6 +56,10 @@ For the visualization of the results, the paths to input and output data needs t
 source("Visualization.R")
 ```
 
+## Data 
+
+The proposed method was evaluated on data from Chronic lymphocytic leukemia (DNA methylation and expression values). The datasets have been deposited in the [ArrayExpress](www.ebi.ac.uk/arrayexpress) database at EMBL‐EBI under the accession numbers E‐MTAB‐6955 and E‐MTAB‐6962, respectively.
+
 ## Contributing
 
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
