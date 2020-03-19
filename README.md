@@ -1,4 +1,4 @@
-# Genomic Data Integration
+# InterTADs
 
 InterTADs is an open-source tool written in [R](https://www.r-project.org/), for integrating multi-omics data (e.g. DNA methylation, expression, mutation) from the same physical source (e.g. patient) taking into account the chromatin configuration of the genome, i.e. the topologically associating domains (TADs).
 
@@ -42,7 +42,7 @@ For the TADiff part, the paths to the input and output folders must be provided.
 
 There also options for choosing if the datasets refer to paired data or not, and for choosing the FDR criterion that is going to be applied.
 
-To run the script:
+In order to run the script:
 
 ```
 source("TADiff.R")
@@ -50,7 +50,7 @@ source("TADiff.R")
 
 ### Visualization
 
-For the visualization of the results paths to input and output data needs to be provided:
+For the visualization of the results, the paths to input and output data needs to be provided:
 
 ```
 source("Visualization.R")
