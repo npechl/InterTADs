@@ -4,6 +4,7 @@ library(GenomicRanges)
 library(ggplot2)
 library(gplots)
 library(data.table)
+library(gghalves)
 
 start_tad_time = Sys.time()
 
@@ -196,9 +197,193 @@ for(i in tad_to_visual){
              axis.title.y = element_text(size = 20)) +
        labs(y = i, x = "") +
        stat_summary(fun = mean, fun.min = mean, fun.max = mean, 
-                    geom = "crossbar", width = 0.5)
+                    geom = "crossbar", width = 0.2)
   
   print(gr)
+  
+  dev.off()
+  
+  tad.test <- full %>% filter(tad_name == i)
+  tad.test = tad.test[order(abs(tad.test$diff), decreasing = TRUE), ]
+
+  tad.test.1 = tad.test[,list1]
+  tad.test.2 = tad.test[,list2]
+  tad.test.1$mean = apply(tad.test.1, 1, mean)
+  tad.test.2$mean = apply(tad.test.2, 1, mean)
+  tad.test.1$status <- paste(group1)
+  tad.test.2$status <- paste(group2)
+  tad.test.1$ids = 1:nrow(tad.test.1)
+  tad.test.2$ids = 1:nrow(tad.test.2)
+
+  tad.test.1$xj = 1
+  tad.test.2$xj = 2
+
+  tad.test.1$line.color = rgb(255, 255, 255, max = 255, alpha = 0, names = "white")
+  tad.test.2$line.color = rgb(255, 255, 255, max = 255, alpha = 0, names = "white")
+
+  tad.test.1[1:min(30, nrow(tad.test.1)), ]$line.color = "gray38"
+
+  tad.test.plot = rbind(tad.test.1[,c("mean", "xj", "ids", "line.color", "status")],
+                        tad.test.2[,c("mean", "xj", "ids", "line.color", "status")])
+
+
+
+  tad.test.plot$xj = jitter(tad.test.plot$xj, amount = 0.1, factor = 1)
+  
+  png(filename = paste(image_output_folder, "/", i, "_topValues.png", sep = ""),
+      width = 600, height = 820)
+  
+  f3 <- ggplot(data=tad.test.plot, aes(y = mean, x = xj, fill = status)) +
+        geom_line(aes(x=xj, group=ids), color = "lightgray") +
+        geom_line(aes(x=xj, group=ids), color = tad.test.plot$line.color) +
+        geom_point(aes(x=xj), size = 1.5, shape = 21, color = "gray61") +
+    
+        # geom_half_boxplot(data=tad.test.plot %>% filter(status == group1), 
+        #                   aes(x=xj, y = mean), position = position_nudge(x = -.25),
+        #                   side = "r",outlier.shape = NA, center = TRUE, 
+        #                   errorbar.draw = FALSE, width = .2) +
+        # 
+        # geom_half_boxplot(data = tad.test.plot %>% filter(status==group2), 
+        #                   aes(x=xj, y = mean), position = position_nudge(x = .15),
+        #                   side = "r",outlier.shape = NA, center = TRUE, 
+        #                   errorbar.draw = FALSE, width = .2) +
+    
+        geom_half_violin(data = tad.test.plot %>% filter(status==group1),
+                         aes(x = xj, y = mean), position = position_nudge(x = -.3),
+                         side = "l") +
+    
+        geom_half_violin(data = tad.test.plot %>% filter(status==group2),
+                         aes(x = xj, y = mean), position = position_nudge(x = .3),
+                         side = "r") +
+    
+        scale_x_continuous(breaks=c(1,2), labels=c("ss6", "ss8"), limits=c(0, 3)) +
+        theme_classic() + labs(y = i, x = "") + 
+        theme(panel.grid.major = element_blank(), 
+              panel.grid.minor = element_blank(), 
+              legend.position = "none",
+              axis.text.x = element_text(size = 15),
+              axis.text.y = element_text(size = 15),
+              axis.title.y = element_text(size = 20))
+  
+  print(f3)
+  
+  dev.off()
+  
+  tad.test <- full %>% filter(tad_name == i)
+  tad.test = tad.test[order(tad.test$diff, decreasing = TRUE), ]
+
+  tad.test.1 = tad.test[,list1]
+  tad.test.2 = tad.test[,list2]
+  tad.test.1$mean = apply(tad.test.1, 1, mean)
+  tad.test.2$mean = apply(tad.test.2, 1, mean)
+  tad.test.1$status <- paste(group1)
+  tad.test.2$status <- paste(group2)
+  tad.test.1$ids = 1:nrow(tad.test.1)
+  tad.test.2$ids = 1:nrow(tad.test.2)
+
+  tad.test.1$xj = 1
+  tad.test.2$xj = 2
+  
+  tad.test.1 = tad.test.1[order(tad.test$diff, decreasing = TRUE), ]
+  tad.test.2 = tad.test.2[order(tad.test$diff, decreasing = TRUE), ]
+
+  tad.test.1$line.color = rgb(255, 255, 255, max = 255, alpha = 0, names = "white")
+  tad.test.2$line.color = rgb(255, 255, 255, max = 255, alpha = 0, names = "white")
+
+  tad.test.1[1:min(30, nrow(tad.test.1)), ]$line.color = "gray38"
+
+  tad.test.plot = rbind(tad.test.1[,c("mean", "xj", "ids", "line.color", "status")],
+                        tad.test.2[,c("mean", "xj", "ids", "line.color", "status")])
+
+
+
+  tad.test.plot$xj = jitter(tad.test.plot$xj, amount = 0.1, factor = 1)
+
+  png(filename = paste(image_output_folder, "/", i, "_positive_connections.png", sep = ""),
+      width = 600, height = 820)
+
+  f3 <- ggplot(data=tad.test.plot, aes(y = mean, x = xj, fill = status)) +
+        geom_line(aes(x=xj, group=ids), color = "lightgray") +
+        geom_line(aes(x=xj, group=ids), color = tad.test.plot$line.color) +
+        geom_point(aes(x=xj), size = 1.5, shape = 21, color = "gray61") +
+    
+        geom_half_violin(data = tad.test.plot %>% filter(status==group1),
+                         aes(x = xj, y = mean), position = position_nudge(x = -.3),
+                         side = "l") +
+    
+        geom_half_violin(data = tad.test.plot %>% filter(status==group2),
+                         aes(x = xj, y = mean), position = position_nudge(x = .3),
+                         side = "r") +
+    
+        scale_x_continuous(breaks=c(1,2), labels=c("ss6", "ss8"), limits=c(0, 3)) +
+        theme_classic() + labs(y = i, x = "") +
+        theme(panel.grid.major = element_blank(),
+              panel.grid.minor = element_blank(),
+              legend.position = "none",
+              axis.text.x = element_text(size = 15),
+              axis.text.y = element_text(size = 15),
+              axis.title.y = element_text(size = 20))
+
+  print(f3)
+
+  dev.off()
+  
+  tad.test <- full %>% filter(tad_name == i)
+  tad.test = tad.test[order(tad.test$diff), ]
+
+  tad.test.1 = tad.test[,list1]
+  tad.test.2 = tad.test[,list2]
+  tad.test.1$mean = apply(tad.test.1, 1, mean)
+  tad.test.2$mean = apply(tad.test.2, 1, mean)
+  tad.test.1$status <- paste(group1)
+  tad.test.2$status <- paste(group2)
+  tad.test.1$ids = 1:nrow(tad.test.1)
+  tad.test.2$ids = 1:nrow(tad.test.2)
+
+  tad.test.1$xj = 1
+  tad.test.2$xj = 2
+  
+  tad.test.1 = tad.test.1[order(tad.test$diff), ]
+  tad.test.2 = tad.test.2[order(tad.test$diff), ]
+  
+  tad.test.1$line.color = rgb(255, 255, 255, max = 255, alpha = 0, names = "white")
+  tad.test.2$line.color = rgb(255, 255, 255, max = 255, alpha = 0, names = "white")
+  
+  tad.test.1[1:min(30, nrow(tad.test.1)), ]$line.color = "gray38"
+  
+  tad.test.plot = rbind(tad.test.1[,c("mean", "xj", "ids", "line.color", "status")],
+                        tad.test.2[,c("mean", "xj", "ids", "line.color", "status")])
+  
+  
+  
+  tad.test.plot$xj = jitter(tad.test.plot$xj, amount = 0.1, factor = 1)
+  
+  png(filename = paste(image_output_folder, "/", i, "_negative_connections.png", sep = ""),
+      width = 600, height = 820)
+  
+  f3 <- ggplot(data=tad.test.plot, aes(y = mean, x = xj, fill = status)) +
+        geom_line(aes(x=xj, group=ids), color = "lightgray") +
+        geom_line(aes(x=xj, group=ids), color = tad.test.plot$line.color) +
+        geom_point(aes(x=xj), size = 1.5, shape = 21, color = "gray61") +
+          
+        geom_half_violin(data = tad.test.plot %>% filter(status==group1),
+                         aes(x = xj, y = mean), position = position_nudge(x = -.3),
+                         side = "l") +
+        
+        geom_half_violin(data = tad.test.plot %>% filter(status==group2),
+                         aes(x = xj, y = mean), position = position_nudge(x = .3),
+                         side = "r") +
+        
+        scale_x_continuous(breaks=c(1,2), labels=c("ss6", "ss8"), limits=c(0, 3)) +
+        theme_classic() + labs(y = i, x = "") + 
+        theme(panel.grid.major = element_blank(), 
+              panel.grid.minor = element_blank(), 
+              legend.position = "none",
+              axis.text.x = element_text(size = 15),
+              axis.text.y = element_text(size = 15),
+              axis.title.y = element_text(size = 20))
+  
+  print(f3)
   
   dev.off()
 }
