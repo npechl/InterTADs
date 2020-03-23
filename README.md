@@ -4,6 +4,12 @@ InterTADs is an open-source tool written in [R](https://www.r-project.org/), for
 
 ## Installation
 
+You can simply clone the repository by using [git](https://git-scm.com/):
+
+```
+git clone https://github.com/nikopech/InterTADs
+```
+
 Before running any scripts, make sure the following packages are installed in your machine:
 ```
 install.packages(c("data.table", "tidyverse", "stringr", "ggplot2", "gplots", "dplyr", "png", "gghalves"))
