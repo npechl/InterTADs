@@ -4,6 +4,8 @@ library(data.table)
 library(stringr)
 library(dplyr)
 
+library(tidyr)
+
 library(org.Hs.eg.db)
 
 library(TxDb.Hsapiens.UCSC.hg19.knownGene)
@@ -14,7 +16,7 @@ source("helpers.R")
 start_time = Sys.time()
 
 ############ Inputs ############
-dir_name = "Data_Integration"
+dir_name = "Datasets"
 output_folder = "output_tables"
 
 tech = "hg19"

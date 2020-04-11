@@ -9,7 +9,7 @@ library(dplyr)
 
 ############################### Inputs ##############################
 
-dir_name = "Data_Integration"
+dir_name = "Datasets"
 tad_folder = "output_tables"
 
 full.tads = fread(paste(tad_folder, "/integrated_table_with_tads.csv", sep = ""))

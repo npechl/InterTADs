@@ -10,7 +10,7 @@ start_tad_time = Sys.time()
 
 ########### Inputs ########## 
 
-dir_name = "Data_Integration"
+dir_name = "Datasets"
 output_folder = "output_tables"
 image_output_folder = "output_visualizations"
 
@@ -153,10 +153,10 @@ criterion = as.matrix(summary(tad_sum$mean))
 criterion = criterion[5]
 
 # filtering
-tad_sign <- tad_sum[which(tad_sum$FDR < FDR_criterion & tad_sum$mean > criterion),]
+tad_sign = tad_sum[which(tad_sum$FDR < FDR_criterion & tad_sum$mean > criterion),]
 
 # final file - export
-full.tads <- merge(tad_sign, full, by.x = "tad_name", by.y = "tad_name")
+full.tads = merge(tad_sign, full, by.x = "tad_name", by.y = "tad_name")
 
 genes.found = full.tads$Gene_id
 genes.found = str_split(genes.found, "\\|")
