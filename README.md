@@ -12,12 +12,12 @@ git clone https://github.com/nikopech/InterTADs
 
 Before running any scripts, make sure the following packages are installed in your machine:
 ```
-install.packages(c("data.table", "tidyverse", "tidyr", "stringr", "ggplot2", "gplots", "dplyr", "png", "gghalves"))
+install.packages(c("data.table", "tidyverse", "gplots", "png", "gghalves"))
+devtools::install_github("stephenturner/annotables")
 ```
 ...and from [Bioconductor](https://www.bioconductor.org/):
 ```
-BiocManager::install(c("TxDb.Hsapiens.UCSC.hg19.knownGene", "TxDb.Hsapiens.UCSC.hg38.knownGene", 
-                       "GenomicRanges", "org.Hs.eg.db", "systemPipeR", "karyoploteR"))
+BiocManager::install(c("TxDb.Hsapiens.UCSC.hg19.knownGene", "TxDb.Hsapiens.UCSC.hg38.knownGene", "GenomicRanges", "org.Hs.eg.db", "systemPipeR", "karyoploteR"))
 ```
 
 ## Usage
@@ -36,7 +36,7 @@ The two folders are placed into a directory, along with a meta-data file which p
 
 The script allows the user to define different folder (or file) names. Moreover, the user can choose a folder name for the output table and a option about the Human Genome that is being used (accepted values are [`hg19`](https://www.ncbi.nlm.nih.gov/assembly/GCF_000001405.13/) or [`hg38`](https://www.ncbi.nlm.nih.gov/assembly/GCF_000001405.39)).
 
-Once every input is provided run the script:
+Once every input is provided, the script can be run by:
 
 ```
 source("Data_Integration.R")
@@ -44,11 +44,7 @@ source("Data_Integration.R")
 
 ### TADiff
 
-For the TADiff part, the paths to the input and output folders must be provided. Also a [BED](https://genome.ucsc.edu/FAQ/FAQformat.html#format1) file is needed containing information about the TADs. 
-
-There also options for choosing if the datasets refer to paired data or not, and for choosing the FDR criterion that is going to be applied.
-
-In order to run the script:
+For the TADiff part, the paths to the input and output folders must be provided. Also a [BED](https://genome.ucsc.edu/FAQ/FAQformat.html#format1) file is needed containing information about the TADs. In order to run the script:
 
 ```
 source("TADiff.R")
@@ -56,7 +52,7 @@ source("TADiff.R")
 
 ### Visualization
 
-For the visualization of the results, the paths to input and output data needs to be provided:
+For the visualization of the results, the paths to input and output data need to be provided:
 
 ```
 source("Visualization.R")
