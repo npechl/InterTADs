@@ -1,37 +1,57 @@
 ############################# Getting required libraries ###########################
 
-library(stringr)
-library(karyoploteR)
-library(data.table)
-library(GenomicRanges)
-library(png)
-library(dplyr)
+source("libraries.R")
 
 ############################### Inputs ##############################
 
+#'
+#' Input parameters for Visualization part
+#' 
+#' @param dir_name Directory of input datasets containing feature counts and frequency tables
+#' 
+#' @param tad_folder Folder name for printing output tables
+#' 
+#' @param meta meta-data file name used
+#' 
+#' @param image_folder_name Directory name of counts NGS data
+#' 
+#' @param diff_col Directory name of freq NGS data
+#' 
+
 dir_name = "Datasets"
-tad_folder = "output_tables"
+
+tad_folder = "output_tables_test"
+
+meta = "meta-data.csv"
+
+image_folder_name = "output_visualizations_test"
+
+diff_col = "groups"
+
+
+my_colors = c("red", "slateblue4", "black", "goldenrod4", "darkorange3")
+my_cex = c(0.8, 1, 1.2, 1.4)
+
 
 full.tads = fread(paste(tad_folder, "/integrated_table_with_tads.csv", sep = ""))
 tad.sign = fread(paste(tad_folder, "/sign_tad_statistics.csv", sep = ""))
-meta = fread(paste(dir_name, "/meta-data.csv", sep = ""))
+
+meta = fread(paste(dir_name, meta, sep = "/"))
 who = meta == ""
 who = apply(who, 1, sum)
 meta = meta[which(who == 0), ]
 
-groups = unique(meta$groups)
+groups = unique(meta[[diff_col]])
 
-image_folder_name = "output_visualizations"
 dir.create(image_folder_name, showWarnings = FALSE)
-image_folder_name = paste(image_folder_name, "/", sep = "")
+# image_folder_name = paste(image_folder_name, "/", sep = "")
 
-tad_to_visual = c()
-
-tad_to_visual = c(tad_to_visual,
-                  tad.sign[which(tad.sign[,"mean"] == max(tad.sign[,"mean"])), ]$tad_name)
-
-tad_to_visual = c(tad_to_visual,
-                  tad.sign[which(tad.sign[,"FDR"] == min(tad.sign[,"FDR"])), ]$tad_name)
+tad_to_visual = c("TAD2")
+# tad_to_visual = c(tad_to_visual,
+#                   tad.sign[which(tad.sign[,"mean"] == max(tad.sign[,"mean"])), ]$tad_name)
+# 
+# tad_to_visual = c(tad_to_visual,
+#                   tad.sign[which(tad.sign[,"FDR"] == min(tad.sign[,"FDR"])), ]$tad_name)
 
 ############################### For every sign TAD ##############################
 
@@ -50,191 +70,318 @@ for(j in tad_to_visual){
   
   columns = c("ID", "chromosome_name", "start_position", "end_position", meta$newNames, "diff")
   
-  range = full.vtads$end_position - full.vtads$start_position
+  full.vtads$range = full.vtads$end_position - full.vtads$start_position
   
-  rain_data = full.vtads[which(range == 1 & !str_detect(full.vtads$ID, ":")), ..columns]
-  
-  box_data = full.vtads[which(range > 1), ..columns]
-  
-  mut_data = full.vtads[which(range == 1 & str_detect(full.vtads$ID, ":")), ..columns]
+  # rain_data = full.vtads[which(str_detect(full.vtads$ID, "cg")), ..columns]
+  # 
+  # box_data = full.vtads[which(str_detect(full.vtads$ID, "XLOC")), ..columns]
+  # 
+  # non_coding_data = full.vtads[which(str_detect(full.vtads$ID, "ENSG")), ..columns]
+  # 
+  # mut_data = full.vtads[which(str_detect(full.vtads$ID, ":")), ..columns]
   
   ############################## Plotting ##############################
-  dir.create(paste(image_folder_name, "patients/", sep = ""), showWarnings = FALSE)
+  dir.create(paste(image_folder_name, "/patients/", sep = ""), showWarnings = FALSE)
+  
+  parents = unique(full.vtads$parent)
   
   for(i in meta$newNames){
-    png(filename = paste(image_folder_name, "patients/", i, "_", j, ".png", sep = ""), width = 1150, height = 900)
+    # png(filename = paste(image_folder_name, "patients/", i, "_", j, ".png", sep = ""), width = 1150, height = 900)
     
-    kp = plotKaryotype(genome = "hg19", plot.type = 4, zoom = region, cex = 1.5)
-    kpDataBackground(kp, data.panel = 1)
-    kpAddBaseNumbers(kp, add.units = TRUE, tick.dist = tick.distance, cex = 1.25)
-    lb = c("0 %", "50 %", "100 %")
-    kpAxis(kp, r0 = 0, r1 = 1, ymin = 0, ymax = 100, side = 2, labels = lb)
+    kp = base::expression({
+      kp = plotKaryotype(genome = "hg19", plot.type = 4, zoom = region, cex = 1.5)
+      kpDataBackground(kp, data.panel = 1)
+      kpAddBaseNumbers(kp, add.units = TRUE, tick.dist = tick.distance, cex = 1.25)
+      lb = c("0 %", "50 %", "100 %")
+      kpAxis(kp, r0 = 0, r1 = 1, ymin = 0, ymax = 100, side = 2, labels = lb)
+      
+      for(p in 1:length(parents)){
+        vis_data = full.vtads[which(full.vtads$parent == parents[p]), ]
+        
+        numeric.vector = vis_data[[i]] # as.numeric(unlist(box_data[,..i]))
+        numeric.vector = numeric.vector / 100
+        
+        if(max(vis_data$range) <= 1){
+          kpPoints(kp, 
+                   chr = vis_data$chromosome_name,
+                   x = vis_data$end_position, 
+                   y = numeric.vector, 
+                   col = my_colors[p],
+                   cex = my_cex[p])
+          
+        } else {
+          kpBars(kp, 
+                 chr = vis_data$chr,
+                 x0 = vis_data$start_position, 
+                 x1 = vis_data$end_position,
+                 y1 = numeric.vector, 
+                 border = my_colors[p], 
+                 cex = my_cex[p])
+          
+        }
+        
+        # if(nrow(box_data) > 0){
+        # 
+        # }
+        # 
+        # if(nrow(non_coding_data) > 0){
+        #   numeric.vector = as.numeric(unlist(non_coding_data[,..i]))
+        #   numeric.vector = numeric.vector / 100
+        #   kpBars(kp, chr = non_coding_data$chr,
+        #          x0 = non_coding_data$start_position, x1 = non_coding_data$end_position,
+        #          y1 = numeric.vector, border = "deepskyblue", cex = 1.2)
+        # }
+        # 
+        # if(nrow(mut_data) > 0){
+        #   mut_data = mut_data[which(mut_data[,..i] > 0), ]
+        #   numeric.vector = as.numeric(unlist(mut_data[,..i]))
+        #   numeric.vector = numeric.vector / 100
+        #   kpPoints(kp, chr = rain_data$chromosome_name,
+        #            x = mut_data$end_position, y = numeric.vector,
+        #            col = "red", cex = 1.2)
+        # }
+        
+        kpAddLabels(kp, labels = j, side = "left", srt = 90, label.margin = 0.03, cex = 1.5)
+        
+      }
+    })
     
-    if(nrow(rain_data) > 0){
-      rain_color = ifelse(rain_data[ ,..i] <= 30, "green4", ifelse(rain_data[ ,..i] <= 70, "blue", "red"))
-      numeric.vector = as.numeric(unlist(rain_data[,..i]))
-      numeric.vector = numeric.vector / 100
-      kpPoints(kp, chr = rain_data$chromosome_name,
-               x = rain_data$end_position, y = numeric.vector, cex = 0.8)
-    }
+    saveImageHigh::save_as_png({base::eval(kp)},
+                               file.name = file.path(image_folder_name, 
+                                                     "patients", 
+                                                     paste(i, "_", j, ".png", sep = "")),
+                               width = 14, height = 10)
     
-    if(nrow(box_data) > 0){
-      numeric.vector = as.numeric(unlist(box_data[,..i]))
-      numeric.vector = numeric.vector / 100
-      kpBars(kp, chr = box_data$chr,
-             x0 = box_data$start_position, x1 = box_data$end_position,
-             y1 = numeric.vector, border = "slateblue4", cex = 1.2)
-    }
-    
-    if(nrow(mut_data) > 0){
-      mut_data = mut_data[which(mut_data[,..i] > 0), ]
-      numeric.vector = as.numeric(unlist(mut_data[,..i]))
-      numeric.vector = numeric.vector / 100
-      kpPoints(kp, chr = rain_data$chromosome_name,
-               x = mut_data$end_position, y = numeric.vector,
-               col = "red", cex = 1.2)
-    }
-    
-    kpAddLabels(kp, labels = j, side = "left", srt = 90, label.margin = 0.03, cex = 1.5)
-    
-    dev.off()
+    # dev.off()
   }
   
-  dir.create(paste(image_folder_name, j, sep = ""), showWarnings = FALSE)
+  dir.create(paste(image_folder_name, j, sep = "/"), showWarnings = FALSE)
   
   ####################### Filtering data ##########################
   
-  columns = c("ID", "chromosome_name", "start_position", "end_position", meta$newNames, "diff")
+  columns = c("ID", "chromosome_name", "start_position", "end_position", meta$newNames, "diff", "parent")
   
-  range = full.vtads$end_position - full.vtads$start_position
+  full.vtads$range = full.vtads$end_position - full.vtads$start_position
   
-  rain_data = full.vtads[which(range == 1 & !str_detect(full.vtads$ID, ":")), ..columns]
+  # rain_data = full.vtads[which(str_detect(full.vtads$ID, "cg")), ..columns]
   
-  box_data = full.vtads[which(range > 1), ..columns]
-  box_data = box_data %>% group_by(start_position, end_position) %>% filter(abs(diff) == max(abs(diff)))
+  box_data = full.vtads[which(full.vtads$range > 1), ..columns]
+  
+  
+  rain_data = full.vtads[which(full.vtads$range <= 1), ..columns]
+  
+  
+  # box_data = full.vtads[which(range > 1), ..columns]
+  box_data = box_data %>% dplyr::group_by(start_position, end_position) %>% dplyr::filter(abs(diff) == max(abs(diff)))
   box_data = as.data.table(box_data)
   
-  mut_data = full.vtads[which(range == 1 & str_detect(full.vtads$ID, ":")), ..columns]
+  # non_coding_data = full.vtads[which(str_detect(full.vtads$ID, "ENSG")), ..columns]
+  # non_coding_data = non_coding_data %>% group_by(start_position, end_position) %>% filter(abs(diff) == max(abs(diff)))
+  # non_coding_data = as.data.table(non_coding_data)
+  # 
+  # mut_data = full.vtads[which(str_detect(full.vtads$ID, ":")), ..columns]
   
   ############################## Plotting ##############################
   
-  for(i in 1:length(groups)){
-    keep = meta$newNames[which(meta$groups == groups[i])]
+  if(!is.null(groups)){
     
-    rain_data$mean = apply(rain_data[,..keep], 1, mean)
-    box_data$mean = apply(box_data[,..keep], 1, mean)
-    mut_data$mean = apply(mut_data[,..keep], 1, mean)
-    
-    maximum_value = 100
-    minimum_value = 0
-    
-    png(filename = paste(image_folder_name, j, "/", groups[i], ".png", sep = ""), 
-        width = 1150, height = 900)
-    
-    kp = plotKaryotype(genome = "hg19", plot.type = 4, zoom = region, cex = 1.5)
-    kpDataBackground(kp, data.panel = 1)
-    kpAddBaseNumbers(kp, add.units = TRUE, tick.dist = tick.distance, cex = 1.25)
-    
-    lb = c(minimum_value, (maximum_value + minimum_value)/2, maximum_value)
-    lb = round(lb, digits = 2)
-    lb = paste(lb, "%", sep = " ")
-    kpAxis(kp, r0 = 0, r1 = 1, ymin = minimum_value, ymax = maximum_value, side = 2, labels = lb)
-    
-    rain_data = rain_data[which(rain_data$mean <= maximum_value & rain_data$mean >= minimum_value), ]
-    if(nrow(rain_data) > 0){
-      rain_color = ifelse(rain_data$mean <= 30, "green4", ifelse(rain_data$mean <= 70, "blue", "red"))
-      numeric.vector = rain_data$mean
-      numeric.vector = numeric.vector / maximum_value
-      kpPoints(kp, chr = rain_data$chromosome_name,
-               x = rain_data$end_position, y = numeric.vector, cex = 0.8)
+    for(i in 1:length(groups)){
+      keep = meta$newNames[which(meta[[diff_col]] == groups[i])]
+      
+      box_data$mean = apply(box_data[,..keep], 1, mean, na.rm = TRUE)
+      rain_data$mean = apply(rain_data[,..keep], 1, mean, na.rm = TRUE)
+      # rain_data$mean = apply(rain_data[,..keep], 1, mean)
+      # box_data$mean = apply(box_data[,..keep], 1, mean)
+      # non_coding_data$mean = apply(non_coding_data[,..keep], 1, mean)
+      # mut_data$mean = apply(mut_data[,..keep], 1, mean)
+      
+      maximum_value = 100
+      minimum_value = 0
+      
+      # png(filename = paste(image_folder_name, j, "/", groups[i], ".png", sep = ""), 
+      #     width = 1150, height = 900)
+      
+      kp = base::expression({
+        kp = plotKaryotype(genome = "hg19", plot.type = 4, zoom = region, cex = 1.5)
+        kpDataBackground(kp, data.panel = 1)
+        kpAddBaseNumbers(kp, add.units = TRUE, tick.dist = tick.distance, cex = 1.25)
+        
+        lb = c(minimum_value, (maximum_value + minimum_value)/2, maximum_value)
+        lb = round(lb, digits = 2)
+        lb = paste(lb, "%", sep = " ")
+        kpAxis(kp, r0 = 0, r1 = 1, ymin = minimum_value, ymax = maximum_value, side = 2, labels = lb)
+        
+        rain_data = rain_data[which(rain_data$mean <= maximum_value & rain_data$mean >= minimum_value), ]
+        box_data = box_data[which(box_data$mean <= maximum_value & box_data$mean >= minimum_value), ]
+        
+        for(p in 1:length(parents)){
+          
+          r_vis_data = rain_data[which(rain_data$parent == parents[p]), ]
+          b_vis_data = box_data[which(box_data$parent == parents[p]), ]
+          
+          if(nrow(r_vis_data) > 0){
+            # rain_color = ifelse(r_vis_data$mean <= 30, "green4", ifelse(r_vis_data$mean <= 70, "blue", "red"))
+            numeric.vector = r_vis_data$mean
+            numeric.vector = numeric.vector / maximum_value
+            kpPoints(kp, 
+                     chr = r_vis_data$chromosome_name,
+                     x = r_vis_data$end_position, 
+                     y = numeric.vector, 
+                     col = my_colors[p],
+                     cex = my_cex[p])
+          }
+          
+          
+          if(nrow(b_vis_data) > 0){
+            numeric.vector = b_vis_data$mean
+            numeric.vector = numeric.vector / maximum_value
+            kpBars(kp, 
+                   chr = b_vis_data$chr,
+                   x0 = b_vis_data$start_position, 
+                   x1 = b_vis_data$end_position,
+                   y1 = numeric.vector, 
+                   border = my_colors[p], 
+                   cex = my_cex[p])
+          }
+          
+          # non_coding_data = non_coding_data[which(non_coding_data$mean <= maximum_value & non_coding_data$mean >= minimum_value), ]
+          # if(nrow(non_coding_data) > 0){
+          #   numeric.vector = non_coding_data$mean
+          #   numeric.vector = numeric.vector / maximum_value
+          #   kpBars(kp, chr = non_coding_data$chr,
+          #          x0 = non_coding_data$start_position, x1 = non_coding_data$end_position,
+          #          y1 = numeric.vector, border = "deepskyblue", cex = 1.2)
+          # }
+          # 
+          # mut_data = mut_data[which(mut_data$mean <= maximum_value & mut_data$mean >= minimum_value & mut_data$mean > 0), ]
+          # 
+          # if(nrow(mut_data) > 0){
+          #   numeric.vector = mut_data$mean
+          #   numeric.vector = numeric.vector / 100
+          #   kpPoints(kp, chr = mut_data$chromosome_name,
+          #            x = mut_data$end_position, y = numeric.vector,
+          #            col = "red", cex = 1.2)
+          # }
+        }
+        
+        kpAddLabels(kp, labels = j, side = "left", srt = 90, label.margin = 0.03, cex = 1.5)
+      })
+      
+      saveImageHigh::save_as_png({base::eval(kp)},
+                                 file.name = file.path(image_folder_name, j,
+                                                       paste(groups[i], ".png", sep = "")),
+                                 width = 14, height = 10)
+      # dev.off()
     }
     
-    box_data = box_data[which(box_data$mean <= maximum_value & box_data$mean >= minimum_value), ]
-    if(nrow(box_data) > 0){
-      numeric.vector = box_data$mean
-      numeric.vector = numeric.vector / maximum_value
-      kpBars(kp, chr = box_data$chr,
-             x0 = box_data$start_position, x1 = box_data$end_position,
-             y1 = numeric.vector, border = "slateblue4", cex = 1.2)
-    }
+    # png(filename = paste(image_folder_name, j, "/", "Group_differences", ".png", sep = ""), 
+    #     width = 1150, height = 900)
     
-    mut_data = mut_data[which(mut_data$mean <= maximum_value & mut_data$mean >= minimum_value & mut_data$mean > 0), ]
+    kp = base::expression({
+      
+      
+      kp = plotKaryotype(genome = "hg19", plot.type = 4, zoom = region, cex = 1.5)
+      kpDataBackground(kp, data.panel = 1)
+      kpAddBaseNumbers(kp, add.units = TRUE, tick.dist = tick.distance, cex = 1.25)
+      
+      # all = c(rain_data$diff, box_data$diff)
+      
+      maximum_value = 100
+      minimum_value = -100
+      
+      lb = c(minimum_value, 0, maximum_value)
+      lb = round(lb, digits = 2)
+      lb = paste(lb, "%", sep = " ")
+      kpAxis(kp, r0 = 0, r1 = 1, ymin = minimum_value, ymax = maximum_value, side = 2, labels = lb)
+      
+      for(p in 1:length(parents)){
+        
+        r_vis_data = rain_data[which(rain_data$parent == parents[p]), ]
+        b_vis_data = box_data[which(box_data$parent == parents[p]), ]
+        
+        if(nrow(r_vis_data) > 0){
+          numeric.vector = r_vis_data$diff
+          who = numeric.vector > 0
+          numeric.vector[who] = numeric.vector[who] / maximum_value
+          numeric.vector[!who] = numeric.vector[!who] / abs(minimum_value)
+          numeric.vector = (numeric.vector + 1)/2
+          
+          kpPoints(kp, 
+                   chr = r_vis_data$chromosome_name,
+                   x = r_vis_data$end_position, 
+                   y = numeric.vector, 
+                   col = my_colors[p],
+                   cex = my_cex[p])
+        }
+        
+        if(nrow(b_vis_data) > 0){
+          numeric.vector = b_vis_data$diff
+          who = numeric.vector > 0
+          numeric.vector[who] = numeric.vector[who] / maximum_value
+          numeric.vector[!who] = numeric.vector[!who] / abs(minimum_value)
+          numeric.vector = (numeric.vector + 1)/2
+          
+          bottom = rep(0.5, length(numeric.vector))
+          bottom[!who] = numeric.vector[!who]
+          
+          up = rep(0.5, length(numeric.vector))
+          up[who] = numeric.vector[who]
+          
+          kpBars(kp, 
+                 chr = b_vis_data$chromosome_name,
+                 x0 = b_vis_data$start_position, 
+                 x1 = b_vis_data$end_position,
+                 y0 = bottom, 
+                 y1 = up,
+                 border = my_colors[p], 
+                 cex = my_cex[p])
+        }
+        
+        # if(nrow(non_coding_data) > 0){
+        #   numeric.vector = non_coding_data$diff
+        #   who = numeric.vector > 0
+        #   numeric.vector[who] = numeric.vector[who] / maximum_value
+        #   numeric.vector[!who] = numeric.vector[!who] / abs(minimum_value)
+        #   numeric.vector = (numeric.vector + 1)/2
+        #   
+        #   bottom = rep(0.5, length(numeric.vector))
+        #   bottom[!who] = numeric.vector[!who]
+        #   
+        #   up = rep(0.5, length(numeric.vector))
+        #   up[who] = numeric.vector[who]
+        #   
+        #   kpBars(kp, chr = non_coding_data$chromosome_name,
+        #          x0 = non_coding_data$start_position, x1 = non_coding_data$end_position,
+        #          y0 = bottom, y1 = up,
+        #          border = "deepskyblue", cex = 1.2)
+        # }
+        # 
+        # if(nrow(mut_data) > 0){
+        #   numeric.vector = mut_data$diff
+        #   who = numeric.vector > 0
+        #   numeric.vector[who] = numeric.vector[who] / maximum_value
+        #   numeric.vector[!who] = numeric.vector[!who] / abs(minimum_value)
+        #   numeric.vector = (numeric.vector + 1)/2
+        #   
+        #   kpPoints(kp, chr = mut_data$chromosome_name,
+        #            x = mut_data$end_position, y = numeric.vector, 
+        #            col = "red", cex = 1.2)
+        # }
+        
+      }
+      
+      kpAddLabels(kp, labels = j, side = "left", srt = 90, label.margin = 0.03, cex = 1.5)
+      
+    })
     
-    if(nrow(mut_data) > 0){
-      numeric.vector = mut_data$mean
-      numeric.vector = numeric.vector / 100
-      kpPoints(kp, chr = mut_data$chromosome_name,
-               x = mut_data$end_position, y = numeric.vector,
-               col = "red", cex = 1.2)
-    }
+    saveImageHigh::save_as_png({base::eval(kp)},
+                               file.name = file.path(image_folder_name, j, "Group_differences.png"),
+                               width = 14, height = 10)
     
-    kpAddLabels(kp, labels = j, side = "left", srt = 90, label.margin = 0.03, cex = 1.5)
+    # dev.off()
     
-    dev.off()
   }
-  
-  png(filename = paste(image_folder_name, j, "/", "Group_differences", ".png", sep = ""), 
-      width = 1150, height = 900)
-  
-  kp = plotKaryotype(genome = "hg19", plot.type = 4, zoom = region, cex = 1.5)
-  kpDataBackground(kp, data.panel = 1)
-  kpAddBaseNumbers(kp, add.units = TRUE, tick.dist = tick.distance, cex = 1.25)
-  
-  all = c(rain_data$diff, box_data$diff)
-  
-  maximum_value = 100
-  minimum_value = -100
-  
-  lb = c(minimum_value, 0, maximum_value)
-  lb = round(lb, digits = 2)
-  lb = paste(lb, "%", sep = " ")
-  kpAxis(kp, r0 = 0, r1 = 1, ymin = minimum_value, ymax = maximum_value, side = 2, labels = lb)
-  
-  if(nrow(rain_data) > 0){
-    numeric.vector = rain_data$diff
-    who = numeric.vector > 0
-    numeric.vector[who] = numeric.vector[who] / maximum_value
-    numeric.vector[!who] = numeric.vector[!who] / abs(minimum_value)
-    numeric.vector = (numeric.vector + 1)/2
-    
-    kpPoints(kp, chr = rain_data$chromosome_name,
-             x = rain_data$end_position, y = numeric.vector, cex = 0.8)
-  }
-  
-  if(nrow(box_data) > 0){
-    numeric.vector = box_data$diff
-    who = numeric.vector > 0
-    numeric.vector[who] = numeric.vector[who] / maximum_value
-    numeric.vector[!who] = numeric.vector[!who] / abs(minimum_value)
-    numeric.vector = (numeric.vector + 1)/2
-    
-    bottom = rep(0.5, length(numeric.vector))
-    bottom[!who] = numeric.vector[!who]
-    
-    up = rep(0.5, length(numeric.vector))
-    up[who] = numeric.vector[who]
-    
-    kpBars(kp, chr = box_data$chromosome_name,
-           x0 = box_data$start_position, x1 = box_data$end_position,
-           y0 = bottom, y1 = up,
-           border = "slateblue4", cex = 1.2)
-  }
-  
-  if(nrow(mut_data) > 0){
-    numeric.vector = mut_data$diff
-    who = numeric.vector > 0
-    numeric.vector[who] = numeric.vector[who] / maximum_value
-    numeric.vector[!who] = numeric.vector[!who] / abs(minimum_value)
-    numeric.vector = (numeric.vector + 1)/2
-    
-    kpPoints(kp, chr = mut_data$chromosome_name,
-             x = mut_data$end_position, y = numeric.vector, 
-             col = "red", cex = 1.2)
-  }
-  
-  kpAddLabels(kp, labels = j, side = "left", srt = 90, label.margin = 0.03, cex = 1.5)
-  
-  dev.off()
+
 }
 
 

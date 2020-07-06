@@ -1,7 +1,4 @@
 map_entrez_ids <- function(entrez.ids, tech = "h19"){
-  library(org.Hs.eg.db)
-  library(annotables)
-  library(data.table)
   
   genes = entrez.ids
   
