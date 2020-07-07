@@ -7,15 +7,15 @@ source("libraries.R")
 #'
 #' Input parameters for Visualization part
 #' 
-#' @param dir_name Directory of input datasets containing feature counts and frequency tables
+#' @param dir_name Directory of input datasets 
 #' 
-#' @param tad_folder Folder name for printing output tables
+#' @param tad_folder Folder name for reading InterTADs output tables
 #' 
 #' @param meta meta-data file name used
 #' 
-#' @param image_folder_name Directory name of counts NGS data
+#' @param image_folder_name Directory name of output visualizations
 #' 
-#' @param diff_col Directory name of freq NGS data
+#' @param diff_col Group column to compare
 #' 
 
 dir_name = "Datasets"
@@ -29,8 +29,8 @@ image_folder_name = "output_visualizations_test"
 diff_col = "groups"
 
 
-my_colors = c("red", "slateblue4", "black", "goldenrod4", "darkorange3")
-my_cex = c(0.8, 1, 1.2, 1.4)
+my_colors = c("black", "slateblue4", "red", "goldenrod4", "darkorange3")
+my_cex = c(1, 0.8, 1.2, 1.4)
 
 
 full.tads = fread(paste(tad_folder, "/integrated_table_with_tads.csv", sep = ""))
@@ -72,14 +72,6 @@ for(j in tad_to_visual){
   
   full.vtads$range = full.vtads$end_position - full.vtads$start_position
   
-  # rain_data = full.vtads[which(str_detect(full.vtads$ID, "cg")), ..columns]
-  # 
-  # box_data = full.vtads[which(str_detect(full.vtads$ID, "XLOC")), ..columns]
-  # 
-  # non_coding_data = full.vtads[which(str_detect(full.vtads$ID, "ENSG")), ..columns]
-  # 
-  # mut_data = full.vtads[which(str_detect(full.vtads$ID, ":")), ..columns]
-  
   ############################## Plotting ##############################
   dir.create(paste(image_folder_name, "/patients/", sep = ""), showWarnings = FALSE)
   
@@ -93,12 +85,12 @@ for(j in tad_to_visual){
       kpDataBackground(kp, data.panel = 1)
       kpAddBaseNumbers(kp, add.units = TRUE, tick.dist = tick.distance, cex = 1.25)
       lb = c("0 %", "50 %", "100 %")
-      kpAxis(kp, r0 = 0, r1 = 1, ymin = 0, ymax = 100, side = 2, labels = lb)
+      kpAxis(kp, r0 = 0, r1 = 1, ymin = 0, ymax = 100, side = 1, labels = lb)
       
       for(p in 1:length(parents)){
         vis_data = full.vtads[which(full.vtads$parent == parents[p]), ]
         
-        numeric.vector = vis_data[[i]] # as.numeric(unlist(box_data[,..i]))
+        numeric.vector = vis_data[[i]] 
         numeric.vector = numeric.vector / 100
         
         if(max(vis_data$range) <= 1){
@@ -120,28 +112,7 @@ for(j in tad_to_visual){
           
         }
         
-        # if(nrow(box_data) > 0){
-        # 
-        # }
-        # 
-        # if(nrow(non_coding_data) > 0){
-        #   numeric.vector = as.numeric(unlist(non_coding_data[,..i]))
-        #   numeric.vector = numeric.vector / 100
-        #   kpBars(kp, chr = non_coding_data$chr,
-        #          x0 = non_coding_data$start_position, x1 = non_coding_data$end_position,
-        #          y1 = numeric.vector, border = "deepskyblue", cex = 1.2)
-        # }
-        # 
-        # if(nrow(mut_data) > 0){
-        #   mut_data = mut_data[which(mut_data[,..i] > 0), ]
-        #   numeric.vector = as.numeric(unlist(mut_data[,..i]))
-        #   numeric.vector = numeric.vector / 100
-        #   kpPoints(kp, chr = rain_data$chromosome_name,
-        #            x = mut_data$end_position, y = numeric.vector,
-        #            col = "red", cex = 1.2)
-        # }
-        
-        kpAddLabels(kp, labels = j, side = "left", srt = 90, label.margin = 0.03, cex = 1.5)
+        kpAddMainTitle(kp, main = j, cex = 1.5)
         
       }
     })
@@ -162,24 +133,15 @@ for(j in tad_to_visual){
   columns = c("ID", "chromosome_name", "start_position", "end_position", meta$newNames, "diff", "parent")
   
   full.vtads$range = full.vtads$end_position - full.vtads$start_position
-  
-  # rain_data = full.vtads[which(str_detect(full.vtads$ID, "cg")), ..columns]
-  
+
   box_data = full.vtads[which(full.vtads$range > 1), ..columns]
   
   
   rain_data = full.vtads[which(full.vtads$range <= 1), ..columns]
-  
-  
-  # box_data = full.vtads[which(range > 1), ..columns]
+
   box_data = box_data %>% dplyr::group_by(start_position, end_position) %>% dplyr::filter(abs(diff) == max(abs(diff)))
   box_data = as.data.table(box_data)
-  
-  # non_coding_data = full.vtads[which(str_detect(full.vtads$ID, "ENSG")), ..columns]
-  # non_coding_data = non_coding_data %>% group_by(start_position, end_position) %>% filter(abs(diff) == max(abs(diff)))
-  # non_coding_data = as.data.table(non_coding_data)
-  # 
-  # mut_data = full.vtads[which(str_detect(full.vtads$ID, ":")), ..columns]
+
   
   ############################## Plotting ##############################
   
@@ -190,10 +152,6 @@ for(j in tad_to_visual){
       
       box_data$mean = apply(box_data[,..keep], 1, mean, na.rm = TRUE)
       rain_data$mean = apply(rain_data[,..keep], 1, mean, na.rm = TRUE)
-      # rain_data$mean = apply(rain_data[,..keep], 1, mean)
-      # box_data$mean = apply(box_data[,..keep], 1, mean)
-      # non_coding_data$mean = apply(non_coding_data[,..keep], 1, mean)
-      # mut_data$mean = apply(mut_data[,..keep], 1, mean)
       
       maximum_value = 100
       minimum_value = 0
@@ -209,7 +167,7 @@ for(j in tad_to_visual){
         lb = c(minimum_value, (maximum_value + minimum_value)/2, maximum_value)
         lb = round(lb, digits = 2)
         lb = paste(lb, "%", sep = " ")
-        kpAxis(kp, r0 = 0, r1 = 1, ymin = minimum_value, ymax = maximum_value, side = 2, labels = lb)
+        kpAxis(kp, r0 = 0, r1 = 1, ymin = minimum_value, ymax = maximum_value, side = 1, labels = lb)
         
         rain_data = rain_data[which(rain_data$mean <= maximum_value & rain_data$mean >= minimum_value), ]
         box_data = box_data[which(box_data$mean <= maximum_value & box_data$mean >= minimum_value), ]
@@ -220,7 +178,6 @@ for(j in tad_to_visual){
           b_vis_data = box_data[which(box_data$parent == parents[p]), ]
           
           if(nrow(r_vis_data) > 0){
-            # rain_color = ifelse(r_vis_data$mean <= 30, "green4", ifelse(r_vis_data$mean <= 70, "blue", "red"))
             numeric.vector = r_vis_data$mean
             numeric.vector = numeric.vector / maximum_value
             kpPoints(kp, 
@@ -243,28 +200,10 @@ for(j in tad_to_visual){
                    border = my_colors[p], 
                    cex = my_cex[p])
           }
-          
-          # non_coding_data = non_coding_data[which(non_coding_data$mean <= maximum_value & non_coding_data$mean >= minimum_value), ]
-          # if(nrow(non_coding_data) > 0){
-          #   numeric.vector = non_coding_data$mean
-          #   numeric.vector = numeric.vector / maximum_value
-          #   kpBars(kp, chr = non_coding_data$chr,
-          #          x0 = non_coding_data$start_position, x1 = non_coding_data$end_position,
-          #          y1 = numeric.vector, border = "deepskyblue", cex = 1.2)
-          # }
-          # 
-          # mut_data = mut_data[which(mut_data$mean <= maximum_value & mut_data$mean >= minimum_value & mut_data$mean > 0), ]
-          # 
-          # if(nrow(mut_data) > 0){
-          #   numeric.vector = mut_data$mean
-          #   numeric.vector = numeric.vector / 100
-          #   kpPoints(kp, chr = mut_data$chromosome_name,
-          #            x = mut_data$end_position, y = numeric.vector,
-          #            col = "red", cex = 1.2)
-          # }
+  
         }
         
-        kpAddLabels(kp, labels = j, side = "left", srt = 90, label.margin = 0.03, cex = 1.5)
+        kpAddMainTitle(kp, main = j, cex = 1.5)
       })
       
       saveImageHigh::save_as_png({base::eval(kp)},
@@ -292,7 +231,7 @@ for(j in tad_to_visual){
       lb = c(minimum_value, 0, maximum_value)
       lb = round(lb, digits = 2)
       lb = paste(lb, "%", sep = " ")
-      kpAxis(kp, r0 = 0, r1 = 1, ymin = minimum_value, ymax = maximum_value, side = 2, labels = lb)
+      kpAxis(kp, r0 = 0, r1 = 1, ymin = minimum_value, ymax = maximum_value, side = 1, labels = lb)
       
       for(p in 1:length(parents)){
         
@@ -337,40 +276,9 @@ for(j in tad_to_visual){
                  cex = my_cex[p])
         }
         
-        # if(nrow(non_coding_data) > 0){
-        #   numeric.vector = non_coding_data$diff
-        #   who = numeric.vector > 0
-        #   numeric.vector[who] = numeric.vector[who] / maximum_value
-        #   numeric.vector[!who] = numeric.vector[!who] / abs(minimum_value)
-        #   numeric.vector = (numeric.vector + 1)/2
-        #   
-        #   bottom = rep(0.5, length(numeric.vector))
-        #   bottom[!who] = numeric.vector[!who]
-        #   
-        #   up = rep(0.5, length(numeric.vector))
-        #   up[who] = numeric.vector[who]
-        #   
-        #   kpBars(kp, chr = non_coding_data$chromosome_name,
-        #          x0 = non_coding_data$start_position, x1 = non_coding_data$end_position,
-        #          y0 = bottom, y1 = up,
-        #          border = "deepskyblue", cex = 1.2)
-        # }
-        # 
-        # if(nrow(mut_data) > 0){
-        #   numeric.vector = mut_data$diff
-        #   who = numeric.vector > 0
-        #   numeric.vector[who] = numeric.vector[who] / maximum_value
-        #   numeric.vector[!who] = numeric.vector[!who] / abs(minimum_value)
-        #   numeric.vector = (numeric.vector + 1)/2
-        #   
-        #   kpPoints(kp, chr = mut_data$chromosome_name,
-        #            x = mut_data$end_position, y = numeric.vector, 
-        #            col = "red", cex = 1.2)
-        # }
-        
       }
       
-      kpAddLabels(kp, labels = j, side = "left", srt = 90, label.margin = 0.03, cex = 1.5)
+      kpAddMainTitle(kp, main = j, cex = 1.5)
       
     })
     
