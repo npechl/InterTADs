@@ -24,6 +24,7 @@ start_time = Sys.time()
 #' 
 
 dir_name = "Datasets"
+
 output_folder = "output_tables_test"
 
 tech = "hg19" # or "hg38"
@@ -31,6 +32,7 @@ tech = "hg19" # or "hg38"
 meta = "meta-data.csv"
 
 counts_dir = "counts"
+
 freq_dir = "freq"
 
 ############ Reading files ############ 
