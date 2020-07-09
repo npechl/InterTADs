@@ -25,7 +25,7 @@ start_time = Sys.time()
 
 dir_name = "Datasets"
 
-output_folder = "output_tables_test"
+output_folder = "output_tables_test_2"
 
 tech = "hg19" # or "hg38"
 
@@ -246,7 +246,7 @@ end_time = Sys.time()
 
 ############ Generating outputs ############ 
 
-dir.create(output_folder, showWarnings = FALSE)
-
-write.table(biodata, paste(output_folder, "/integrated_table.csv", sep = ""), 
-            row.names = FALSE, sep = "\t", quote = FALSE)
+# dir.create(output_folder, showWarnings = FALSE)
+# 
+# write.table(biodata, paste(output_folder, "/integrated_table.csv", sep = ""), 
+#             row.names = FALSE, sep = "\t", quote = FALSE)

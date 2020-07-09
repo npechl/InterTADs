@@ -17,6 +17,10 @@ source("libraries.R")
 #' 
 #' @param diff_col Group column to compare
 #' 
+#' @param my_colors Colors for printing images
+#' 
+#' @param my_cex Sizes for printing images
+#' 
 
 dir_name = "Datasets"
 

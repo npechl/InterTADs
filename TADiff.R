@@ -300,10 +300,10 @@ for(i in tad_to_visual){
        stat_summary(fun = mean, fun.min = mean, fun.max = mean, 
                     geom = "crossbar", width = 0.2)
   
-  saveImageHigh::save_as_png({print(gr)},
-                             file.name = file.path(image_output_folder,
-                                                   paste(i, "allValues.png", sep = "_")),
-                             height = 8)
+  # saveImageHigh::save_as_png({print(gr)},
+  #                            file.name = file.path(image_output_folder,
+  #                                                  paste(i, "allValues.png", sep = "_")),
+  #                            height = 8)
   
   # dev.off()
   
@@ -436,10 +436,10 @@ for(i in tad_to_visual){
              axis.text.y = element_text(size = 15),
              axis.title.y = element_text(size = 16))
   
-  saveImageHigh::save_as_png({print(f3)},
-                             file.name = file.path(image_output_folder,
-                                                   paste(i, "_topPositiveValues.png", sep = "")),
-                             height = 8) 
+  # saveImageHigh::save_as_png({print(f3)},
+  #                            file.name = file.path(image_output_folder,
+  #                                                  paste(i, "_topPositiveValues.png", sep = "")),
+  #                            height = 8) 
 
   # dev.off()
   
@@ -500,10 +500,10 @@ for(i in tad_to_visual){
              axis.text.y = element_text(size = 15),
              axis.title.y = element_text(size = 16))
   
-  saveImageHigh::save_as_png({print(f3)},
-                             file.name = file.path(image_output_folder,
-                                                   paste(i, "_topNegativeValues.png", sep = "")),
-                             height = 8)  
+  # saveImageHigh::save_as_png({print(f3)},
+  #                            file.name = file.path(image_output_folder,
+  #                                                  paste(i, "_topNegativeValues.png", sep = "")),
+  #                            height = 8)  
   
   # dev.off()
 }
@@ -519,24 +519,24 @@ rm(list = setdiff(ls(), c("data.all", "full", "full.tads", "tad_sign", "tad_sum"
 tad_sign = tad_sign[,c("tad_name", "count", "mean", "FDR")]
 
 ########### Generating outputs ###########  
-dir.create(output_folder, showWarnings = FALSE)
-
-write.table(full, paste(output_folder, "/integrated_table_with_tads.csv", sep = ""), 
-            row.names = FALSE, sep = "\t", quote = FALSE)
-
-if(!is.null(groups)){
-  
-  write.table(tad_sum, paste(output_folder, "/tad_statistics.csv", sep = ""), 
-              row.names = FALSE, sep = "\t", quote = FALSE)
-  
-  write.table(full.tads, paste(output_folder, "/integrated_table_with_sign_tads.csv", sep = ""), 
-              row.names = FALSE, sep = "\t", quote = FALSE)
-  
-  write.table(tad_sign, paste(output_folder, "/sign_tad_statistics.csv", sep = ""), 
-              row.names = FALSE, sep = "\t", quote = FALSE)
-  
-  write.table(genes.found, paste(output_folder, "/genes_found.txt", sep = ""), 
-              row.names = FALSE, col.names = FALSE, quote = FALSE)
-  
-  
-}
+# dir.create(output_folder, showWarnings = FALSE)
+# 
+# write.table(full, paste(output_folder, "/integrated_table_with_tads.csv", sep = ""), 
+#             row.names = FALSE, sep = "\t", quote = FALSE)
+# 
+# if(!is.null(groups)){
+#   
+#   write.table(tad_sum, paste(output_folder, "/tad_statistics.csv", sep = ""), 
+#               row.names = FALSE, sep = "\t", quote = FALSE)
+#   
+#   write.table(full.tads, paste(output_folder, "/integrated_table_with_sign_tads.csv", sep = ""), 
+#               row.names = FALSE, sep = "\t", quote = FALSE)
+#   
+#   write.table(tad_sign, paste(output_folder, "/sign_tad_statistics.csv", sep = ""), 
+#               row.names = FALSE, sep = "\t", quote = FALSE)
+#   
+#   write.table(genes.found, paste(output_folder, "/genes_found.txt", sep = ""), 
+#               row.names = FALSE, col.names = FALSE, quote = FALSE)
+#   
+#   
+# }
