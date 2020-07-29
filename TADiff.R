@@ -22,13 +22,13 @@ start_tad_time = Sys.time()
 #' 
 #' @param FDR_criterion user defined FDR criterion
 
-dir_name = "Datasets"
-output_folder = "output_tables_test"
-image_output_folder = "output_visualizations_test"
+dir_name = "newDatasets"
+output_folder = "onlyMethylation_newDatasets"
+image_output_folder = "onlyMethylation_newDatasets_vis"
 
 tad_file = "hglft_genome_2dab_ec1330.bed"
 
-meta = "meta-data.csv"
+meta = "meta-data-file.txt"
 
 paired.data = FALSE
 
@@ -262,7 +262,7 @@ dir.create(image_output_folder, showWarnings = FALSE)
 #' 
 #' @param tad_to_visual TAD to visualize
 
-tad_to_visual = c("TAD127")
+tad_to_visual = c("TAD2130", "TAD854")
 
 # tad_to_visual = c(tad_to_visual,
 #                   tad_sign[which(tad_sign$FDR == min(tad_sign$FDR)), ]$tad_name)
@@ -300,10 +300,10 @@ for(i in tad_to_visual){
        stat_summary(fun = mean, fun.min = mean, fun.max = mean, 
                     geom = "crossbar", width = 0.2)
   
-  # saveImageHigh::save_as_png({print(gr)},
-  #                            file.name = file.path(image_output_folder,
-  #                                                  paste(i, "allValues.png", sep = "_")),
-  #                            height = 8)
+  saveImageHigh::save_as_pdf({print(gr)},
+                             file.name = file.path(image_output_folder,
+                                                   paste(i, "allValues.png", sep = "_")),
+                             height = 8)
   
   # dev.off()
   
@@ -371,7 +371,7 @@ for(i in tad_to_visual){
              axis.text.y = element_text(size = 15),
              axis.title.y = element_text(size = 16))
   
-  saveImageHigh::save_as_png({print(f3)}, 
+  saveImageHigh::save_as_pdf({print(f3)},
                              file.name = file.path(image_output_folder,
                                                    paste(i, "_topValues.png", sep = "")),
                              height = 8)
@@ -436,10 +436,10 @@ for(i in tad_to_visual){
              axis.text.y = element_text(size = 15),
              axis.title.y = element_text(size = 16))
   
-  # saveImageHigh::save_as_png({print(f3)},
-  #                            file.name = file.path(image_output_folder,
-  #                                                  paste(i, "_topPositiveValues.png", sep = "")),
-  #                            height = 8) 
+  saveImageHigh::save_as_pdf({print(f3)},
+                             file.name = file.path(image_output_folder,
+                                                   paste(i, "_topPositiveValues.png", sep = "")),
+                             height = 8)
 
   # dev.off()
   
@@ -500,10 +500,10 @@ for(i in tad_to_visual){
              axis.text.y = element_text(size = 15),
              axis.title.y = element_text(size = 16))
   
-  # saveImageHigh::save_as_png({print(f3)},
-  #                            file.name = file.path(image_output_folder,
-  #                                                  paste(i, "_topNegativeValues.png", sep = "")),
-  #                            height = 8)  
+  saveImageHigh::save_as_pdf({print(f3)},
+                             file.name = file.path(image_output_folder,
+                                                   paste(i, "_topNegativeValues.png", sep = "")),
+                             height = 8)
   
   # dev.off()
 }
@@ -514,29 +514,29 @@ end_tad_time = Sys.time()
 
 rm(list = setdiff(ls(), c("data.all", "full", "full.tads", "tad_sign", "tad_sum", 
                         "dir_name", "end_tad_time", "start_tad_time",
-                        "paired_data", "groups", "FDR_criterion", "genes.found", "output_folder")))
+                        "paired_data", "groups", "FDR_criterion", "genes.found", "output_folder", "x", "res", "res2")))
 
 tad_sign = tad_sign[,c("tad_name", "count", "mean", "FDR")]
 
 ########### Generating outputs ###########  
-# dir.create(output_folder, showWarnings = FALSE)
-# 
-# write.table(full, paste(output_folder, "/integrated_table_with_tads.csv", sep = ""), 
-#             row.names = FALSE, sep = "\t", quote = FALSE)
-# 
-# if(!is.null(groups)){
-#   
-#   write.table(tad_sum, paste(output_folder, "/tad_statistics.csv", sep = ""), 
-#               row.names = FALSE, sep = "\t", quote = FALSE)
-#   
-#   write.table(full.tads, paste(output_folder, "/integrated_table_with_sign_tads.csv", sep = ""), 
-#               row.names = FALSE, sep = "\t", quote = FALSE)
-#   
-#   write.table(tad_sign, paste(output_folder, "/sign_tad_statistics.csv", sep = ""), 
-#               row.names = FALSE, sep = "\t", quote = FALSE)
-#   
-#   write.table(genes.found, paste(output_folder, "/genes_found.txt", sep = ""), 
-#               row.names = FALSE, col.names = FALSE, quote = FALSE)
-#   
-#   
-# }
+dir.create(output_folder, showWarnings = FALSE)
+
+write.table(full, paste(output_folder, "/integrated_table_with_tads.csv", sep = ""),
+            row.names = FALSE, sep = "\t", quote = FALSE)
+
+if(!is.null(groups)){
+
+  write.table(tad_sum, paste(output_folder, "/tad_statistics.csv", sep = ""),
+              row.names = FALSE, sep = "\t", quote = FALSE)
+
+  write.table(full.tads, paste(output_folder, "/integrated_table_with_sign_tads.csv", sep = ""),
+              row.names = FALSE, sep = "\t", quote = FALSE)
+
+  write.table(tad_sign, paste(output_folder, "/sign_tad_statistics.csv", sep = ""),
+              row.names = FALSE, sep = "\t", quote = FALSE)
+
+  write.table(genes.found, paste(output_folder, "/genes_found.txt", sep = ""),
+              row.names = FALSE, col.names = FALSE, quote = FALSE)
+
+
+}

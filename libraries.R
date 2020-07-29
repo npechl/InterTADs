@@ -9,9 +9,8 @@ library(GenomicRanges)
 library(gplots)
 library(gghalves)
 library(karyoploteR)
-library(GenomicRanges)
 
 #' 
 #' You can find it at https://github.com/nikopech/saveImageHigh
 #' 
-library(saveImageHigh)
+# library(saveImageHigh)

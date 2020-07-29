@@ -23,13 +23,13 @@ start_time = Sys.time()
 #' @param freq_dir Directory name of freq NGS data
 #' 
 
-dir_name = "Datasets"
+dir_name = "newDatasets"
 
-output_folder = "output_tables_test_2"
+output_folder = "onlyMethylation_newDatasets"
 
 tech = "hg19" # or "hg38"
 
-meta = "meta-data.csv"
+meta = "meta-data-file.txt"
 
 counts_dir = "counts"
 
@@ -64,61 +64,65 @@ biodata = list()
 #' Reading input frequency tables
 #' 
 
-for(i in 1:length(freq)){
-  new = fread(paste(dir_name, freq_dir, freq[i], sep = "/"))
-  
-  keep = which(str_detect(freq[i], files))
-  parent = keep
-  keep = meta[,..keep]
-  keep = as.character(unlist(keep))
-  
-  new = cbind(new[,1:4], new[,..keep])
-  colnames(new) = c("ID", "chromosome_name", "start_position", "end_position", names)
-  
-  new$chromosome_name = str_to_lower(new$chromosome_name)
-  new$chromosome_name = str_remove(new$chromosome_name, "chr")
-  
-  if(max(new[,5:ncol(new)]) <= 1){
-    new[,5:ncol(new)] = 100 * new[,5:ncol(new)]
+if(length(freq) > 0){
+  for(i in 1:length(freq)){
+    new = fread(paste(dir_name, freq_dir, freq[i], sep = "/"))
+    
+    keep = which(str_detect(freq[i], files))
+    parent = keep
+    keep = meta[,..keep]
+    keep = as.character(unlist(keep))
+    
+    new = cbind(new[,1:4], new[,..keep])
+    colnames(new) = c("ID", "chromosome_name", "start_position", "end_position", names)
+    
+    new$chromosome_name = str_to_lower(new$chromosome_name)
+    new$chromosome_name = str_remove(new$chromosome_name, "chr")
+    
+    if(max(new[,5:ncol(new)]) <= 1){
+      new[,5:ncol(new)] = 100 * new[,5:ncol(new)]
+    }
+    
+    new$parent = parent
+    
+    biodata[[i]] = new
   }
-  
-  new$parent = parent
-  
-  biodata[[i]] = new
 }
 
 #'
 #' Reading input counts tables
 #' 
 
-for(i in 1:length(counts)){
-  new = fread(paste(dir_name, counts_dir, counts[i], sep = "/"))
-  
-  keep = which(str_detect(counts[i], files))
-  parent = keep
-  keep = meta[,..keep]
-  keep = as.character(unlist(keep))
-  
-  new = cbind(new[,1:4], new[,..keep])
-  colnames(new) = c("ID", "chromosome_name", "start_position", "end_position", names)
-  
-  new$chromosome_name = str_to_lower(new$chromosome_name)
-  new$chromosome_name = str_remove(new$chromosome_name, "chr")
-  
-  temp = new[,5:ncol(new)]
-  
-  temp = log(temp + 1)
-  col.max = apply(temp, 2, max)
-  col.max = as.numeric(col.max)
-  
-  temp = t(temp) * (100 / col.max)
-  temp = as.data.table(t(temp))
-  
-  new = cbind(new[,1:4], temp)
-  
-  new$parent = parent
-  
-  biodata[[i + length(freq)]] = new
+if(length(counts) > 0){
+  for(i in 1:length(counts)){
+    new = fread(paste(dir_name, counts_dir, counts[i], sep = "/"))
+    
+    keep = which(str_detect(counts[i], files))
+    parent = keep
+    keep = meta[,..keep]
+    keep = as.character(unlist(keep))
+    
+    new = cbind(new[,1:4], new[,..keep])
+    colnames(new) = c("ID", "chromosome_name", "start_position", "end_position", names)
+    
+    new$chromosome_name = str_to_lower(new$chromosome_name)
+    new$chromosome_name = str_remove(new$chromosome_name, "chr")
+    
+    temp = new[,5:ncol(new)]
+    
+    temp = log(temp + 1)
+    col.max = apply(temp, 2, max)
+    col.max = as.numeric(col.max)
+    
+    temp = t(temp) * (100 / col.max)
+    temp = as.data.table(t(temp))
+    
+    new = cbind(new[,1:4], temp)
+    
+    new$parent = parent
+    
+    biodata[[i + length(freq)]] = new
+  }
 }
 
 biodata = rbindlist(biodata, use.names = FALSE)
@@ -240,13 +244,13 @@ names = str_replace(names, "featuretype", "Gene_locus")
 
 colnames(biodata) = names
 
-rm(list = setdiff(ls(), c("biodata", "meta", "start_time", "dir_name", "output_folder")))
+rm(list = setdiff(ls(), c("biodata", "meta", "start_time", "dir_name", "output_folder", "x", "res")))
 
 end_time = Sys.time()
 
 ############ Generating outputs ############ 
 
-# dir.create(output_folder, showWarnings = FALSE)
-# 
-# write.table(biodata, paste(output_folder, "/integrated_table.csv", sep = ""), 
-#             row.names = FALSE, sep = "\t", quote = FALSE)
+dir.create(output_folder, showWarnings = FALSE)
+
+write.table(biodata, paste(output_folder, "/integrated_table.csv", sep = ""),
+            row.names = FALSE, sep = "\t", quote = FALSE)
