@@ -1,5 +1,7 @@
 ########## Loading libraries ##########
 
+rm(list = ls())
+
 source("libraries.R")
 source("helpers.R")
 
@@ -22,18 +24,22 @@ start_time = Sys.time()
 #' 
 #' @param freq_dir Directory name of freq NGS data
 #' 
+#' @param tad_file BED file containing information about TADs
+#' 
 
-dir_name = "newDatasets"
+dir_name = "Datasets"
 
-output_folder = "onlyMethylation_newDatasets"
+output_folder = "results"
 
 tech = "hg19" # or "hg38"
 
-meta = "meta-data-file.txt"
+meta = "meta-data.csv"
 
 counts_dir = "counts"
 
 freq_dir = "freq"
+
+tad_file = "hglft_genome_2dab_ec1330.bed"
 
 ############ Reading files ############ 
 
@@ -54,7 +60,7 @@ counts = list.files(paste(dir_name, counts_dir, sep = "/"))
 freq = list.files(paste(dir_name, freq_dir, sep = "/"))
 
 files = colnames(meta)
-files = files[which(!(files %in% c("groups", "newNames")))]
+# files = files[which(!(files %in% c("groups", "newNames")))]
 
 names = meta$newNames
 
@@ -141,7 +147,7 @@ zero.ids = rep(0, length(names))
 zero.ids = paste(zero.ids, collapse = "")
 
 data.num.ids = unite(data = biodata[,..names], col = ids, sep = "")
-biodata = biodata[which(data.num.ids != zero.ids), ]
+biodata = biodata[which(data.num.ids$ids != zero.ids), ]
 
 ############ Getting genomic features ############ 
 
@@ -244,7 +250,68 @@ names = str_replace(names, "featuretype", "Gene_locus")
 
 colnames(biodata) = names
 
-rm(list = setdiff(ls(), c("biodata", "meta", "start_time", "dir_name", "output_folder", "x", "res")))
+rm(list = setdiff(ls(), c("biodata", "meta", "start_time", "dir_name", "output_folder", "x", "res", "tad_file")))
+
+############ Collapse on TADs ############
+
+TAD = fread(paste(dir_name, tad_file, sep = "/"), 
+            header = F, 
+            sep = "\t", 
+            check.names = FALSE)
+
+#'
+#' Create a barcode
+#'  
+# biodata$name = paste0(biodata$ID, biodata$Gene_id)
+
+#' Reordering
+#' 
+data.over = biodata[,c("ID", "chromosome_name", "start_position", "end_position")]
+data.over$chromosome_name = paste("chr", data.over$chromosome_name, sep = "")
+data.over = data.over[,c(2,3,4,1)]
+
+#'
+#' Overlap of the TAD with events
+#' 
+colnames(TAD) = paste(c("chr", "start", "end", "name"))
+colnames(data.over) = paste(c("chr", "start", "end", "name"))
+
+#'
+#' Make GRanges object
+#' 
+gr1 = with(TAD, GRanges(chr, IRanges(start = start, end = end, names = name)))
+gr2 = with(data.over, GRanges(chr, IRanges(start = start, end = end, names = name)))
+
+#'
+#' Completely overlapping
+#' 
+type1 = findOverlaps(query = gr1, subject = gr2)
+
+type1.df = cbind(TAD[queryHits(type1),], data.over[subjectHits(type1),])
+type1.df = type1.df[,c(2,3,4,8)]
+colnames(type1.df) = c("tad_start", "tad_end", "tad_name", "name.1")
+
+#' Overlapping with TADs' table
+#' 
+full = base::merge(type1.df, biodata, by.x = "name.1", by.y = "ID")
+
+colnames(full)[1] = "ID"
+
+keep = c("chromosome_name", 
+         "tad_name", 
+         "tad_start", 
+         "tad_end", 
+         "ID", 
+         "start_position", 
+         "end_position", 
+         "Gene_id", 
+         "Gene_locus", 
+         "parent",
+         meta$newNames)
+
+full = full[,..keep]
+
+rm(list = setdiff(ls(), c("biodata", "full", "meta", "start_time", "dir_name", "output_folder", "x", "res")))
 
 end_time = Sys.time()
 
@@ -252,5 +319,24 @@ end_time = Sys.time()
 
 dir.create(output_folder, showWarnings = FALSE)
 
-write.table(biodata, paste(output_folder, "/integrated_table.csv", sep = ""),
+write.table(biodata, paste(output_folder, "/integrated-table.csv", sep = ""),
             row.names = FALSE, sep = "\t", quote = FALSE)
+
+write.table(full, paste(output_folder, "/integrated-tad-table.csv", sep = ""),
+            row.names = FALSE, sep = "\t", quote = FALSE)
+
+for(i in unique(biodata$parent)){
+  
+  temp = biodata[which(biodata$parent == i), ]$ID
+  
+  temp = temp[sample(1:length(temp), 3)]
+  
+  temp = paste(temp, collapse = ", ")
+  
+  cat(c("File", i, ":", temp, "...", "\n\n"), 
+      file = paste(output_folder, "/summary.txt", sep = ""),
+      append = TRUE)
+  
+  
+  
+}

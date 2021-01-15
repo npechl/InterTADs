@@ -1,5 +1,7 @@
 ########## Loading libraries ########## 
 
+rm(list = ls())
+
 source("libraries.R")
 
 start_tad_time = Sys.time()
@@ -14,37 +16,30 @@ start_tad_time = Sys.time()
 #' 
 #' @param image_output_folder Folder name for print output images
 #' 
-#' @param tad_file BED file containing information about TADs
-#' 
 #' @param meta meta-data file name used
 #' 
-#' @param paired.data Boolean flag indicating whether input data is paired or not
+#' @param names.meta meta data columns to process (names or indexes)
 #' 
-#' @param FDR_criterion user defined FDR criterion
+#' @param expr_data Parent index of expression data. If no expression is provided, place FALSE
 
-dir_name = "newDatasets"
-output_folder = "onlyMethylation_newDatasets"
-image_output_folder = "onlyMethylation_newDatasets_vis"
+dir_name = "Datasets"
 
-tad_file = "hglft_genome_2dab_ec1330.bed"
+output_folder = "results"
 
-meta = "meta-data-file.txt"
+image_output_folder = "results-vis"
 
-paired.data = FALSE
+meta = "meta-data.csv"
 
-FDR_criterion = 0.05
+names.meta = c("groups")
 
-#'
-#' Reading inputs
-#' 
+expr_data = 2 
 
 
-data.all = fread(paste(output_folder, "/integrated_table.csv", sep = ""))
 
-TAD = fread(paste(dir_name, tad_file, sep = "/"), 
-            header = F, 
-            sep = "\t", 
-            check.names = FALSE)
+data.all = fread(paste(output_folder, "/integrated-tad-table.csv", sep = ""),
+                    sep = "\t")
+
+data.all$ID = paste(data.all$tad_name, data.all$ID, sep = ";")
 
 meta = fread(paste(dir_name, meta, sep = "/"))
 who = meta == ""
@@ -52,491 +47,195 @@ who = apply(who, 1, sum, na.rm = TRUE)
 meta = meta[which(who == 0), ]
 
 
-#' 
-#' @param groups used to compare two groups from the meta data file
-#' in case there is no need for any comparison to perform, 
-#' please set the variable to NULL:
-#' 
-#' groups = NULL
-#' 
-#' 
+sample.list = meta$newNames
+data.all$Mean = rowMeans(data.all[,..sample.list])
 
-diff_col = "groups"
-groups = meta[[diff_col]]
-groups = as.character(groups)
-groups = unique(groups)
-groups = groups[which(groups != "")]
-groups = groups[which(!is.na(groups))]
-group1 = groups[1]
-group2 = groups[2]
 
-########### Processing ########### 
+data.all = data.all[which(round(data.all$Mean) > 10), ]
 
-#'
-#' Generate a barcode
-#'  
-data.all$name = paste0(data.all$ID, data.all$Gene_id)
 
-#' Reordering
-#' 
-data.over = data.all[,c("name", "chromosome_name", "start_position", "end_position")]
-data.over$chromosome_name = paste("chr", data.over$chromosome_name, sep = "")
-data.over = data.over[,c(2,3,4,1)]
+sign_table = matrix(0, nrow = length(names.meta), ncol = 2)
 
-#'
-#' Overlap of the TAD with events
-#' 
-colnames(TAD) = paste(c("chr", "start", "end", "name"))
-colnames(data.over) = paste(c("chr", "start", "end", "name"))
+rm(who)
 
-#'
-#' Make GRanges object
-#' 
-gr1 = with(TAD, GRanges(chr, IRanges(start = start, end = end, names = name)))
-gr2 = with(data.over, GRanges(chr, IRanges(start = start, end = end, names = name)))
-
-#'
-#' Completely overlapping
-#' 
-type1 = findOverlaps(query = gr1, subject = gr2)
-
-type1.df = cbind(TAD[queryHits(type1),], data.over[subjectHits(type1),])
-type1.df = type1.df[,c(2,3,4,8)]
-colnames(type1.df) = c("tad_start", "tad_end", "tad_name", "name.1")
-
-#'
-#' Generating output overlapping with
-#' TADs table
-#' 
-full = base::merge(type1.df, data.all, by.x = "name.1", by.y = "name")
-keep = c("chromosome_name", 
-         "tad_name", 
-         "tad_start", 
-         "tad_end", 
-         "ID", 
-         "start_position", 
-         "end_position", 
-         "Gene_id", 
-         "Gene_locus", 
-         "parent",
-         meta$newNames)
-
-full = full[,..keep]
-
-# test for NAs, remove them for the statistical analysis
-# full[is.na(full)] <- 0
-# full$Gene_id[which(full$Gene_id == 0)] = "NA"
-
-########### Statistics ########### 
-
-if(!is.null(groups)){
+for (z in 1:length(names.meta)){
   
-  #'
-  #' Statistical differences between two groups
-  #' 
+  analysis = names.meta[z]
+  groups = as.character(meta[[analysis]])
+  groups = unique(groups)
+  groups = groups[which(groups != "")]
+  groups = groups[!is.na(groups)]
   
-  list1 = meta[which(meta[[diff_col]] == group1), ]$newNames
-  list2 = meta[which(meta[[diff_col]] == group2), ]$newNames
+  group1 = groups[1]
+  group2 = groups[2]
   
-  full.1 = full[,..list1]
-  full.2 = full[,..list2]
+  meta.keep = meta[which(meta[[analysis]] == group1 | meta[[analysis]] == group2), ]
   
-  full$diff = apply(full.2, 1, mean, na.rm = TRUE) - apply(full.1, 1, mean, na.rm = TRUE)
+  sample.list = meta.keep$newNames
   
-  #'
-  #' Exclude the events with no differences
-  #' 
-  full = full[which(round(abs(full$diff))>0),]
+  df = data.all[,..sample.list]
   
-  #'
-  #' Statistics
-  #' 
-  tad_sum = dplyr::group_by(full, tad_name) %>% 
-    dplyr::summarise(count = n(), 
-                     mean = mean(abs(diff), na.rm = TRUE),
-                     IQR = IQR(diff, na.rm = TRUE))
+  df = as.data.frame(df)
+  row.names(df) = data.all$ID
   
-  tad_sum$ttest = numeric(length = nrow(tad_sum))
-  tad_sum$wilcoxon = numeric(length = nrow(tad_sum))
-  tad_sum = as.data.table(tad_sum)
+  pheno = as.factor(meta.keep[[analysis]])
   
-  tad_sum$ttest = NA
-  tad_sum$wilcoxon = NA
+  phenoMat = model.matrix(~pheno)
+  colnames(phenoMat) = sub("^pheno", "", colnames(phenoMat))
   
-  #'
-  #' parametric t.test
-  #' 
-  #' non-parametric wilcoxon
-  #' 
+  fit = lmFit(object = df, design = phenoMat)
   
-  if(paired.data){
+  gc()
+  set.seed(6)
+  fit = eBayes(fit)
+  
+  gc()
+  top.rank = topTable(fit, number = nrow(df), adjust.method = "fdr", sort.by = "p")
+  
+  sign.table = top.rank[which(top.rank$adj.P.Val <= 0.9 & abs(top.rank$logFC) > 2), ]
+  
+  if (nrow(sign.tad.info) == 0) {
     
-    for (i in 1:nrow(tad_sum)){
-      tad = full[which(full$name == as.character(tad_sum[i,1])), ]
-      
-      tad.1 = tad[,..list1]
-      tad.2 = tad[,..list2]
-      
-      statistics2 = t.test(unlist(tad.1), unlist(tad.2), na.rm = TRUE, paired = T)
-      statistics3 = wilcox.test(unlist(tad.1), unlist(tad.2), na.rm = TRUE, paired = T)
-      
-      tad_sum[i,5] = statistics2$p.value
-      tad_sum[i,6] = statistics3$p.value
-    }
+    cat(c("No statistical significant events for:", names.meta[z], "\n"))
+    
+    sign_table[z,1] = analysis 
+    sign_table[z,2] = "0" 
     
   } else {
     
-    for (i in 1:nrow(tad_sum)){
-      tad = full[which(full$tad_name == as.character(tad_sum[i,1])), ]
+    # annotate sign.table
+    
+    sign.table$ID = row.names(sign.table)
+    
+    sign.table = merge(sign.table, 
+                       data.all, 
+                       by.x = "ID", 
+                       by.y = "ID")
+    
+    sign.tad.info = sign.table %>% 
+      dplyr::group_by(tad_name) %>% 
+      dplyr::summarise(count = n()) 
+    
+    
+    
+    # annotate tad.info table
+    
+    tad.info = data.all %>% 
+      dplyr::group_by(tad_name) %>% 
+      dplyr::summarize(count = n()) 
+    
+    sign.tad.info = merge(sign.tad.info, 
+                          tad.info, 
+                          by = "tad_name")
+    
+    sign.tad.info$freq = sign.tad.info$count.x / sign.tad.info$count.y * 100
+  
+    sign.tad.info$pvalue = 1
+    
+    for (i in 1:nrow(sign.tad.info)) {
       
-      tad.1 = tad[,..list1]
-      tad.2 = tad[,..list2]
+      sign.tad.info$pvalue[i] = 1 - phyper(sign.tad.info$count.x[i], 
+                                           nrow(sign.table), 
+                                           nrow(df) - nrow(sign.table), 
+                                           sign.tad.info$count.y[i])
       
-      one.run = function(x) return(length(unique(x)) == 1)
+    }  
+    
+    
+    if(expr_data != FALSE){
       
-      same.values.1 = sum(apply(tad.1, 1, one.run))
-      same.values.2 = sum(apply(tad.2, 1, one.run))
+      # get expression data
       
-      if(same.values.1 == nrow(tad.1) && same.values.2 == nrow(tad.2)){
-        next
-      }
+      expr = data.all[which(data.all$parent == expr_data), ]
       
-      statistics1 = t.test(tad.1, tad.2, na.rm = TRUE)
-      statistics4 = wilcox.test(unlist(tad.1), unlist(tad.2), na.rm = TRUE, correct = FALSE)
+      df = expr[,..sample.list]
       
-      tad_sum[i,5] = statistics1$p.value
-      tad_sum[i,6] = statistics4$p.value
+      df = as.data.frame(df)
+      row.names(df) = expr$ID
+      
+      # build model
+      
+      fit = lmFit(object = df, design = phenoMat)
+      
+      gc()
+      set.seed(6)
+      fit = eBayes(fit)
+      
+      # get top rank events
+      
+      gc()
+      top.rank = topTable(fit, number = nrow(df), adjust.method = "fdr")
+      
+      # any filtering ?
+      
+      # annotate sign.table (expression)
+      
+      sign.table.expr = as.data.frame(top.rank)
+      
+      sign.table.expr$ID = row.names(sign.table.expr)
+      
+      sign.table.expr = merge(sign.table.expr, 
+                              expr, 
+                              by = "ID")
+      
+      sign.tad.expr = sign.table.expr %>% 
+        dplyr::group_by(tad_name) %>% 
+        dplyr::summarise(mean_logFC = mean(abs(logFC)))
+      
+      
+      
+      # merge information
+      
+      tad.all.info = merge(sign.tad.info, 
+                           sign.tad.expr, 
+                           by = "tad_name" )
+      
+      tad.all.info.f = tad.all.info %>% 
+        filter(count.x > 4) %>% 
+        filter(pvalue < 0.01) %>% 
+        filter(freq > 15) %>% 
+        filter(mean_logFC > 2)
+      
+      sign_table[z,1] = analysis 
+      sign_table[z,2] = as.character(nrow(tad.all.info.f))
+      
+      
+      
+      # create output tables
+      
+      full.tads = merge(tad.all.info.f, 
+                        data.all, 
+                        by = "tad_name")
+      
+      write.table(full.tads, 
+                  file = paste(output_folder, "/", analysis, "_TADiff.txt", sep = ""), 
+                  col.names = TRUE, 
+                  row.names = FALSE, 
+                  quote = FALSE, 
+                  sep = "\t")
     }
     
-  }
-  
-  tad_sum = tad_sum[which(!is.na(tad_sum$ttest)), ]
-  
-  if (nrow(meta) >= 30){
-    
-    data.b = tad_sum[,5]
-    tad_sum$FDR = p.adjust(unlist(data.b), method = c("BH"), n = nrow(data.b))
-    
-  } else {
-    
-    data.b = tad_sum[,6]
-    tad_sum$FDR = p.adjust(unlist(data.b), method = c("BH"), n = nrow(data.b))
-    
-  }
-  
-  #'
-  #' Criterion based on mean of diff across TADs
-  #' 
-  criterion = as.matrix(summary(tad_sum$mean))
-  criterion = criterion[5]
-  
-  #'
-  #' Filtering
-  #' 
-  tad_sign = tad_sum[which(tad_sum$FDR < FDR_criterion & tad_sum$mean > criterion),]
-  
-  #'
-  #' Merge full TAD table with significant TADs
-  #' 
-  full.tads = merge(tad_sign, 
-                    full, 
-                    by.x = "tad_name", 
-                    by.y = "tad_name")
-  
-  genes.found = full.tads$Gene_id
-  genes.found = str_split(genes.found, "\\|")
-  genes.found = unlist(genes.found)
-  genes.found = genes.found[genes.found != "NA"]
-  
-  keep = colnames(full.tads)
-  keep = which(!(keep %in% c("IQR", "ttest", "wilcoxon")))
-  full.tads = full.tads[,..keep]
-  
-  
+    # what's the value of `sign_table` if we don't have expression data
+    # which are the outputs if we don't have expression data
+  } 
 }
 
-########### Generating output images ########### 
-dir.create(image_output_folder, showWarnings = FALSE)
+sign_table = as.data.frame(sign_table)
 
-#' Generating image with events in two groups
-#' 
-#' @param tad_to_visual TAD to visualize
-
-tad_to_visual = c("TAD2130", "TAD854")
-
-# tad_to_visual = c(tad_to_visual,
-#                   tad_sign[which(tad_sign$FDR == min(tad_sign$FDR)), ]$tad_name)
-# 
-# tad_to_visual = c(tad_to_visual,
-#                   tad_sign[which(tad_sign$mean == max(tad_sign$mean)), ]$tad_name)
-
-
-for(i in tad_to_visual){
-  tad.test = full %>% dplyr::filter(tad_name == i)
-  tad.test.1 = as.matrix(unlist(tad.test[,..list1]))
-  tad.test.1 = as.data.frame(tad.test.1)
-  tad.test.1$status = paste(group1)
-  tad.test.2 = as.matrix(unlist(tad.test[,..list2]))
-  tad.test.2 = as.data.frame(tad.test.2)
-  tad.test.2$status = paste(group2)
-  
-  tad.test.plot = rbind(tad.test.1, tad.test.2)
-  
-  # png(filename = paste(image_output_folder, "/", i, ".png", sep = ""), 
-  #     width = 600, height = 820)
-  
-  # pdf(paste(image_output_folder, "/", i, ".pdf", sep = ""))
-  
-  gr = ggplot(tad.test.plot, aes(x = status, y = V1, fill = status)) + 
-       geom_jitter(position = position_jitter(0.1), shape = 21, color = "gray61", size = 1.5) +
-       theme_bw() + 
-       theme(panel.grid.major = element_blank(), 
-             panel.grid.minor = element_blank(), 
-             legend.position = "none",
-             axis.text.x = element_text(size = 15),
-             axis.text.y = element_text(size = 15),
-             axis.title.y = element_text(size = 16)) +
-       labs(y = i, x = "") +
-       stat_summary(fun = mean, fun.min = mean, fun.max = mean, 
-                    geom = "crossbar", width = 0.2)
-  
-  saveImageHigh::save_as_pdf({print(gr)},
-                             file.name = file.path(image_output_folder,
-                                                   paste(i, "allValues.png", sep = "_")),
-                             height = 8)
-  
-  # dev.off()
-  
-  tad.test = full %>% dplyr::filter(tad_name == i)
-  tad.test = tad.test[order(abs(tad.test$diff), decreasing = TRUE), ]
-
-  tad.test.1 = tad.test[,..list1]
-  tad.test.2 = tad.test[,..list2]
-  tad.test.1$mean = apply(tad.test.1, 1, mean)
-  tad.test.2$mean = apply(tad.test.2, 1, mean)
-  tad.test.1$status = paste(group1)
-  tad.test.2$status = paste(group2)
-  tad.test.1$ids = 1:nrow(tad.test.1)
-  tad.test.2$ids = 1:nrow(tad.test.2)
-
-  tad.test.1$xj = 1
-  tad.test.2$xj = 2
-
-  tad.test.1$line.color = rgb(255, 255, 255, max = 255, alpha = 0, names = "white")
-  tad.test.2$line.color = rgb(255, 255, 255, max = 255, alpha = 0, names = "white")
-
-  tad.test.1[1:min(30, nrow(tad.test.1)), ]$line.color = "gray38"
-
-  tad.test.plot = rbind(tad.test.1[,c("mean", "xj", "ids", "line.color", "status")],
-                        tad.test.2[,c("mean", "xj", "ids", "line.color", "status")])
+write.table(sign_table, 
+            file = paste(output_folder, "/Summary_TADiff.txt", sep = ""), 
+            col.names = TRUE, 
+            row.names = FALSE, 
+            quote = FALSE, 
+            sep = "\t")
 
 
 
-  tad.test.plot$xj = jitter(tad.test.plot$xj, amount = 0.1, factor = 1)
-  
-  # png(filename = paste(image_output_folder, "/", i, "_topValues.png", sep = ""),
-  #     width = 600, height = 820)
-  
-  # pdf(paste(image_output_folder, "/", i, "_topValues.pdf", sep = ""))
-  
-  f3 = ggplot(data = tad.test.plot, aes(y = mean, x = xj, fill = status)) +
-       geom_line(aes(x = xj, group = ids), color = "lightgray") +
-       geom_line(aes(x = xj, group = ids), color = tad.test.plot$line.color) +
-       geom_point(aes(x = xj), size = 1.5, shape = 21, color = "gray61") +
-    
-       # geom_half_boxplot(data=tad.test.plot %>% filter(status == group1), 
-       #                   aes(x=xj, y = mean), position = position_nudge(x = -.25),
-       #                   side = "r",outlier.shape = NA, center = TRUE, 
-       #                   errorbar.draw = FALSE, width = .2) +
-       # 
-       # geom_half_boxplot(data = tad.test.plot %>% filter(status==group2), 
-       #                   aes(x=xj, y = mean), position = position_nudge(x = .15),
-       #                   side = "r",outlier.shape = NA, center = TRUE, 
-       #                   errorbar.draw = FALSE, width = .2) +
-    
-       geom_half_violin(data = tad.test.plot %>% filter(status==group1),
-                        aes(x = xj, y = mean), position = position_nudge(x = -.3),
-                        side = "l") +
-    
-       geom_half_violin(data = tad.test.plot %>% filter(status==group2),
-                        aes(x = xj, y = mean), position = position_nudge(x = .3),
-                        side = "r") +
-    
-       scale_x_continuous(breaks=c(1,2), labels=c("ss6", "ss8"), limits=c(0, 3)) +
-       theme_classic() + labs(y = i, x = "") + 
-       theme(panel.grid.major = element_blank(), 
-             panel.grid.minor = element_blank(), 
-             legend.position = "none",
-             axis.text.x = element_text(size = 15),
-             axis.text.y = element_text(size = 15),
-             axis.title.y = element_text(size = 16))
-  
-  saveImageHigh::save_as_pdf({print(f3)},
-                             file.name = file.path(image_output_folder,
-                                                   paste(i, "_topValues.png", sep = "")),
-                             height = 8)
-                               
-  
-  # dev.off()
-  
-  tad.test = full %>% dplyr::filter(tad_name == i)
-  tad.test = tad.test[order(tad.test$diff, decreasing = TRUE), ]
-
-  tad.test.1 = tad.test[,..list1]
-  tad.test.2 = tad.test[,..list2]
-  tad.test.1$mean = apply(tad.test.1, 1, mean)
-  tad.test.2$mean = apply(tad.test.2, 1, mean)
-  tad.test.1$status = paste(group1)
-  tad.test.2$status = paste(group2)
-  tad.test.1$ids = 1:nrow(tad.test.1)
-  tad.test.2$ids = 1:nrow(tad.test.2)
-
-  tad.test.1$xj = 1
-  tad.test.2$xj = 2
-  
-  tad.test.1 = tad.test.1[order(tad.test$diff, decreasing = TRUE), ]
-  tad.test.2 = tad.test.2[order(tad.test$diff, decreasing = TRUE), ]
-
-  tad.test.1$line.color = rgb(255, 255, 255, max = 255, alpha = 0, names = "white")
-  tad.test.2$line.color = rgb(255, 255, 255, max = 255, alpha = 0, names = "white")
-
-  tad.test.1[1:min(30, nrow(tad.test.1)), ]$line.color = "gray38"
-
-  tad.test.plot = rbind(tad.test.1[,c("mean", "xj", "ids", "line.color", "status")],
-                        tad.test.2[,c("mean", "xj", "ids", "line.color", "status")])
 
 
 
-  tad.test.plot$xj = jitter(tad.test.plot$xj, amount = 0.1, factor = 1)
-
-  # png(filename = paste(image_output_folder, "/", i, "_positive_connections.png", sep = ""),
-  #     width = 600, height = 820)
-  
-  # pdf(paste(image_output_folder, "/", i, "_positive_connections.pdf", sep = ""))
-
-  f3 = ggplot(data=tad.test.plot, aes(y = mean, x = xj, fill = status)) +
-       geom_line(aes(x=xj, group=ids), color = "lightgray") +
-       geom_line(aes(x=xj, group=ids), color = tad.test.plot$line.color) +
-       geom_point(aes(x=xj), size = 1.5, shape = 21, color = "gray61") +
-    
-       geom_half_violin(data = tad.test.plot %>% filter(status==group1),
-                        aes(x = xj, y = mean), position = position_nudge(x = -.3),
-                        side = "l") +
-    
-       geom_half_violin(data = tad.test.plot %>% filter(status==group2),
-                        aes(x = xj, y = mean), position = position_nudge(x = .3),
-                        side = "r") +
-    
-       scale_x_continuous(breaks=c(1,2), labels=c("ss6", "ss8"), limits=c(0, 3)) +
-       theme_classic() + labs(y = i, x = "") +
-       theme(panel.grid.major = element_blank(),
-             panel.grid.minor = element_blank(),
-             legend.position = "none",
-             axis.text.x = element_text(size = 15),
-             axis.text.y = element_text(size = 15),
-             axis.title.y = element_text(size = 16))
-  
-  saveImageHigh::save_as_pdf({print(f3)},
-                             file.name = file.path(image_output_folder,
-                                                   paste(i, "_topPositiveValues.png", sep = "")),
-                             height = 8)
-
-  # dev.off()
-  
-  tad.test = full %>% dplyr::filter(tad_name == i)
-  tad.test = tad.test[order(tad.test$diff), ]
-
-  tad.test.1 = tad.test[,..list1]
-  tad.test.2 = tad.test[,..list2]
-  tad.test.1$mean = apply(tad.test.1, 1, mean)
-  tad.test.2$mean = apply(tad.test.2, 1, mean)
-  tad.test.1$status = paste(group1)
-  tad.test.2$status = paste(group2)
-  tad.test.1$ids = 1:nrow(tad.test.1)
-  tad.test.2$ids = 1:nrow(tad.test.2)
-
-  tad.test.1$xj = 1
-  tad.test.2$xj = 2
-  
-  tad.test.1 = tad.test.1[order(tad.test$diff), ]
-  tad.test.2 = tad.test.2[order(tad.test$diff), ]
-  
-  tad.test.1$line.color = rgb(255, 255, 255, max = 255, alpha = 0, names = "white")
-  tad.test.2$line.color = rgb(255, 255, 255, max = 255, alpha = 0, names = "white")
-  
-  tad.test.1[1:min(30, nrow(tad.test.1)), ]$line.color = "gray38"
-  
-  tad.test.plot = rbind(tad.test.1[,c("mean", "xj", "ids", "line.color", "status")],
-                        tad.test.2[,c("mean", "xj", "ids", "line.color", "status")])
-  
-  
-  
-  tad.test.plot$xj = jitter(tad.test.plot$xj, amount = 0.1, factor = 1)
-  
-  # png(filename = paste(image_output_folder, "/", i, "_negative_connections.png", sep = ""),
-  #     width = 600, height = 820)
-  
-  # pdf(paste(image_output_folder, "/", i, "_negative_connections.pdf", sep = ""))
-  
-  f3 = ggplot(data=tad.test.plot, aes(y = mean, x = xj, fill = status)) +
-       geom_line(aes(x=xj, group=ids), color = "lightgray") +
-       geom_line(aes(x=xj, group=ids), color = tad.test.plot$line.color) +
-       geom_point(aes(x=xj), size = 1.5, shape = 21, color = "gray61") +
-          
-       geom_half_violin(data = tad.test.plot %>% filter(status==group1),
-                        aes(x = xj, y = mean), position = position_nudge(x = -.3),
-                        side = "l") +
-        
-       geom_half_violin(data = tad.test.plot %>% filter(status==group2),
-                        aes(x = xj, y = mean), position = position_nudge(x = .3),
-                        side = "r") +
-        
-       scale_x_continuous(breaks=c(1,2), labels=c("ss6", "ss8"), limits=c(0, 3)) +
-       theme_classic() + labs(y = i, x = "") + 
-       theme(panel.grid.major = element_blank(), 
-             panel.grid.minor = element_blank(), 
-             legend.position = "none",
-             axis.text.x = element_text(size = 15),
-             axis.text.y = element_text(size = 15),
-             axis.title.y = element_text(size = 16))
-  
-  saveImageHigh::save_as_pdf({print(f3)},
-                             file.name = file.path(image_output_folder,
-                                                   paste(i, "_topNegativeValues.png", sep = "")),
-                             height = 8)
-  
-  # dev.off()
-}
-
-########### Clear enviroment ########### 
-
-end_tad_time = Sys.time()
-
-rm(list = setdiff(ls(), c("data.all", "full", "full.tads", "tad_sign", "tad_sum", 
-                        "dir_name", "end_tad_time", "start_tad_time",
-                        "paired_data", "groups", "FDR_criterion", "genes.found", "output_folder", "x", "res", "res2")))
-
-tad_sign = tad_sign[,c("tad_name", "count", "mean", "FDR")]
-
-########### Generating outputs ###########  
-dir.create(output_folder, showWarnings = FALSE)
-
-write.table(full, paste(output_folder, "/integrated_table_with_tads.csv", sep = ""),
-            row.names = FALSE, sep = "\t", quote = FALSE)
-
-if(!is.null(groups)){
-
-  write.table(tad_sum, paste(output_folder, "/tad_statistics.csv", sep = ""),
-              row.names = FALSE, sep = "\t", quote = FALSE)
-
-  write.table(full.tads, paste(output_folder, "/integrated_table_with_sign_tads.csv", sep = ""),
-              row.names = FALSE, sep = "\t", quote = FALSE)
-
-  write.table(tad_sign, paste(output_folder, "/sign_tad_statistics.csv", sep = ""),
-              row.names = FALSE, sep = "\t", quote = FALSE)
-
-  write.table(genes.found, paste(output_folder, "/genes_found.txt", sep = ""),
-              row.names = FALSE, col.names = FALSE, quote = FALSE)
 
 
-}
+
+
+

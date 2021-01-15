@@ -10,7 +10,10 @@ library(gplots)
 library(gghalves)
 library(karyoploteR)
 
-#' 
+library(limma)
+
 #' You can find it at https://github.com/nikopech/saveImageHigh
 #' 
 # library(saveImageHigh)
+
+
