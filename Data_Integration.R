@@ -27,13 +27,13 @@ start_time = Sys.time()
 #' @param tad_file BED file containing information about TADs
 #' 
 
-dir_name = "Datasets"
+dir_name = "Datasets_bloodcancer"
 
-output_folder = "results"
+output_folder = "results_bloodcancer"
 
 tech = "hg19" # or "hg38"
 
-meta = "meta-data.csv"
+meta = "metaData_groups.csv"
 
 counts_dir = "counts"
 
@@ -174,12 +174,22 @@ gr = GRanges(seqnames = Rle(paste("chr", biodata$chromosome_name, sep = "")),
 
 overlaps = findOverlaps(gr, feat)
 
+overlaps.from = overlaps@from
+overlaps.to = overlaps@to
+
+rm(overlaps)
+
 feat = as.data.table(feat)
 feat = feat[,c("feature_by", "featuretype")]
 feat$feature_by = as.character(feat$feature_by)
 
-feat = cbind(biodata[overlaps@from, 1:4], feat[overlaps@to, ])
-biodata = cbind(feat, biodata[overlaps@from, 5:ncol(biodata)])
+
+rm(gr, temp, new, data.num.ids, txdb)
+
+feat = cbind(biodata[overlaps.from, 1:4], feat[overlaps.to, ])
+biodata = cbind(feat, biodata[overlaps.from, 5:ncol(biodata)])
+
+rm(feat, overlaps.from, overlaps.to, col.max, keep, names)
 
 biodata = unique(biodata)
 biodata[which(biodata$feature_by == "character(0)"), ]$feature_by = "NA"
@@ -197,6 +207,8 @@ mapping = map_entrez_ids(entrez.ids = genes, tech = tech)
 
 map = base::match(biodata$feature_by, mapping$entrez.id)
 biodata$feature_by = mapping[map, ]$hgnc.symbol
+
+rm(map, mapping, genes)
 
 #'
 #' Collapsing genes and feature type of same observation into same row
@@ -242,7 +254,7 @@ for(i in 1:(length(iterations) - 1)){
 
 biodata = rbindlist(total)
 
-rm(total)
+rm(total, unique.ids, temp, features)
 
 names = colnames(biodata)
 names = str_replace(names, "feature_by", "Gene_id")
@@ -290,6 +302,8 @@ type1 = findOverlaps(query = gr1, subject = gr2)
 type1.df = cbind(TAD[queryHits(type1),], data.over[subjectHits(type1),])
 type1.df = type1.df[,c(2,3,4,8)]
 colnames(type1.df) = c("tad_start", "tad_end", "tad_name", "name.1")
+
+rm(type1, gr1, gr2)
 
 #' Overlapping with TADs' table
 #' 

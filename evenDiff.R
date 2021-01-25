@@ -14,29 +14,61 @@ start_tad_time = Sys.time()
 #' 
 #' @param output_folder Folder name for printing output tables
 #' 
-#' @param image_output_folder Folder name for print output images
-#' 
 #' @param meta meta-data file name used
 #' 
 #' @param names.meta meta data columns to process (names or indexes)
 #' 
 #' @param expr_data Parent index of expression data. If no expression is provided, place FALSE
 
-dir_name = "Datasets"
+dir_name = "Datasets_bloodcancer"
 
-output_folder = "results"
+output_folder = "results_bloodcancer"
 
-image_output_folder = "results-vis"
+meta = "metaData_groups.csv"
 
-meta = "meta-data.csv"
+names.meta = c("IGHV", 
+               "gain2p25.3", 
+               "del8p12", 
+               "gain8q24",
+               "del9p21.3",
+               "del11q22.3",
+               "trisomy12",
+               "del13q14_any",
+               "del13q14_bi",
+               "del13q14_mono",
+               "del14q24.3",
+               "del15q15.1",
+               "del17p13",
+               "Chromothripsis",
+               "BRAF",
+               "KRAS",
+               "MYD88",
+               "NOTCH1",
+               "SF3B1",
+               "TP53",
+               "ACTN2",
+               "ATM",
+               "BIRC3",
+               "CPS1",
+               "EGR2",
+               "FLRT2",
+               "IRF2BP2",
+               "KLHL6",
+               "LRP1",
+               "MED12",
+               "MGA",
+               "MUC16",
+               "NFKBIE",
+               "PCLO",
+               "UMODL1",
+               "XPO1",	
+               "ZC3H18")
 
-names.meta = c("groups")
-
-expr_data = 2 
+expr_data = 1
 
 
 
-data.all = fread(paste(output_folder, "/integrated-tad-table.csv", sep = ""),
+data.all = fread(paste(output_folder, "/integrated-tad-table-methNorm.txt", sep = ""),
                  sep = "\t")
 
 data.all$ID = paste(data.all$tad_name, data.all$ID, sep = ";")
@@ -65,6 +97,8 @@ colnames(diffevent) = c("Analysis", paste("p_", unique(data.all$parent), sep = "
 rm(who)
 
 for (z in 1:length(names.meta)){
+  
+  cat(c(names.meta[z], "\n"))
   
   analysis = names.meta[z]
   groups = as.character(meta[[analysis]])
@@ -100,7 +134,7 @@ for (z in 1:length(names.meta)){
   
   sign.table = top.rank[which(top.rank$adj.P.Val <= 0.01 & abs(top.rank$logFC) > 4), ]
   
-  if (nrow(sign.tad.info) == 0) {
+  if (nrow(sign.table) == 0) {
     
     cat(c("No statistical significant events for:", names.meta[z], "\n"))
     
