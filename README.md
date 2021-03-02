@@ -7,17 +7,30 @@ InterTADs is an open-source tool written in [R](https://www.r-project.org/), for
 You can simply clone the repository by using [git](https://git-scm.com/):
 
 ```
-git clone https://github.com/nikopech/InterTADs
+git clone https://github.com/BiodataAnalysisGroup/InterTADs.git
 ```
 
 Before running any scripts, make sure the following packages are installed in your machine:
-```
-install.packages(c("data.table", "tidyverse", "gplots", "png", "gghalves"))
+
+```R
+install.packages(c("data.table", 
+                   "tidyverse", 
+                   "gplots", 
+                   "png", 
+                   "gghalves"))
+
 devtools::install_github("stephenturner/annotables")
 ```
+
 ...and from [Bioconductor](https://www.bioconductor.org/):
-```
-BiocManager::install(c("TxDb.Hsapiens.UCSC.hg19.knownGene", "TxDb.Hsapiens.UCSC.hg38.knownGene", "GenomicRanges", "org.Hs.eg.db", "systemPipeR", "karyoploteR"))
+
+```R
+BiocManager::install(c("TxDb.Hsapiens.UCSC.hg19.knownGene", 
+                       "TxDb.Hsapiens.UCSC.hg38.knownGene", 
+                       "GenomicRanges", 
+                       "org.Hs.eg.db", 
+                       "systemPipeR", 
+                       "karyoploteR"))
 ```
 
 ## Usage

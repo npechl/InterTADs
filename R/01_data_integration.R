@@ -2,8 +2,8 @@
 
 rm(list = ls())
 
-source("libraries.R")
-source("helpers.R")
+source("R/libraries.R")
+source("R/helpers.R")
 
 start_time = Sys.time()
 

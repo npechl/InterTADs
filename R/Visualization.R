@@ -98,7 +98,7 @@ for(j in tad_to_visual){
         numeric.vector = numeric.vector / 100
         
         if(max(vis_data$range) <= 1){
-          kpPoints(kp, 
+            (kp, 
                    chr = vis_data$chromosome_name,
                    x = vis_data$end_position, 
                    y = numeric.vector, 

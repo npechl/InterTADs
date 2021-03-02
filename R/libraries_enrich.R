@@ -16,7 +16,11 @@ library(hrbrthemes)
 library(extrafont)
 library(pathview)
 library(gridExtra)
+
+# You can find it at https://github.com/nikopech/saveImageHigh
+
 library(saveImageHigh)
+
 library(KEGGREST)
 library(ggpubr)
 library(systemPipeR)

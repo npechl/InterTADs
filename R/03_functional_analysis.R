@@ -1,9 +1,9 @@
 ########## Loading libraries ########## 
 
-source("librariesEnrich.R")
-source("motifEnrich.R")
-source("goPathwayEnrich.R")
-source("visualization.R")
+source("R/libraries_enrich.R")
+source("R/motif_enrich.R")
+source("R/go_pathway_enrich.R")
+source("R/visualization_enrich.R")
 
 ########### Inputs ########## 
 

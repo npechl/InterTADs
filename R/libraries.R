@@ -8,7 +8,7 @@ library(annotables)
 library(GenomicRanges)
 library(gplots)
 library(gghalves)
-library(karyoploteR)
+# library(karyoploteR)
 
 library(limma)
 
