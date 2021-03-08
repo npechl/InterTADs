@@ -12,6 +12,8 @@ source("R/visualization_enrich.R")
 #' 
 #' @param tech Human Genome Reference used
 #' 
+#' @param exp.parent number of the parent file of the expression data 
+#' 
 #' @param dbs Databases used from EnrichR
 #' 
 #' @param type the prevously selected databases acronyms used for the names of the outputs files
@@ -40,6 +42,8 @@ source("R/visualization_enrich.R")
 
 tech <- "hg19" # or "hg38"
 
+exp.parent <- 1
+
 dbs <- c("GO_Molecular_Function_2018","GO_Biological_Process_2018","KEGG_2019_Human")
 
 type <- c("GO.MF","GO.BP","KEGG")
@@ -54,13 +58,13 @@ cut.off.TF <- 0.05
 
 cut.off <- 0.05
 
-criterio <- "P.value"  #"Adjusted.P.value" 
+criterio <- "Adjusted.P.value" #"P.value"
 
 min.genes <- 3
 
 system <- "win"
 
-dir_name <- "results_bloodcancer/"
+dir_name <- "test_files"
 
 output_folder <- paste0("Outputs_test_",criterio,"_",cut.off)
 
@@ -119,8 +123,8 @@ if (!is_empty(files.evenDiff)){
       
       
       #motif enrichment
-      tech <- "hg19"
-      exp.parent <- 1
+     # tech <- "hg19"
+      #exp.parent <- 1
       report.list <- motifEnrich(biodata, folder$motifOutputsFolder,dir_name,
                                  p.adjust.method, cut.off.TF, tech, exp.parent)
       #report.list <- dget(paste0(folder$motifOutputsFolder,"/report MotifEA.txt"))
@@ -272,8 +276,8 @@ if (!is_empty(files.TADiff)){
       
       
       #motif enrichment
-      tech <- "hg19"
-      exp.parent <- 1
+     # tech <- "hg19"
+   #   exp.parent <- 1
       report.list <- motifEnrich(biodata, folder$motifOutputsFolder,p.adjust.method, cut.off.TF, tech, exp.parent)
 
       #report.list <- dget(paste0(folder$motifOutputsFolder,"/report MotifEA.txt"))

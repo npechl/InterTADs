@@ -40,7 +40,7 @@ compareDensityPlot <- function(string,type,data.visual){
       legend.title = element_text(size=24)
     )
 
-  save_as_png(print(p1), file.name =paste(string, "/","Density plot-P values of ",type, ".png", sep =""))
+  save_image(print(p1), file.name =paste(string, "/","Density plot-P values of ",type, ".png", sep =""))
   
 }
 
@@ -88,7 +88,7 @@ histogramPlot <- function(string,type,data.visual){
       axis.title.y = element_text(size = 13, vjust = 0.5,hjust = 0.5)
     )
  
-  save_as_png(print(p2), file.name = paste(string, "/",type," in different TADs", ".png", sep = ""), height = (0.5*nrow(data.plot2)+2), width = 13)#, height = 7, width = 13)
+  save_image(print(p2), file.name = paste(string, "/",type," in different TADs", ".png", sep = ""), height = (0.5*nrow(data.plot2)+2), width = 13)#, height = 7, width = 13)
   
   
   #plot 2.5
@@ -114,7 +114,7 @@ histogramPlot <- function(string,type,data.visual){
       legend.text = element_text(size =24)
     )
   
-  save_as_png(print(p2.5), file.name = paste(string, "/Top ",type, ".png", sep = ""),height = (0.5*nrow(data.plot2))+2, width = 18)#, height = 7, width = 13)
+  save_image(print(p2.5), file.name = paste(string, "/Top ",type, ".png", sep = ""),height = (0.5*nrow(data.plot2))+2, width = 18)#, height = 7, width = 13)
   
 }
 
@@ -179,7 +179,7 @@ networkPlot <- function(string,type,data.visual){
         legend.title = element_text(size = 18)
       )
     
-    save_as_png(print(network), file.name =paste(string, "/Top ",type," network graph", ".png", sep = ""), height = 7, width = 17)
+    save_image(print(network), file.name =paste(string, "/Top ",type," network graph", ".png", sep = ""), height = 7, width = 17)
 
 }
 
@@ -234,7 +234,7 @@ groupPlots <- function(string,type, data.visual){
         
       )+coord_flip() 
 
-    save_as_png(print(p4), file.name =paste(string, "/Adjusted P values per ",type, "/Adjusted P values of ",temp$ID[1], ".png", sep = ""), height = (0.5*nrow(temp)+2), width = 13)
+    save_image(print(p4), file.name =paste(string, "/Adjusted P values per ",type, "/Adjusted P values of ",temp$ID[1], ".png", sep = ""), height = (0.5*nrow(temp)+2), width = 13)
   }
   
   
@@ -271,7 +271,7 @@ groupPlots <- function(string,type, data.visual){
         
       )+coord_flip() 
     
-    save_as_png(print(p5), file.name =paste(string, "/Adjusted P values per TAD/","Adjusted P values of ",temp$TAD[1], ".png", sep = ""), height = (0.5*nrow(temp)+2), width = 13)
+    save_image(print(p5), file.name =paste(string, "/Adjusted P values per TAD/","Adjusted P values of ",temp$TAD[1], ".png", sep = ""), height = (0.5*nrow(temp)+2), width = 13)
     
   }
 }
@@ -436,7 +436,7 @@ perTADPlots <- function(report.list,image_output_folder){
         
       )+coord_flip() 
     
-    save_as_png(print(p2), file.name =paste(tad.dir, "/Histogram Image.png", sep = ""), height = (0.5*nrow(temp)+2), width = 13)
+    save_image(print(p2), file.name =paste(tad.dir, "/Histogram Image.png", sep = ""), height = (0.5*nrow(tabl)+2), width = 13)
   }
   
   return(data.plot5)
@@ -528,7 +528,7 @@ perTFsPlots <- function(report.list, data.plot3.4, image_output_folder){
         
       )+coord_flip() 
 
-    save_as_png(print(p3), file.name =paste(string, "/Barplot.png", sep = ""), height = (0.2*nrow(temp)+3), width = 13)
+    save_image(print(p3), file.name =paste(string, "/Barplot.png", sep = ""), height = (0.2*nrow(temp)+3), width = 13)
     
     
     #plot4
@@ -543,7 +543,7 @@ perTFsPlots <- function(report.list, data.plot3.4, image_output_folder){
     
     p4 <- ggseqlogo(matrices.motifs, method = 'bits', font = "roboto_slab_bold")
     
-    save_as_png(print(p4), file.name =paste(string, "/Motifs.png", sep = ""), width = 14.5, height = 6.1)
+    save_image(print(p4), file.name =paste(string, "/Motifs.png", sep = ""), width = 14.5, height = 6.1)
     
   }
   
@@ -594,7 +594,7 @@ perTFsPlots <- function(report.list, data.plot3.4, image_output_folder){
       legend.text = element_text(size =20)
     )
   
-  save_as_png(print(p6.5), file.name =paste(image_output_folder, "/Top Transcription Factors.png", sep = ""), height = 8, width = 14)
+  save_image(print(p6.5), file.name =paste(image_output_folder, "/Top Transcription Factors.png", sep = ""), height = 8, width = 14)
   
   #plot7
   
@@ -670,7 +670,7 @@ perTFsPlots <- function(report.list, data.plot3.4, image_output_folder){
                       ggarrange(p9,p8,p9,ncol = 1, nrow = 3, heights = c(0.4,10, 0.5)),
                       ncol = 3, nrow =1, widths = c(4,1.3,1.3), heights = c(1.2,0.5, 0.5) )
   
-  save_as_png(print(figure), file.name =paste(image_output_folder, "/Top 10 Transcription Factors.png", sep = ""), height = 15, width = 15)
+  save_image(print(figure), file.name =paste(image_output_folder, "/Top 10 Transcription Factors.png", sep = ""), height = 15, width = 15)
   
 }
 
@@ -697,7 +697,7 @@ densityPlot <- function(data.plot5, image_output_folder){
       legend.title = element_text(size=15)
     )
   
-  save_as_png(print(p5), file.name =paste(image_output_folder, "/Density plot-P values of Motifs.png", sep = ""))
+  save_image(print(p5), file.name =paste(image_output_folder, "/Density plot-P values of Motifs.png", sep = ""))
   
   
 }
