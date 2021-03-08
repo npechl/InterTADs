@@ -278,7 +278,8 @@ if (!is_empty(files.TADiff)){
       #motif enrichment
      # tech <- "hg19"
    #   exp.parent <- 1
-      report.list <- motifEnrich(biodata, folder$motifOutputsFolder,p.adjust.method, cut.off.TF, tech, exp.parent)
+      report.list <- motifEnrich(biodata, folder$motifOutputsFolder,dir_name,
+                         p.adjust.method, cut.off.TF, tech, exp.parent)
 
       #report.list <- dget(paste0(folder$motifOutputsFolder,"/report MotifEA.txt"))
       listMotif <- motifOutputs(report.list)

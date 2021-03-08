@@ -14,7 +14,7 @@ library(igraph)
 library(ggraph)
 library(hrbrthemes)
 library(extrafont)
-library(pathview)
+#library(pathview)
 library(gridExtra)
 
 # You can find it at https://github.com/nikopech/saveImageHigh
