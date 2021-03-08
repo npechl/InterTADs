@@ -60,7 +60,7 @@ min.genes <- 3
 
 system <- "win"
 
-dir_name <- "test_files"
+dir_name <- "results_bloodcancer/"
 
 output_folder <- paste0("Outputs_test_",criterio,"_",cut.off)
 
