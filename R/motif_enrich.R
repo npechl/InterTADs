@@ -1,357 +1,411 @@
-#This file contains functions used in the "enrichmentAnalysis.R" script
+#' This file contains functions used in the `03_enrichmentAnalysis.R` 
+#' script.
 
 
-#This function is called by the "motifEnrich" function
-#It is used to find the sequences, that correspond to TFBS from the genomic coordinates of the events
-prepareSequences <- function(biodata, tech, motif_output_folder, exp.parent, dir_name){
-  
-  #filter for the sequences related to TFs location
-  data <- biodata %>%
-    dplyr::select(ID,tad_name,chromosome_name,start_position,end_position, parent)
-  
-  #expression data parent == 1
-  
-  data.cg <- data[data$parent != exp.parent,] 
-  
-  #expand the CG sequences
-  
-  data.cg$start_position <- data.cg$start_position - 25
-  data.cg$end_position <- data.cg$end_position + 25
-  
-  
-  data.cg <- data.cg %>% dplyr::select(tad_name, start_position, end_position, chromosome_name, parent, ID)
-  
-  #keep promoter of ENSG sequences
-  if (tech == "hg19"){
-    
-    download.file(url="ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_19/gencode.v19.annotation.gff3.gz",
-                  destfile=paste0(dir_name,'/gencode.v19.annotation.gff3.gz'), method='curl')
-    file.hg <- read.gff(paste0(dir_name,"/gencode.v19.annotation.gff3.gz"))
-    
-  }else if (tech == "hg38"){
-    
-    download.file(url="ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_36/gencode.v36.annotation.gff3.gz",
-                  destfile=paste0(dir_name,'/gencode.v36.annotation.gff3.gz'), method='curl')
-    file.hg <- read.gff(paste0(dir_name,"/gencode.v36.annotation.gff3.gz"))
-    
-  }
-  
-  
-  data.ensg <- data[data$parent == exp.parent,] 
-  data.ensg$partID <- unlist(lapply(strsplit(data.ensg$ID,";"),'[[',2))
-  
-  gr = GRanges(seqnames = Rle(paste("chr", data.ensg$chromosome_name, sep = "")),
-               ranges = IRanges(start = as.numeric(data.ensg$start_position),
-                                end = as.numeric(data.ensg$end_position)))
-  
-  hg = GRanges(seqnames = Rle(file.hg$seqid),
-                 ranges = IRanges(start = as.numeric(file.hg$start),
-                                  end = as.numeric(file.hg$end)))
-  
-  overlaps = findOverlaps(gr, hg)
-  
-  overlaps.from = overlaps@from
-  overlaps.to = overlaps@to
-  
-  file.hg = as.data.table(file.hg)
-  file.hg = file.hg[,c("strand", "attributes")]
-  
-  strand.data = cbind(data.ensg[overlaps.from,1:7], file.hg[overlaps.to, ])
-  strand.data <- strand.data[str_detect(strand.data$attributes, strand.data$partID),]
 
-  data.ensg = strand.data[,-c("attributes")]
+#' This function is called by the `03_functional_analysis.R` script.
+#' 
+#' @description 
+#' It performs enrichment analysis using the PWMEnrich tool.
+#' PWMEnrich input is the DNA sequences grouped per TAD.
+motifs_enrich <- function(biodata, 
+                          motif_output_folder, 
+                          dir_name,
+                          p_adjust_method,
+                          cut_off, 
+                          tech, 
+                          exp_parent) {
   
-  data.ensg <- unique(data.ensg)
+  motif_data <- prepare_sequences(biodata, 
+                                  tech, 
+                                  motif_output_folder, 
+                                  exp_parent, 
+                                  dir_name)
   
-  who.plus <- which(data.ensg$strand == "+")
-  who.minus <- which(data.ensg$strand == "-")
+  seq_tad_number <- get_dna_sequences(motif_data,
+                                      motif_output_folder,
+                                      tech)
   
-  data.ensg$end_position[who.plus] <- data.ensg$start_position[who.plus]
-  data.ensg$start_position[who.plus] <- data.ensg$start_position[who.plus] - 2000
+  # Perform motif enrichment analysis using PWMEnrich.
+  report_list <- list()
   
-  data.ensg$start_position[who.minus] <- data.ensg$end_position[who.minus] 
-  data.ensg$end_position[who.minus] <- data.ensg$end_position[who.minus] + 2000
+  # Load the pre-compiled lognormal background.
+  data(PWMLogn.hg19.MotifDb.Hsap)
   
-  data.ensg <- data.ensg %>% dplyr::select(tad_name, start_position, end_position, chromosome_name, parent, ID)
-  
-  data <- rbind(data.cg, data.ensg)
-  data <- data[order(data$tad_name,data$start_position,decreasing = F)]
-  data$AA <- c(1:nrow(data))
-  
-  keep.parent.ID <- unique(data[,c("AA", "ID","parent")])
-  keep.parent.ID <- keep.parent.ID[order(keep.parent.ID$AA, decreasing = T),]
-  
-  new.data = GRanges(seqnames = Rle(paste0(data$chromosome_name,"_",data$tad_name)),
-               ranges = IRanges(start = as.numeric(data$start_position),
-                                end = as.numeric(data$end_position)), use.names = data$ID)
-  
-  new.data <- reduce(new.data, with.revmap = T)
-  
-  new.data <- as.data.table(new.data)
-  
-  new.data <- new.data[,c("seqnames", "start" , "end" ,"revmap")]
-  new.data$revmap <- as.character(new.data$revmap)
-  new.data$revmap <- str_replace_all(new.data$revmap,":"," |")
-  new.data$revmap <- paste0(new.data$revmap," ")
-  new.data$parent <- ""
-  
-  new.data <- separate(new.data,"seqnames",c("chromosome_name", "tad_name"),sep = "_", remove = T)
-  
-  for (k in keep.parent.ID$AA){
+  k <- 1
+ 
+  for (i in c(1:nrow(seq_tad_number))) {
     
-    who <- which(str_detect(new.data$revmap,paste0(as.character(k)," ")))
-    new.data$revmap[who] <- str_replace(new.data$revmap[who],paste0(as.character(k)," "),keep.parent.ID$ID[k])
-    new.data$parent[who] <- paste0(keep.parent.ID$parent[k],"|",new.data$parent[who]) 
-  } 
-  
-  new.data$parent <- str_sub(new.data$parent, start = 1, end = (nchar(new.data$parent)-1) )
-  
-  colnames(new.data) <- c("chromosome_name","tad_name","start_position", "end_position", "merged.from", "parent")
-  
-  write.table(new.data, paste0(motif_output_folder,"/prepared sequences info.csv"), sep = "\t")
-  return(new.data)
-}
-
-
-#This function is called by the "motifEnrich" function
-#It is used to query the Rest Ensembl API  
-#It gets the DNA sequences that correspond to the genomic coordinates of the events
-getDNASequences <- function(input.data, outputs_folder, tech){
-  
-  if (tech == "hg19"){
-    hg.version = "GRCh37"
-  }else if (tech == "hg38"){
-    hg.version = "GRCh38"
-  }
-  
-  #query Ensembl Rest Api to get the sequences 
-  #per TAD so as not to lose the TAD information
-  new.TADs <- input.data %>%
-    group_by(tad_name)
-  new.groups <- group_split(new.TADs)
-  
-  #iterations <- c(1:5)
-  #k <- 5+1
-  iterations <- c(1:length(new.groups))
-  k <- length(new.groups)+1
-  seq.tad.number <- data.table(start = numeric(k),
-                               end = numeric(k),
-                               tad = character(k),
-                               stringsAsFactors = F)
-  seq.tad.number$start[1] <- 1
-  
-  for (i in iterations){
+    sequence <- readDNAStringSet(paste0(motif_output_folder, "/seq_perTADs.fasta"), 
+                                 format="fasta", 
+                                 skip = (seq_tad_number$start[i] - 1), 
+                                 nrec = (seq_tad_number$end[i] - seq_tad_number$start[i] + 1))
     
-    data <- new.groups[[i]]
-    iter <- c(1:nrow(data))  
-    seq <- data.table(dna.seq = character(),
-                      tad = character(),
-                      stringsAsFactors = FALSE)
+    res <- motifEnrichment(sequence, PWMLogn.hg19.MotifDb.Hsap)
+    report <- groupReport(res, by.top.motifs = TRUE)
     
-    for (j in iter){
-      start <- data$start_position[j]
-      end <- data$end_position[j]
-      chr <- data$chromosome_name[j]
-      server <- "http://rest.ensembl.org"
-      ext <- paste0("/sequence/region/human/",chr,":",start, "..", end, "?coord_system_version=",hg.version )
-      r <- httr::GET(paste(server, ext, sep = ""), content_type("text/plain"))
+    report@d$adjusted.p.value <- p.adjust(report@d$p.value, 
+                                          method = p_adjust_method)
+    
+    report <- report[report$adjusted.p.value < cut_off]
+    
+    if (nrow(report@d) > 0) {
       
-     # if (httr::status_code(r) == 503){
-    #    for (a in c(1:5)){
-     #     r <- httr::GET(paste(server, ext, sep = ""), content_type("text/plain"))
-      #  }
-    #  }
-      
-      #stop_for_status(r)
-      x <- data.table(dna.seq = httr::content(r),
-                      tad = data$tad_name[j], 
-                      stringsAsFactors = FALSE)
-      seq <- rbind(seq,x)
-    } 
-    
-    if (!is.null(seq)){
-      
-      write.fasta(sequences = as.list(seq$dna.seq) , names = seq$tad, file.out = paste0(outputs_folder,"/seq_perTADs.fasta"), open = "a")
-      seq.tad.number$end[i] <- (nrow(seq) + seq.tad.number$start[i] -1)
-      seq.tad.number$start[i+1] <- (seq.tad.number$end[i] +1)
-      seq.tad.number$tad[i] <- data$tad_name[1]
+      report_list[[k]] <- report@d
+      report_list[[k]]$tad <- seq_tad_number$tad[i]
+      k <- k +1
       
     }
   }
   
-  seq.tad.number <- seq.tad.number[which(seq.tad.number$end != 0),]
-  return(seq.tad.number)
-}
+  rm(motif_data, report, seq_tad_number, sequence, res)
+  
+  return(report_list)
+  
+} 
 
 
-#This function is called by the "enrichmentAnalysis.R" script 
-#It manipulates the enriched data after the analysis and creates three output data.tables 
-#to be used for the Output csv files and the visualization
-motifOutputs <- function(report.list){
+
+#' This function is called by the `03_functional_analysis.R` script.
+#' 
+#' @description  
+#' It manipulates the enriched data after the analysis and creates 
+#' three output data.tables to be used for the Output csv files and 
+#' the visualization.
+motif_outputs <- function(report_list) {
   
-  csv_perTAD <- data.table(TAD = character(),
-                           TFs = character(),
-                           Motifs = character(),
-                           Adjusted.P.value = character(),
-                           P.value = character())
+  csv_per_tad <- data.table(tad = character(),
+                            tfs = character(),
+                            motifs = character(),
+                            adjusted_p_value = character(),
+                            p_value = character())
   
-  csv_perTF <- data.table(TFs = character(),
-                          TAD = character(),
-                          Adjusted.P.value = character(),
-                          Motifs = character())
+  csv_per_tf <- data.table(tfs = character(),
+                           tad = character(),
+                           adjusted_p_value = character(),
+                           motifs = character())
   
-  topMotifs <- data.table(target = character(),
-                          adjusted.p.value = numeric(),
-                          id = character())
-  
-  iterations <- c(1: length(report.list))
-  for (i in iterations){
-    temp <- report.list[[i]]@d
+  top_motifs <- data.table(target = character(),
+                           adjusted_p_value = numeric(),
+                           id = character())
+ 
+  for (i in c(1:length(report_list))) {
     
-    #exclude uncharacterized motifs
-    temp <- temp[str_detect(temp$id,"UW.Motif.",negate = TRUE),]
-    perTAD <- temp %>%
-      dplyr::select(tad,target,id,adjusted.p.value, p.value) %>%
-      dplyr::summarise(TAD = tad,TFs = paste(target, collapse = "|"),
-                       Motifs = paste(id, collapse = "|"),
-                       Adjusted.P.value = paste(adjusted.p.value, collapse = "|"),
-                       P.value = paste(p.value, collapse = "|"),) %>%
-      as.data.table()%>%
+    temp <- report_list[[i]]
+    
+    # Exclude uncharacterized motifs
+    temp <- temp[str_detect(temp$id, "UW.Motif.", negate = TRUE), ]
+    
+    per_tad <- temp %>%
+      dplyr::select(tad, target, id, adjusted.p.value, p.value) %>%
+      dplyr::summarise(tad = tad,
+                       tfs = paste(target, collapse = "|"),
+                       motifs = paste(id, collapse = "|"),
+                       adjusted_p_value = paste(adjusted.p.value, collapse = "|"),
+                       p_value = paste(p.value, collapse = "|"), ) %>%
+      as.data.table() %>%
       unique()
-    csv_perTAD <- rbind(csv_perTAD,perTAD)
     
-    perTF.topMotif <- temp %>%
-      dplyr::select(target,adjusted.p.value,id)
+    csv_per_tad <- rbind(csv_per_tad, per_tad)
     
-    topMotifs <- rbind(topMotifs, perTF.topMotif)
+    per_tf_top_motif <- temp %>%
+      dplyr::select(target, adjusted.p.value, id)
     
-    perTF <- temp %>%
-      dplyr::select(target,tad,adjusted.p.value,id) %>%
+    colnames(per_tf_top_motif) <- c("target", "adjusted_p_value", "id")
+    
+    top_motifs <- rbind(top_motifs, per_tf_top_motif)
+    
+    per_tf <- temp %>%
+      dplyr::select(target, tad, adjusted.p.value, id) %>%
       group_by(target,tad) %>%
-      dplyr::summarise(target, tad,
-                       Adjusted.P.value = paste(adjusted.p.value, collapse = "|"),
-                       Motifs = paste(id, collapse = "|"),) %>%
-      as.data.table()%>%
+      dplyr::summarise(target, 
+                       tad,
+                       adjusted_p_value = paste(adjusted.p.value, collapse = "|"),
+                       motifs = paste(id, collapse = "|"), ) %>%
+      as.data.table() %>%
       unique()
-    colnames(perTF) <- c("TFs", "TAD", "Adjusted.P.value", "Motifs")
-    csv_perTF <- rbind(csv_perTF,perTF)
+    
+    colnames(per_tf) <- c("tfs", "tad", "adjusted_p_value", "motifs")
+    csv_per_tf <- rbind(csv_per_tf, per_tf)
   }
   
-  data.visual <- csv_perTF %>%
-    dplyr::select(TFs,TAD,Adjusted.P.value)
+  data_visual <- csv_per_tf %>%
+    dplyr::select(tfs, tad, adjusted_p_value)
   
-  csv_perTF <- csv_perTF %>%
-    group_by(TFs) %>%
-    dplyr::summarise(TFs,TAD = paste(TAD,collapse ="|"),
-                     Adjusted.P.value = paste(Adjusted.P.value, collapse = "|"),
-                     Motifs = paste(Motifs, collapse = "|"),) %>%
-    as.data.table()%>%
+  csv_per_tf <- csv_per_tf %>%
+    group_by(tfs) %>%
+    dplyr::summarise(tfs,
+                     tad = paste(tad,collapse ="|"),
+                     adjusted_p_value = paste(adjusted_p_value, collapse = "|"),
+                     motifs = paste(motifs, collapse = "|"), ) %>%
+    as.data.table() %>%
     unique()
-  
-  iterations <- c(1:nrow(csv_perTF))
-  for(i in iterations){
+ 
+  for(i in c(1:nrow(csv_per_tf))) {
     
-    temp <- csv_perTF[i] %>%
-      dplyr::select(TFs,Motifs)
+    temp <- csv_per_tf[i] %>%
+      dplyr::select(tfs, motifs)
     temp <- temp %>%
-      separate_rows(Motifs, sep = "\\|") %>%
+      separate_rows(motifs, sep = "\\|") %>%
       as.data.table()
     temp <- unique(temp)
     
     temp <- temp %>%
-      group_by(TFs) %>%
-      dplyr::summarise(TFs,
-                       Motifs = paste(Motifs, collapse = "|"),) %>%
-      as.data.table()%>%
+      group_by(tfs) %>%
+      dplyr::summarise(tfs,
+                       motifs = paste(motifs, collapse = "|"), ) %>%
+      as.data.table() %>%
       unique()
-    csv_perTF[i,4] <- temp[1,2]
+    
+    csv_per_tf[i, 4] <- temp[1, 2]
   }
   
-  table.TFs.Motifs <- csv_perTF %>%
-    dplyr::select(TFs,Motifs)
-  data.visual <- left_join(data.visual,table.TFs.Motifs)
+  table_tsf_motifs <- csv_per_tf %>%
+    dplyr::select(tfs, motifs)
   
-  topMotifs <- topMotifs %>%
+  data_visual <- left_join(data_visual, table_tsf_motifs)
+  
+  top_motifs <- top_motifs %>%
     group_by(target, id) %>%
-    summarise(target, id, adjusted.p.value = mean (adjusted.p.value)) %>%
+    summarise(target, id, adjusted_p_value = mean(adjusted_p_value)) %>%
     unique()
   
-  topMotifs <- topMotifs %>%
+  top_motifs <- top_motifs %>%
     group_by(target) %>%
-    summarise(target, Adjusted.P.value = min(adjusted.p.value), id, adjusted.p.value)
+    summarise(target, 
+              min_adjusted_p_value = min(adjusted_p_value), 
+              id, adjusted_p_value)
   
-  topMotifs <- topMotifs[which(topMotifs$adjusted.p.value == topMotifs$Adjusted.P.value),]
+  who_top <- which(top_motifs$adjusted_p_value == top_motifs$min_adjusted_p_value)
   
-  topMotifs <- dplyr::select(topMotifs, target, id)
-  colnames(topMotifs) <- c("TFs","top.motif")
+  top_motifs <- top_motifs[who_top, ]
   
-  data.visual <- left_join(data.visual,topMotifs)
-  csv_perTF <- left_join(csv_perTF,topMotifs)
+  top_motifs <- dplyr::select(top_motifs, target, id)
+  colnames(top_motifs) <- c("tfs", "top_motif")
   
-  newList <- list(table_perTAD = csv_perTAD,table_perTFs = csv_perTF, data.visual = data.visual)
-  return(newList)
+  data_visual <- left_join(data_visual, top_motifs)
+  csv_per_tf <- left_join(csv_per_tf, top_motifs)
+  
+  result <- list(table_per_tad = csv_per_tad,
+                 table_per_tfs = csv_per_tf, 
+                 data_visual = data_visual)
+  
+  rm(csv_per_tf, csv_per_tad, data_visual, top_motifs, who_top,
+     table_tsf_motifs, per_tf, temp)
+  
+  return(result)
 }
 
 
-#This function is called by the "enrichmentAnalysis.R" script
-#It performs enrichment analysis using the PWMEnrich tool
-#PWMEnrich input is the DNA sequences grouped per TAD
-motifEnrich <- function(biodata, motif_output_folder, dir_name,
-                        p.adjust.method, cut.off, tech, exp.parent){
+
+#' This function is called by the `motifs_enrich` function.
+#' 
+#' @description 
+#' It is used to find the sequences, that correspond to TFBS 
+#' from the genomic coordinates of the events.
+prepare_sequences <- function(data, 
+                              tech, 
+                              motif_output_folder, 
+                              exp_parent, 
+                              dir_name) {
   
-  #number of cores available for motif enrichment analysis
-  #N <- 3
+  # Filter for the sequences related to TFs location
+  data <- data %>%
+    dplyr::select(tad_name, start_position, end_position,
+                  chromosome_name, parent, ID)
   
-  #speed up execution
-  #registerCoresPWMEnrich(N)
-  #useBigMemoryPWMEnrich(TRUE)
+  data_cg <- data[data$parent != exp_parent, ] 
   
-  motif.data <- prepareSequences(biodata, tech, motif_output_folder, exp.parent, dir_name)
- 
-  seq.tad.number <- getDNASequences(motif.data,motif_output_folder, tech)
- 
-  #perform motif enrichment analysis using PWMEnrich
-  report.list <- list()
-  #report.list.adj <- list()
+  # Expand the CG sequences
   
-  # load the pre-compiled lognormal background
-  data(PWMLogn.hg19.MotifDb.Hsap)
-  #l <- 1
-  k <- 1
-  #iterations <- c(1:10)
-  iterations <- c(1:nrow(seq.tad.number))
-  for (i in iterations){
+  data_cg$start_position <- data_cg$start_position - 25
+  data_cg$end_position <- data_cg$end_position + 25
+  
+  # Keep promoter of ENSG sequences
+  if (tech == "hg19") {
+   
+      file_hg <- read.gff(paste0(dir_name, "/gencode.v19.annotation.gff3.gz"))
     
-    sequence = readDNAStringSet(paste0(motif_output_folder,"/seq_perTADs.fasta"), format="fasta", skip = (seq.tad.number$start[i]-1), nrec = (seq.tad.number$end[i]-seq.tad.number$start[i]+1) )
-    res = motifEnrichment(sequence, PWMLogn.hg19.MotifDb.Hsap)
-    report = groupReport(res, by.top.motifs = TRUE)
+  } else if (tech == "hg38") {
     
-    report@d$adjusted.p.value <- p.adjust(report@d$p.value, method = p.adjust.method)
-    #report.p <- report[report$p.value < cut.off]
-    report <- report[report$adjusted.p.value < cut.off]
+     file_hg <- read.gff(paste0(dir_name, "/gencode.v36.annotation.gff3.gz"))
     
-    if (nrow(report@d)>0){
-      report.list[[k]]<-report
-      report.list[[k]]@d$tad <- seq.tad.number$tad[i]
-      k <- k +1
-    }
-    
-    #if (nrow(report.p@d)>0){
-    #  report.list.p[[l]]<-report.p
-    #  report.list.p[[l]]@d$tad <- seq.tad.number$tad[i]
-     # l <- l+1
-    #}
   }
- 
-  #registerCoresPWMEnrich(NULL)
-  #useBigMemoryPWMEnrich(FALSE)
-  #filename <- paste0(motif_output_folder,"/report MotifEA P value.txt")
-  #file.create(filename, showWarnings = FALSE)
-  #dput(report.list.p, file = filename)
   
-  #filename <- paste0(motif_output_folder,"/report MotifEA adjusted P value.txt")
-  #file.create(filename, showWarnings = FALSE)
-  #dput(report.list.adj, file = filename)
-  return(report.list)
   
+  data_ensg <- data[data$parent == exp_parent, ] 
+  data_ensg$partID <- unlist(lapply(strsplit(data_ensg$ID,";"), '[[', 2))
+  
+  gr <- GRanges(seqnames = Rle(paste("chr", data_ensg$chromosome_name, sep = "")),
+                ranges = IRanges(start = as.numeric(data_ensg$start_position),
+                                 end = as.numeric(data_ensg$end_position)))
+  
+  hg <- GRanges(seqnames = Rle(file_hg$seqid),
+                 ranges = IRanges(start = as.numeric(file_hg$start),
+                                  end = as.numeric(file_hg$end)))
+  
+  overlaps <- findOverlaps(gr, hg)
+  
+  overlaps_from <- overlaps@from
+  overlaps_to <- overlaps@to
+  
+  file_hg <- as.data.table(file_hg)
+  file_hg <- file_hg[ ,c("strand", "attributes")]
+  
+  strand_data <- cbind(data_ensg[overlaps_from, 1:7], 
+                       file_hg[overlaps_to, ])
+  
+  strand_data <- strand_data[str_detect(strand_data$attributes, strand_data$partID), ]
+
+  data_ensg <- strand_data[, -c("attributes")]
+  
+  data_ensg <- unique(data_ensg)
+  
+  who_plus <- which(data_ensg$strand == "+")
+  who_minus <- which(data_ensg$strand == "-")
+  
+  data_ensg$end_position[who_plus] <- data_ensg$start_position[who_plus]
+  data_ensg$start_position[who_plus] <- data_ensg$start_position[who_plus] - 2000
+  
+  data_ensg$start_position[who_minus] <- data_ensg$end_position[who_minus] 
+  data_ensg$end_position[who_minus] <- data_ensg$end_position[who_minus] + 2000
+  
+  data_ensg <- data_ensg %>% 
+    dplyr::select(tad_name, start_position, end_position, 
+                  chromosome_name, parent, ID)
+  
+  data <- rbind(data_cg, data_ensg)
+  data <- data[order(data$tad_name,data$start_position, decreasing = FALSE)]
+  data$AA <- c(1:nrow(data))
+  
+  keep_parent_ID <- unique(data[,c("AA", "ID", "parent")])
+  keep_parent_ID <- keep_parent_ID[order(keep_parent_ID$AA, decreasing = TRUE),]
+  
+  new_data <- GRanges(seqnames = Rle(paste0(data$chromosome_name, "_", data$tad_name)),
+                      ranges = IRanges(start = as.numeric(data$start_position),
+                                       end = as.numeric(data$end_position)),
+                      use.names = data$ID)
+  
+  new_data <- reduce(new_data, with.revmap = TRUE)
+  
+  new_data <- as.data.table(new_data)
+  
+  new_data <- new_data[, c("seqnames", "start" , "end" , "revmap")]
+  new_data$revmap <- as.character(new_data$revmap)
+  new_data$revmap <- str_replace_all(new_data$revmap, ":", " |")
+  new_data$revmap <- paste0(new_data$revmap," ")
+  new_data$parent <- ""
+  
+  new_data <- separate(new_data, "seqnames", 
+                       c("chromosome_name", "tad_name"), 
+                       sep = "_", remove = TRUE)
+  
+  for (k in keep_parent_ID$AA) {
+    
+    who <- which(str_detect(new_data$revmap, paste0(as.character(k), " ")))
+    
+    new_data$revmap[who] <- str_replace(new_data$revmap[who],
+                                        paste0(as.character(k), " "),
+                                        keep_parent_ID$ID[k])
+    
+    new_data$parent[who] <- paste0(keep_parent_ID$parent[k], "|", new_data$parent[who]) 
+  } 
+  
+  new_data$parent <- str_sub(new_data$parent, 
+                             start = 1, end = (nchar(new_data$parent) - 1))
+  
+  colnames(new_data) <- c("chromosome_name","tad_name",
+                          "start_position", "end_position",
+                          "merged_from", "parent")
+  
+  write.table(new_data, 
+              paste0(motif_output_folder,"/prepared sequences info.csv"), 
+              sep = "\t", row.names = FALSE)
+  
+  rm(data_cg, data_ensg, data, file_hg, gr, hg, overlaps,
+     overlaps_from, overlaps_to, strand_data, who_minus, 
+     who_plus, keep_parent_ID, who)
+  
+  return(new_data)
 }
+
+
+#' This function is called by the `motifs_enrich` function.
+#' 
+#' @description 
+#' It is used to query the Rest Ensembl API.  
+#' It gets the DNA sequences that correspond to the genomic 
+#' coordinates of the events.
+get_dna_sequences <- function(input_data, 
+                              outputs_folder, 
+                              tech) {
+  
+  if (tech == "hg19") {
+    
+    hg_version <- "GRCh37"
+  
+  } else if (tech == "hg38") {
+  
+      hg_version <- "GRCh38"
+  }
+  
+  # Query Ensembl Rest Api to get the sequences 
+  # per TAD so as not to lose the TAD information.
+  
+  new_TADs <- input_data %>%
+    group_by(tad_name)
+  new_groups <- group_split(new_TADs)
+  
+  iterations <- c(1:length(new_groups))
+  k <- length(new_groups) + 1
+  seq_tad_number <- data.table(start = numeric(k),
+                               end = numeric(k),
+                               tad = character(k)) 
+  
+  seq_tad_number$start[1] <- 1
+  
+  for (i in iterations) {
+    
+    data <- new_groups[[i]]
+    iter <- c(1:nrow(data))  
+    seq <- data.table(dna_seq = character(),
+                      tad = character())
+    
+    for (j in iter) {
+      
+      start <- data$start_position[j]
+      end <- data$end_position[j]
+      chr <- data$chromosome_name[j]
+      
+      server <- "http://rest.ensembl.org"
+      ext <- paste0("/sequence/region/human/", chr, ":", start, "..", end,
+                    "?coord_system_version=", hg_version)
+      
+      r <- httr::GET(paste(server, ext, sep = ""), content_type("text/plain"))
+      
+      seq <- rbind(seq, data.table(dna_seq = httr::content(r),
+                                  tad = data$tad_name[j]))
+      
+    } 
+    
+    if (!is.null(seq)) {
+      
+      write.fasta(sequences = as.list(seq$dna_seq), names = seq$tad, 
+                  file.out = paste0(outputs_folder,"/seq_perTADs.fasta"), 
+                  open = "a")
+      
+      seq_tad_number$end[i] <- (nrow(seq) + seq_tad_number$start[i] - 1)
+      seq_tad_number$start[i + 1] <- (seq_tad_number$end[i] + 1)
+      seq_tad_number$tad[i] <- data$tad_name[1]
+      
+    }
+  }
+  
+  seq_tad_number <- seq_tad_number[which(seq_tad_number$end != 0), ]
+  
+  rm(new_groups, new_TADs, data, seq, r, iterations, iter, k)
+  
+  return(seq_tad_number)
+}
+
+

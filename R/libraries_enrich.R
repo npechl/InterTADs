@@ -1,4 +1,4 @@
-########## Loading libraries ########## 
+# Loading libraries ------------------
 library(pryr)
 library(PWMEnrich)
 library(PWMEnrich.Hsapiens.background)

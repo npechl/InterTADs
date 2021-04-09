@@ -1,36 +1,44 @@
-########## Loading libraries ########## 
+# Load libraries and functions -------------------
+
+rm(list = ls())
 
 source("R/libraries_enrich.R")
 source("R/motif_enrich.R")
 source("R/go_pathway_enrich.R")
 source("R/visualization_enrich.R")
 
-########### Inputs ########## 
+# Inputs -----------------
 
 
-#' Input parameters for TADiff part
+#' Functional analysis.
+#' 
+#' @description  
+#' Enrichment analysis with GO terms, KEGG pathways and motif enrichment with TFs. 
+#' Optional step to be performed on the output files 
+#' of the `02c_evenDiff.R` and `02d_TADiff.R` scripts. 
+#' 
 #' 
 #' @param tech Human Genome Reference used
 #' 
-#' @param exp.parent number of the parent file of the expression data 
+#' @param exp_parent number of the parent file of the expression data 
 #' 
 #' @param dbs Databases used from EnrichR
 #' 
-#' @param type the prevously selected databases acronyms used for the names of the outputs files
-#'             e.g. GO.MF for GO_Molecular_Function_2018
+#' @param type the prevously selected databases acronyms used for the names 
+#'             of the outputs files e.g. GO_MF for GO_Molecular_Function_2018
 #' 
-#' @param genes.cover gene coverage of the databases
+#' @param genes_cover gene coverage of the databases
 #' 
-#' @param p.adjust.method p adjustment method, the methods supported are: 
-#'                        c("holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none")
+#' @param p_adjust_method p adjustment method, the methods supported are: 
+#'                        `c("holm", "hochberg", "hommel", "bonferroni",`
+#'                        `"BH", "BY", "fdr", "none")`
 #' 
-#' @param criterio Enrichr result column selected as criterio: "P.value" or "Adjusted.P.value"
+#' @param criterio Enrichr result column selected as criterio: 
+#'                `"p-value"` or `"adjusted p-value"`
 #' 
-#' @param cut.off cut-off Enrichr enrichment (adjusted) p-value
+#' @param cut_off cut-off Enrichr enrichment (adjusted) p-value
 #' 
-#' @param cut.off.TF cut-off motif enrichment adjusted p-value
-#' 
-#' @param min.genes min number of genes in over-represented terms
+#' @param min_genes min number of genes in over-represented terms
 #' 
 #' @param system RStudio supports different fonts for different operating systems
 #'  
@@ -42,383 +50,467 @@ source("R/visualization_enrich.R")
 
 tech <- "hg19" # or "hg38"
 
-exp.parent <- 1
+exp_parent <- 1
 
-dbs <- c("GO_Molecular_Function_2018","GO_Biological_Process_2018","KEGG_2019_Human")
+dbs <- c("GO_Molecular_Function_2018",
+         "GO_Biological_Process_2018",
+         "KEGG_2019_Human")
 
-type <- c("GO.MF","GO.BP","KEGG")
+type <- c("GO_MF", "GO_BP", "KEGG")
 
-genes.cover <- c(11459,14433,7802)
+genes_cover <- c(11459, 14433, 7802)
 
-#choose a p adjust method, the methods supported are:
-#c("holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none")
-p.adjust.method <- "fdr"
+p_adjust_method <- "fdr"
 
-cut.off.TF <- 0.05
+cut_off <- 1
 
-cut.off <- 0.05
+criterio <- "adjusted p-value" #"p-value" 
 
-criterio <- "Adjusted.P.value" #"P.value"
-
-min.genes <- 3
+min_genes <- 3
 
 system <- "win"
 
 dir_name <- "test_files"
 
-output_folder <- paste0("Outputs_test_",criterio,"_",cut.off)
+output_folder <- paste0("Outputs_tad_files_new")
 
-#scal_test <- data.table(part = character(6),
-#                        time = character(6),
-#                        memory = numeric(6) )
+# Set graph fonts --------------------
+set_graph_fonts(system)
 
-#scal_test$part[1] <- "start"
-#scal_test$time[1] <- format(Sys.time(), "%d-%b-%Y %H.%M.%S")
-#scal_test$memory[1] <- mem_used()
+# Download hg gff file ----------------
+if (tech == "hg19") {
+   
+   download.file(url="ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_19/gencode.v19.annotation.gff3.gz",
+                 destfile=paste0(dir_name,'/gencode.v19.annotation.gff3.gz'), 
+                 method='curl')
+   
+} else if (tech == "hg38") {
+   
+   download.file(url="ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_36/gencode.v36.annotation.gff3.gz",
+                 destfile=paste0(dir_name,'/gencode.v36.annotation.gff3.gz'), 
+                 method='curl')
+   
+}
 
-########### Enrichment + Data Analysis ##########
+# Enrichment + Data Analysis -----------------
 
 dir.create(output_folder, showWarnings = FALSE)
 
-data.type <- data.table(type =c("GO.MF","GO.BP","KEGG"),
-                        cover = as.numeric(genes.cover))
+data_type <- data.table(type = type,
+                        cover = as.numeric(genes_cover))
 
-files.evenDiff <- list.files(dir_name,pattern = c("evenDiff"))
-files.TADiff <- list.files(dir_name,pattern = c("TADiff"))
+files_evenDiff <- list.files(dir_name, pattern = c("evenDiff"))
+files_TADiff   <- list.files(dir_name, pattern = c("TADiff"))
 
-if (!is_empty(files.evenDiff)){
-   for (one.file in files.evenDiff){
+# evenDiff files --------------
+
+if (!is_empty(files_evenDiff)) {
+   
+   for (one_file in files_evenDiff) {
       
-      file.name <- str_remove(one.file,".txt")
-      folder <- createFolders(paste0(output_folder,"/",file.name))
-      biodata <- fread(paste0(dir_name,"/",one.file))
+      file_name <- str_remove(one_file, ".txt")
+      folder <- create_folders(paste0(output_folder, "/", file_name))
+      biodata <- fread(paste0(dir_name, "/", one_file))
       
-      #enrichment all
-      listAll <- enrichAll(biodata,dbs, cut.off,criterio, type)
+      # Enrichment all
+      list_all <- enrich_all(biodata, dbs, cut_off, criterio, type)
       
-      #data analysis
-      
-      for (l in c(1:length(dbs))){
-         if (nrow(listAll[[l]]) > 0){
+      # Data analysis
+      for (l in c(1:length(dbs))) { 
+         
+         if (nrow(list_all[[l]]) > 0) {
             
-            name <- names(listAll)[l]
-            genes.coverage <- data.type[type == name,cover]
-            result <- dataAnalysis(listAll[[l]], name,listAll$data.with.genes, genes.coverage,p.adjust.method, min.genes)
-            if (!is.null(result)) {assign(paste0('list.', name, '.All'), result)}
+            name <- names(list_all)[l]
+            genes_coverage <- data_type[type == name, cover]
+            result <- data_analysis(list_all[[l]],
+                                    name,
+                                    list_all$data_with_genes, 
+                                    genes_coverage,
+                                    p_adjust_method, 
+                                    min_genes)
+            
+            if (!is.null(result)) assign(paste0('list_', name, '_all'), result)
          }
          
       }
       
-      #get pathview input data
-      #if (nrow(listAll$KEGG) != 0){
-      
-      #listPathAll <- getKEGGIds(listAll$KEGG, biodata[,Gene_id,diff])         
-      #}
-      
-      if( exists("list.GO.MF.All") & exists("list.GO.BP.All")){
+      if (exists("list_GO_MF_all") & exists("list_GO_BP_all")) {
          
-         #join GO Molecular Function and Biological Process outputs
-         dataAll <- full_join(list.GO.MF.All$data.perTAD, list.GO.BP.All$data.perTAD, by = "TAD")
+         # Join GO Molecular Function and Biological Process outputs
+         data_all <- full_join(list_GO_MF_all$data_per_tad, 
+                               list_GO_BP_all$data_per_tad, 
+                               by = "TAD")
       }
       
       
-      #motif enrichment
-     # tech <- "hg19"
-      #exp.parent <- 1
-      report.list <- motifEnrich(biodata, folder$motifOutputsFolder,dir_name,
-                                 p.adjust.method, cut.off.TF, tech, exp.parent)
-      #report.list <- dget(paste0(folder$motifOutputsFolder,"/report MotifEA.txt"))
-      listMotif <- motifOutputs(report.list)
+      # Motif enrichment
+      report_list <- motifs_enrich(biodata, 
+                                   folder$motif_outputs,
+                                   dir_name,
+                                   p_adjust_method, 
+                                   cut_off,
+                                   tech,
+                                   exp_parent)
       
-      ########### Output Files ########## 
+      if (length(report_list) > 0) list_motif <- motif_outputs(report_list)
       
-      #enrichment all
-      if (exists("dataAll")){
-         fwrite(dataAll, paste0(folder$goAllOutputs, "/over-represented GO terms-enrichment all.csv"), 
+      # Output Files ------------- 
+      
+      # Enrichment all
+      if (exists("data_all")) {
+         fwrite(data_all, 
+                paste0(folder$go_all_outputs, "/over-represented GO terms-enrichment all.csv"), 
                 row.names = FALSE, sep = "\t", quote = FALSE)
       }
       
-      if (exists("list.GO.MF.All")){
-         fwrite(list.GO.MF.All$data.perTerm, paste0(folder$goAllOutputs, "/GO MF Terms in different TADs.csv"), 
+      if (exists("list_GO_MF_all")) {
+         
+         fwrite(list_GO_MF_all$data_per_term,
+                paste0(folder$go_all_outputs, "/GO MF Terms in different TADs.csv"), 
                 row.names = FALSE, sep = "\t", quote = FALSE)
          
-         fwrite(list.GO.MF.All$data.perTAD, paste0(folder$goAllOutputs, "/over-represented GO MF terms-enrichment all.csv"), 
-                row.names = FALSE, sep = "\t", quote = FALSE)
-         
-      }
-      
-      if (exists("list.GO.BP.All")){
-         
-         fwrite(list.GO.BP.All$data.perTerm, paste0(folder$goAllOutputs, "/GO BP Terms in different TADs.csv"), 
-                row.names = FALSE, sep = "\t", quote = FALSE)
-         
-         
-         fwrite(list.GO.BP.All$data.perTAD, paste0(folder$goAllOutputs, "/over-represented GO BP terms-enrichment all.csv"), 
+         fwrite(list_GO_MF_all$data_per_tad, 
+                paste0(folder$go_all_outputs, "/over-represented GO MF terms-enrichment all.csv"), 
                 row.names = FALSE, sep = "\t", quote = FALSE)
          
       }
       
-      if (exists("list.KEGG.All")){
+      if (exists("list_GO_BP_all")) {
          
-         fwrite(list.KEGG.All$data.perTAD, paste(folder$keggAllOutputs, "/over-represented KEGG Pathways-enrichment all.csv", sep = ""), 
+         fwrite(list_GO_BP_all$data_per_term, 
+                paste0(folder$go_all_outputs, "/GO BP Terms in different TADs.csv"), 
                 row.names = FALSE, sep = "\t", quote = FALSE)
          
          
-         fwrite(list.KEGG.All$data.perTerm, paste0(folder$keggAllOutputs, "/KEGG Pathways in different TADs.csv"), 
+         fwrite(list_GO_BP_all$data_per_tad, 
+                paste0(folder$go_all_outputs, "/over-represented GO BP terms-enrichment all.csv"), 
                 row.names = FALSE, sep = "\t", quote = FALSE)
          
-         #fwrite(listPathAll$output.csv, paste0(folder$keggAllOutputs, "/Pathview input.csv"),
-         #       row.names = FALSE, sep = "\t", quote = FALSE)
+      }
+      
+      if (exists("list_KEGG_all")) {
          
+         fwrite(list_KEGG_all$data_per_tad, 
+                paste0(folder$kegg_all_outputs, "/over-represented KEGG Pathways-enrichment all.csv"), 
+                row.names = FALSE, sep = "\t", quote = FALSE)
+         
+         
+         fwrite(list_KEGG_all$data_per_term, 
+                paste0(folder$kegg_all_outputs, "/KEGG Pathways in different TADs.csv"), 
+                row.names = FALSE, sep = "\t", quote = FALSE)
          
       }
       
      
-      #motif enrichment
-      fwrite(listMotif$table_perTAD, paste0(folder$motifOutputsFolder, "/over-represented TFs in each tad.csv"), 
-             row.names = FALSE, sep = "\t", quote = FALSE)
-      fwrite(listMotif$table_perTFs, paste0(folder$motifOutputsFolder, "/TFs in different TADs.csv"), 
-             row.names = FALSE, sep = "\t", quote = FALSE)
-      file.create(paste0(folder$motifOutputsFolder,"/report MotifEA.txt"), showWarnings = FALSE)
-      dput(report.list, file = paste0(folder$motifOutputsFolder,"/report MotifEA.txt"))
-      
-      ########### Visualization ##########
-      
-      setGraphFonts(system)
-      
-      #enrich all visualization
-      if (exists("list.GO.MF.All")){
-         enrichrVisual(folder$goAllImages,"GO MF Terms",list.GO.MF.All$data.visual, criterio)
-      }
-      
-      if (exists("list.GO.BP.All")){
-         enrichrVisual(folder$goAllImages, "GO BP Terms",list.GO.BP.All$data.visual, criterio)
-      }
-      
-      if (exists("list.KEGG.All")){
-         enrichrVisual(folder$keggAllImages, "KEGG Pathways",list.KEGG.All$data.visual, criterio)
-         #pathVisual(listPathAll$pathview.input ,folder$keggAllImages)
+      # Motif enrichment
+      if (length(report_list) > 0) {
          
+         fwrite(list_motif$table_per_tad, 
+                paste0(folder$motif_outputs, "/over-represented TFs in each tad.csv"), 
+                row.names = FALSE, sep = "\t", quote = FALSE)
+         
+         fwrite(list_motif$table_per_tfs, 
+                paste0(folder$motif_outputs, "/TFs in different TADs.csv"), 
+                row.names = FALSE, sep = "\t", quote = FALSE)
+         
+         file.create(paste0(folder$motif_outputs,"/report MotifEA.txt"), 
+                     showWarnings = FALSE)
+         
+         dput(report_list, file = paste0(folder$motif_outputs,"/report MotifEA.txt"))
       }
       
-      #motif enrichment analysis visualization
-      #report.list <- dget(paste0(folder$motifOutputsFolder,"/report MotifEA.txt"))
-      motifVisual(folder$motifImageOutputs, folder$motifOutputsFolder, listMotif$data.visual, report.list, criterio)
+      # Visualization -------------
       
-      rm(listMotif,listAll,list.GO.MF.All,list.GO.BP.All,list.KEGG.All, dataAll,
-         listPerTAD,list.GO.MF.PerTAD,list.GO.BP.PerTAD,list.KEGG.PerTAD, dataPerTAD,
-         listPathAll, listPathPerTAD)
+      # Enrich all visualization
+      if (exists("list_GO_MF_all")) {
+         
+         enrichr_visual(folder$go_all_images,
+                        "GO MF Terms",
+                        list_GO_MF_all$data_visual,
+                        criterio)
+      }
+      
+      if (exists("list_GO_BP_all")) {
+         
+         enrichr_visual(folder$go_all_images, 
+                       "GO BP Terms",
+                       list_GO_BP_all$data_visual,
+                       criterio)
+      }
+      
+      if (exists("list_KEGG_all")) {
+         
+         enrichr_visual(folder$kegg_all_images,
+                       "KEGG Pathways",
+                       list_KEGG_all$data_visual, 
+                       criterio)
+      }
+      
+      # Motif enrichment analysis visualization
+      if (length(report_list) > 0) {
+         
+          motif_visual(folder$motif_images,
+                       folder$motif_outputs, 
+                       list_motif$data_visual,
+                       report_list, 
+                       criterio)
+      }
+      
+      rm(list_motif, list_all, list_GO_MF_all, list_GO_BP_all, list_KEGG_all,
+         data_all, report_list)
    }
    
 }
 
-if (!is_empty(files.TADiff)){
-   for (one.file in files.TADiff){
-      
-      file.name <- str_remove(one.file,".txt")
-      folder <- createFolders(paste0(output_folder,"/",file.name))
-      biodata <- fread(paste0(dir_name,"/",one.file))
-      
-      #enrichment all
-      listAll <- enrichAll(biodata,dbs, cut.off,criterio, type)
-      
-      #data analysis
-      
-      for (l in c(1:length(dbs))){
-         if (nrow(listAll[[l]]) > 0){
-            
-            name <- names(listAll)[l]
-            genes.coverage <- data.type[type == name,cover]
-            result <- dataAnalysis(listAll[[l]], name,listAll$data.with.genes, genes.coverage,p.adjust.method, min.genes)
-            if (!is.null(result)) {assign(paste0('list.', name, '.PerTAD'), result)}
-         }
-         
-      }
-      
-      #get pathview input data
-      #if (nrow(listAll$KEGG) != 0){
-      
-      #listPathAll <- getKEGGIds(listAll$KEGG, biodata[,Gene_id,diff])         
-      #}
-      
-      if( exists("list.GO.MF.All") & exists("list.GO.BP.All")){
-         
-         #join GO Molecular Function and Biological Process outputs
-         dataAll <- full_join(list.GO.MF.All$data.perTAD, list.GO.BP.All$data.perTAD, by = "TAD")
-      }
-      
-      #enrichment per TAD
-      listPerTAD <- enrichPerTAD(biodata, dbs, cut.off,criterio, type)
-         
-      for (l in c(1:length(dbs))){
-         if (nrow(listPerTAD[[l]]) > 0){
-               
-            name <- names(listPerTAD)[l]
-            genes.coverage <- data.type[type == name,cover]
-            result <- dataAnalysis(listPerTAD[[l]], name,listPerTAD$data.with.genes, genes.coverage,p.adjust.method, min.genes)
-            if (!is.null(result)) {assign(paste0('list.', name, '.PerTAD'), result)}
-         }
-            
-      }
-         
-      #get pathview input data
-      #if (nrow(listAll$KEGG) != 0){
-         
-      #listPathPerTAD <- getKEGGIds(listPerTAD$KEGG, biodata[,Gene_id,diff])        #get pathview input data
-      #}
-         
-      if(exists("list.GO.MF.PerTAD") & exists("list.GO.BP.PerTAD")){
-            
-         #join GO Molecular Function and Biological Process outputs
-         dataPerTAD <- full_join(list.GO.MF.PerTAD$data.perTAD, list.GO.BP.PerTAD$data.perTAD, by = "TAD")
-      }
-         
-      
-      
-      #motif enrichment
-     # tech <- "hg19"
-   #   exp.parent <- 1
-      report.list <- motifEnrich(biodata, folder$motifOutputsFolder,dir_name,
-                         p.adjust.method, cut.off.TF, tech, exp.parent)
 
-      #report.list <- dget(paste0(folder$motifOutputsFolder,"/report MotifEA.txt"))
-      listMotif <- motifOutputs(report.list)
+# TADiff files ----------------
+
+if (!is_empty(files_TADiff)) {
+   
+   for (one_file in files_TADiff) {
       
-      ########### Output Files ########## 
+      file_name <- str_remove(one_file, ".txt")
+      folder <- create_folders(paste0(output_folder, "/", file_name))
+      biodata <- fread(paste0(dir_name, "/", one_file))
       
-      #enrichment all
-      if (exists("dataAll")){
-         fwrite(dataAll, paste0(folder$goAllOutputs, "/over-represented GO terms-enrichment all.csv"), 
+      # Enrichment all
+      list_all <- enrich_all(biodata, dbs, cut_off, criterio, type)
+      
+      # Data analysis
+      for (l in c(1:length(dbs))) {
+         
+         if (nrow(list_all[[l]]) > 0) {
+            
+            name <- names(list_all)[l]
+            genes_coverage <- data_type[type == name, cover]
+            result <- data_analysis(list_all[[l]], 
+                                    name,
+                                    list_all$data_with_genes,
+                                    genes_coverage,
+                                    p_adjust_method,
+                                    min_genes)
+            
+            if (!is.null(result)) assign(paste0('list_', name, '_all'), result)
+         }
+         
+      }
+
+      if (exists("list_GO_MF_all") & exists("list_GO_BP_all")) {
+         
+         # join GO Molecular Function and Biological Process outputs
+         data_all <- full_join(list_GO_MF_all$data_per_tad, 
+                               list_GO_BP_all$data_per_tad, 
+                               by = "TAD")
+      }
+      
+      
+      # Enrichment per TAD
+      list_per_tad <- enrich_per_tad(biodata, dbs, cut_off, criterio, type)
+         
+      for (l in c(1:length(dbs))) {
+         
+         if (nrow(list_per_tad[[l]]) > 0) {
+               
+            name <- names(list_per_tad)[l]
+            genes_coverage <- data_type[type == name, cover]
+            result <- data_analysis(list_per_tad[[l]], 
+                                    name,
+                                    list_per_tad$data_with_genes, 
+                                    genes_coverage,
+                                    p_adjust_method, 
+                                    min_genes)
+            
+            if (!is.null(result)) assign(paste0('list_', name, '_per_tad'), result)
+         }
+      }
+         
+
+      if (exists("list_GO_MF_per_tad") & exists("list_GO_BP_per_tad")){ 
+         
+         # join GO Molecular Function and Biological Process outputs
+         data_per_tad <- full_join(list_GO_MF_per_tad$data_per_tad, 
+                                   list_GO_BP_per_tad$data_per_tad,
+                                   by = "TAD")
+      }
+         
+      
+      
+      # Motif enrichment
+      report_list <- motifs_enrich(biodata, 
+                                   folder$motif_outputs,
+                                   dir_name,
+                                   p_adjust_method,
+                                   cut_off, 
+                                   tech,
+                                   exp_parent)
+
+      if (length(report_list) > 0)  list_motif <- motif_outputs(report_list)
+      
+      
+      # Output Files -------------- 
+      
+      # Enrichment all
+      if (exists("data_all")) {
+         fwrite(data_all, 
+                paste0(folder$go_all_outputs, "/over-represented GO terms-enrichment all.csv"), 
                 row.names = FALSE, sep = "\t", quote = FALSE)
       }
       
-      if (exists("list.GO.MF.All")){
-         fwrite(list.GO.MF.All$data.perTerm, paste0(folder$goAllOutputs, "/GO MF Terms in different TADs.csv"), 
+      if (exists("list_GO_MF_all")) {
+         fwrite(list_GO_MF_all$data_per_term,
+                paste0(folder$go_all_outputs, "/GO MF Terms in different TADs.csv"), 
                 row.names = FALSE, sep = "\t", quote = FALSE)
          
-         fwrite(list.GO.MF.All$data.perTAD, paste0(folder$goAllOutputs, "/over-represented GO MF terms-enrichment all.csv"), 
-                row.names = FALSE, sep = "\t", quote = FALSE)
-         
-      }
-      
-      if (exists("list.GO.BP.All")){
-         
-         fwrite(list.GO.BP.All$data.perTerm, paste0(folder$goAllOutputs, "/GO BP Terms in different TADs.csv"), 
-                row.names = FALSE, sep = "\t", quote = FALSE)
-         
-         
-         fwrite(list.GO.BP.All$data.perTAD, paste0(folder$goAllOutputs, "/over-represented GO BP terms-enrichment all.csv"), 
+         fwrite(list_GO_MF_all$data_per_tad,
+                paste0(folder$go_all_outputs, "/over-represented GO MF terms-enrichment all.csv"), 
                 row.names = FALSE, sep = "\t", quote = FALSE)
          
       }
       
-      if (exists("list.KEGG.All")){
+      if (exists("list_GO_BP_all")) {
          
-         fwrite(list.KEGG.All$data.perTAD, paste(folder$keggAllOutputs, "/over-represented KEGG Pathways-enrichment all.csv", sep = ""), 
+         fwrite(list_GO_BP_all$data_per_term,
+                paste0(folder$go_all_outputs, "/GO BP Terms in different TADs.csv"), 
                 row.names = FALSE, sep = "\t", quote = FALSE)
          
          
-         fwrite(list.KEGG.All$data.perTerm, paste0(folder$keggAllOutputs, "/KEGG Pathways in different TADs.csv"), 
+         fwrite(list_GO_BP_all$data_per_tad,
+                paste0(folder$go_all_outputs, "/over-represented GO BP terms-enrichment all.csv"), 
                 row.names = FALSE, sep = "\t", quote = FALSE)
-         
-         #fwrite(listPathAll$output.csv, paste0(folder$keggAllOutputs, "/Pathview input.csv"),
-         #       row.names = FALSE, sep = "\t", quote = FALSE)
-         
          
       }
       
-      #enrichment per TAD  
-      if (exists("dataPerTAD")){
-           fwrite(dataPerTAD, paste(folder$goPerOutputs, "/over-represented GO terms-enrichment per tad.csv", sep = ""), 
+      if (exists("list_KEGG_all")) {
+         
+         fwrite(list_KEGG_all$data_per_tad, 
+                paste0(folder$kegg_all_outputs, "/over-represented KEGG Pathways-enrichment all.csv"), 
                 row.names = FALSE, sep = "\t", quote = FALSE)
+         
+         
+         fwrite(list_KEGG_all$data_per_term,
+                paste0(folder$kegg_all_outputs, "/KEGG Pathways in different TADs.csv"), 
+                row.names = FALSE, sep = "\t", quote = FALSE)
+
+      }
+      
+      # Enrichment per TAD  
+      if (exists("data_per_tad")) {
+           fwrite(data_per_tad, 
+                  paste0(folder$go_per_outputs, "/over-represented GO terms-enrichment per tad.csv"), 
+                  row.names = FALSE, sep = "\t", quote = FALSE)
       }
          
-      if (exists("list.GO.MF.PerTAD")){
-         fwrite(list.GO.MF.PerTAD$data.perTerm, paste0(folder$goPerOutputs, "/GO MF Terms in different TADs.csv"), 
+      if (exists("list_GO_MF_per_tad")) {
+         fwrite(list_GO_MF_per_tad$data_per_term, 
+                paste0(folder$go_per_outputs, "/GO MF Terms in different TADs.csv"), 
                 row.names = FALSE, sep = "\t", quote = FALSE)
             
-         fwrite(list.GO.MF.PerTAD$data.perTAD, paste0(folder$goPerOutputs, "/over-represented GO MF terms-enrichment per TAD.csv"), 
+         fwrite(list_GO_MF_per_tad$data_per_tad, 
+                paste0(folder$go_per_outputs, "/over-represented GO MF terms-enrichment per TAD.csv"), 
                 row.names = FALSE, sep = "\t", quote = FALSE)
       
       }
          
-      if (exists("list.GO.BP.PerTAD")){
+      if (exists("list_GO_BP_per_tad")) {
             
-         fwrite(list.GO.BP.PerTAD$data.perTerm, paste0(folder$goPerOutputs, "/GO BP Terms in different TADs.csv"), 
+         fwrite(list_GO_BP_per_tad$data_per_term, 
+                paste0(folder$go_per_outputs, "/GO BP Terms in different TADs.csv"), 
                 row.names = FALSE, sep = "\t", quote = FALSE)
             
-            
-         fwrite(list.GO.BP.PerTAD$data.perTAD, paste0(folder$goPerOutputs, "/over-represented GO BP terms-enrichment per TAD.csv"), 
+         fwrite(list_GO_BP_per_tad$data_per_tad, 
+                paste0(folder$go_per_outputs, "/over-represented GO BP terms-enrichment per TAD.csv"), 
                 row.names = FALSE, sep = "\t", quote = FALSE)
             
       }
          
-      if (exists("list.KEGG.PerTAD")){
+      if (exists("list_KEGG_per_tad")) {
             
-         fwrite(list.KEGG.PerTAD$data.perTAD, paste(folder$keggPerOutputs, "/over-represented KEGG Pathways-enrichment per TAD.csv", sep = ""), 
+         fwrite(list_KEGG_per_tad$data_per_tad, 
+                paste0(folder$kegg_per_outputs, "/over-represented KEGG Pathways-enrichment per TAD.csv"), 
                 row.names = FALSE, sep = "\t", quote = FALSE)
             
-            
-         fwrite(list.KEGG.PerTAD$data.perTerm, paste0(folder$keggPerOutputs, "/KEGG Pathways in different TADs.csv"), 
+         fwrite(list_KEGG_per_tad$data_per_term, 
+                paste0(folder$kegg_per_outputs, "/KEGG Pathways in different TADs.csv"), 
                 row.names = FALSE, sep = "\t", quote = FALSE)
-            
-         #fwrite(listPathPerTAD$output.csv, paste0(folder$keggPerOutputs, "/Pathview input.csv"),
-         #       row.names = FALSE, sep = "\t", quote = FALSE)
-            
       }
   
       
-      #motif enrichment
-      fwrite(listMotif$table_perTAD, paste0(folder$motifOutputsFolder, "/over-represented TFs in each tad.csv"), 
-             row.names = FALSE, sep = "\t", quote = FALSE)
-      fwrite(listMotif$table_perTFs, paste0(folder$motifOutputsFolder, "/TFs in different TADs.csv"), 
-             row.names = FALSE, sep = "\t", quote = FALSE)
-      file.create(paste0(folder$motifOutputsFolder,"/report MotifEA.txt"), showWarnings = FALSE)
-      dput(report.list, file = paste0(folder$motifOutputsFolder,"/report MotifEA.txt"))
-      
-      ########### Visualization ##########
-      
-      setGraphFonts(system)
-      
-      #enrich all visualization
-      if (exists("list.GO.MF.All")){
-         enrichrVisual(folder$goAllImages,"GO MF Terms",list.GO.MF.All$data.visual, criterio)
-      }
-      
-      if (exists("list.GO.BP.All")){
-         enrichrVisual(folder$goAllImages, "GO BP Terms",list.GO.BP.All$data.visual, criterio)
-      }
-      
-      if (exists("list.KEGG.All")){
-         enrichrVisual(folder$keggAllImages, "KEGG Pathways",list.KEGG.All$data.visual, criterio)
-         #pathVisual(listPathAll$pathview.input ,folder$keggAllImages)
+      # Motif enrichment
+      if (length(report_list) > 0) {
          
+         fwrite(list_motif$table_per_tad, 
+                paste0(folder$motif_outputs, "/over-represented TFs in each tad.csv"), 
+                row.names = FALSE, sep = "\t", quote = FALSE)
+         
+         fwrite(list_motif$table_per_tfs, 
+                paste0(folder$motif_outputs, "/TFs in different TADs.csv"), 
+                row.names = FALSE, sep = "\t", quote = FALSE)
+         
+         file.create(paste0(folder$motif_outputs,"/report MotifEA.txt"), showWarnings = FALSE)
+         
+         dput(report_list, file = paste0(folder$motif_outputs,"/report MotifEA.txt"))
+      }
+      
+      # Visualization --------------
+
+      # Enrich all visualization
+      if (exists("list_GO_MF_all")) {
+         enrichr_visual(folder$go_all_images,
+                        "GO MF Terms",
+                        list_GO_MF_all$data_visual,
+                        criterio)
+      }
+      
+      if (exists("list_GO_BP_all")) {
+         enrichr_visual(folder$go_all_images, 
+                        "GO BP Terms",
+                        list_GO_BP_all$data_visual, 
+                        criterio)
+      }
+      
+      if (exists("list_KEGG_all")) {
+         enrichr_visual(folder$kegg_all_images,
+                        "KEGG Pathways",
+                        list_KEGG_all$data_visual,
+                        criterio)
       }
       
       
-      #enrich per TAD visualization 
-      if (exists("list.GO.MF.PerTAD")){
-         enrichrVisual(folder$goPerImages,"GO MF Terms",list.GO.MF.PerTAD$data.visual, criterio)
+      # Enrich per TAD visualization 
+      if (exists("list_GO_MF_per_tad")) {
+         enrichr_visual(folder$go_per_images,
+                       "GO MF Terms",
+                       list_GO_MF_per_tad$data_visual,
+                       criterio)
       }
          
-      if (exists("list.GO.BP.PerTAD")){
-         enrichrVisual(folder$goPerImages, "GO BP Terms",list.GO.BP.PerTAD$data.visual, criterio)
+      if (exists("list_GO_BP_per_tad")) {
+         enrichr_visual(folder$go_per_images, 
+                       "GO BP Terms",
+                       list_GO_BP_per_tad$data_visual,
+                       criterio)
       }
          
-      if (exists("list.KEGG.PerTAD")){
-         enrichrVisual(folder$keggPerImages, "KEGG Pathways",list.KEGG.PerTAD$data.visual, criterio)
-         #pathVisual(listPathPerTAD$pathview.input ,folder$keggPerImages)         }
-         
+      if (exists("list_KEGG_per_tad")) {
+         enrichr_visual(folder$kegg_per_images,
+                       "KEGG Pathways",
+                       list_KEGG_per_tad$data_visual,
+                       criterio)
       }
       
       
-      #motif enrichment analysis visualization
-      #report.list <- dget(paste0(folder$motifOutputsFolder,"/report MotifEA.txt"))
-      motifVisual(folder$motifImageOutputs, folder$motifOutputsFolder, listMotif$data.visual, report.list, criterio)
+      # Motif enrichment analysis visualization
+      if (length(report_list) > 0) {
+          motif_visual(folder$motif_images,
+                      folder$motif_outputs,
+                      list_motif$data_visual, 
+                      report_list,
+                      criterio)
+      }
       
-      rm(listMotif,listAll,list.GO.MF.All,list.GO.BP.All,list.KEGG.All, dataAll,
-         listPerTAD,list.GO.MF.PerTAD,list.GO.BP.PerTAD,list.KEGG.PerTAD, dataPerTAD,
-         listPathAll, listPathPerTAD)
+      rm(list_all, list_GO_MF_all, list_GO_BP_all, list_KEGG_all, data_all,
+         list_per_tad, list_GO_MF_per_tad, list_GO_BP_per_tad, list_KEGG_per_tad, 
+         data_per_tad, list_motif, report_list)
    }
    
 }
