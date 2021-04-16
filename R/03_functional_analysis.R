@@ -62,7 +62,7 @@ genes_cover <- c(11459, 14433, 7802)
 
 p_adjust_method <- "fdr"
 
-cut_off <- 1
+cut_off <- 0.05
 
 criterio <- "adjusted p-value" #"p-value" 
 
@@ -72,8 +72,9 @@ system <- "win"
 
 dir_name <- "test_files"
 
-output_folder <- paste0("Outputs_tad_files_new")
+output_folder <- paste0("Outputs_whatever")
 
+start_time <- proc.time()
 # Set graph fonts --------------------
 set_graph_fonts(system)
 
@@ -95,6 +96,8 @@ if (tech == "hg19") {
 # Enrichment + Data Analysis -----------------
 
 dir.create(output_folder, showWarnings = FALSE)
+
+file.create(paste0(output_folder, "/time_info.txt"))
 
 data_type <- data.table(type = type,
                         cover = as.numeric(genes_cover))
@@ -272,6 +275,7 @@ if (!is_empty(files_TADiff)) {
       file_name <- str_remove(one_file, ".txt")
       folder <- create_folders(paste0(output_folder, "/", file_name))
       biodata <- fread(paste0(dir_name, "/", one_file))
+      # biodata <- biodata[which((biodata$significant == TRUE) & (tad_name == "TAD2886")), ]
       
       # Enrichment all
       list_all <- enrich_all(biodata, dbs, cut_off, criterio, type)
@@ -514,3 +518,22 @@ if (!is_empty(files_TADiff)) {
    }
    
 }
+
+
+# Time measurements ----------
+
+end_time <- proc.time()
+
+time_diff <- end_time - start_time
+
+line <- paste0("Total time in secs")
+write(line, paste0(output_folder, "/time_info.txt"), append = T)
+
+line <- paste0("user: ", time_diff[1])
+write(line, paste0(output_folder,"/time_info.txt"), append = T)
+
+line <- paste0("system: ", time_diff[2])
+write(line, paste0(output_folder,"/time_info.txt"), append = T)
+
+line <- paste0("elapsed: ", time_diff[3])
+write(line, paste0(output_folder,"/time_info.txt"), append = T)
