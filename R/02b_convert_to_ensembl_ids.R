@@ -1,4 +1,4 @@
-########## Loading libraries ########## 
+# Loading libraries -------------------------------------------------------
 
 rm(list = ls())
 
@@ -6,7 +6,7 @@ source("R/libraries.R")
 
 library(biomaRt)
 
-########### Inputs ###########
+# Inputs ------------------------------------------------------------------------------
 
 #' Input parameters for TADiff part
 #' 
@@ -30,15 +30,6 @@ expr_data = 1
 
 data.all = fread(paste(output_folder, "/integrated-tad-table-methNorm.txt", sep = ""),
                  sep = "\t")
-
-# meta = fread(paste(dir_name, meta, sep = "/"))
-# who = meta == ""
-# who = apply(who, 1, sum, na.rm = TRUE)
-# meta = meta[which(who == 0), ]
-# 
-# 
-# sample.list = meta$newNames
-
 
 expression = data.all[which(data.all$parent == expr_data), ]
 
@@ -103,7 +94,3 @@ write.table(data.all,
             row.names = FALSE, 
             quote = FALSE, 
             sep = "\t")
-
-
-
-

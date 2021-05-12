@@ -1,8 +1,8 @@
-############################# Getting required libraries ###########################
+# Getting required libraries ------------------------------------------------------------
 
 source("libraries.R")
 
-############################### Inputs ##############################
+# Inputs ---------------------------------------------------------------------------------
 
 #'
 #' Input parameters for Visualization part
@@ -57,7 +57,7 @@ tad_to_visual = c("TAD2")
 # tad_to_visual = c(tad_to_visual,
 #                   tad.sign[which(tad.sign[,"FDR"] == min(tad.sign[,"FDR"])), ]$tad_name)
 
-############################### For every sign TAD ##############################
+# For every sign TAD ----------------------------------------------------------------------------
 
 for(j in tad_to_visual){
   full.vtads = full.tads[which(full.tads$tad_name %in% j), ]
@@ -70,13 +70,14 @@ for(j in tad_to_visual){
   tick.distance = (end - start)/6
   # tick.distance = tick.distance + (tick.distance / 5.9)
   
-  ####################### Reading data ##########################
+  ## Reading data -------------------------------------------------------------------
   
   columns = c("ID", "chromosome_name", "start_position", "end_position", meta$newNames, "diff")
   
   full.vtads$range = full.vtads$end_position - full.vtads$start_position
   
-  ############################## Plotting ##############################
+  ## Plotting ------------------------------------------------------------------------------
+
   dir.create(paste(image_folder_name, "/patients/", sep = ""), showWarnings = FALSE)
   
   parents = unique(full.vtads$parent)
@@ -132,7 +133,7 @@ for(j in tad_to_visual){
   
   dir.create(paste(image_folder_name, j, sep = "/"), showWarnings = FALSE)
   
-  ####################### Filtering data ##########################
+  ## Filtering data ------------------------------------------------------------------
   
   columns = c("ID", "chromosome_name", "start_position", "end_position", meta$newNames, "diff", "parent")
   
@@ -147,7 +148,7 @@ for(j in tad_to_visual){
   box_data = as.data.table(box_data)
 
   
-  ############################## Plotting ##############################
+  ## Plotting ---------------------------------------------------------------------------
   
   if(!is.null(groups)){
     

@@ -1,4 +1,4 @@
-########## Loading libraries ##########
+# Loading libraries -----------------------------------------------------
 
 rm(list = ls())
 
@@ -7,7 +7,7 @@ source("R/helpers.R")
 
 start_time = Sys.time()
 
-############ Inputs ############
+# Inputs -----------------------------------------------------------------------
 
 #'
 #' Input parameters for Data Integration part
@@ -41,7 +41,7 @@ freq_dir = "freq"
 
 tad_file = "hglft_genome_2dab_ec1330.bed"
 
-############ Reading files ############ 
+# Reading files ------------------------------------------------------------- 
 
 #'
 #' Reading meta data file
@@ -133,7 +133,7 @@ if(length(counts) > 0){
 
 biodata = rbindlist(biodata, use.names = FALSE)
 
-########### Filtering ########### 
+# Filtering ---------------------------------------------------------------------
 
 #'
 #'  Keep chromosomes 1 - 22
@@ -149,7 +149,7 @@ zero.ids = paste(zero.ids, collapse = "")
 data.num.ids = unite(data = biodata[,..names], col = ids, sep = "")
 biodata = biodata[which(data.num.ids$ids != zero.ids), ]
 
-############ Getting genomic features ############ 
+# Getting genomic features --------------------------------------------------------------------- 
 
 #'
 #' Getting gene names (expressed as entrez ids) and locus (e.g. exon, intron, cds etc.)
@@ -264,7 +264,7 @@ colnames(biodata) = names
 
 rm(list = setdiff(ls(), c("biodata", "meta", "start_time", "dir_name", "output_folder", "x", "res", "tad_file")))
 
-############ Collapse on TADs ############
+# Collapse on TADs ----------------------------------------------------------------
 
 TAD = fread(paste(dir_name, tad_file, sep = "/"), 
             header = F, 
@@ -329,7 +329,7 @@ rm(list = setdiff(ls(), c("biodata", "full", "meta", "start_time", "dir_name", "
 
 end_time = Sys.time()
 
-############ Generating outputs ############ 
+# Generating outputs ------------------------------------------------------------------------
 
 dir.create(output_folder, showWarnings = FALSE)
 

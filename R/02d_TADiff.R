@@ -1,4 +1,4 @@
-########## Loading libraries ########## 
+# Loading libraries -------------------------------------------------------------------
 
 rm(list = ls())
 
@@ -6,7 +6,7 @@ source("R/libraries.R")
 
 start_tad_time = Sys.time()
 
-########### Inputs ###########
+# Inputs -------------------------------------------------------------------------------------
 
 #' Input parameters for TADiff part
 #' 
@@ -266,14 +266,5 @@ write.table(sign_table,
             row.names = FALSE, 
             quote = FALSE, 
             sep = "\t")
-
-
-
-
-
-
-
-
-
 
 
