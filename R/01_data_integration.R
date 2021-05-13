@@ -27,13 +27,13 @@ start_time = Sys.time()
 #' @param tad_file BED file containing information about TADs
 #' 
 
-dir_name = "Datasets_bloodcancer"
+dir_name = "Datasets"
 
-output_folder = "results_bloodcancer"
+output_folder = "results"
 
 tech = "hg19" # or "hg38"
 
-meta = "metaData_groups.csv"
+meta = "meta-data.csv"
 
 counts_dir = "counts"
 
@@ -221,40 +221,51 @@ rm(map, mapping, genes)
 #' index1 --- MYC|RUNX1T1, exon|intron
 #' 
 
-unique.ids = unique(biodata$ID)
-iterations = seq(from = 0, to = (length(unique.ids) - 1), by = 200000)
-iterations = c(iterations, length(unique.ids))
+features = biodata[, .(Gene_id = paste(feature_by, collapse = "|"),
+                       Gene_feature = paste(featuretype, collapse = "|")), by = ID]
 
-total = list()
+biodata = biodata[which(!base::duplicated(biodata$ID)), ]
 
-for(i in 1:(length(iterations) - 1)){
-  
-  temp = unique.ids[(iterations[i] + 1):(iterations[i + 1])]
-  
-  temp = biodata[which(biodata$ID %in% temp), ]
-  
-  features = temp %>% 
-             dplyr::group_by(ID) %>% 
-             dplyr::select(ID, feature_by, featuretype) %>% 
-             dplyr::summarise(Gene_id = paste(feature_by, collapse = "|"),
-                              Gene_feature = paste(featuretype, collapse = "|"))
-  
-  features = as.data.table(features)
-  
-  who = which(!duplicated(temp$ID))
-  temp = temp[who, ]
-  
-  map = base::match(features$ID, temp$ID)
-  temp[map, ]$feature_by = features$Gene_id
-  temp[map, ]$featuretype = features$Gene_feature
-  
-  total[[i]] = temp
-  
-}
+who = base::match(biodata$ID, features$ID)
 
-biodata = rbindlist(total)
+biodata$feature_by = features[who, ]$Gene_id
+biodata$featuretype = features[who, ]$Gene_feature
 
-rm(total, unique.ids, temp, features)
+
+# unique.ids = unique(biodata$ID)
+# iterations = seq(from = 0, to = (length(unique.ids) - 1), by = 200000)
+# iterations = c(iterations, length(unique.ids))
+# 
+# total = list()
+# 
+# for(i in 1:(length(iterations) - 1)) {
+#   
+#   temp = unique.ids[(iterations[i] + 1):(iterations[i + 1])]
+#   
+#   temp = biodata[which(biodata$ID %in% temp), ]
+#   
+#   features = temp %>% 
+#              dplyr::group_by(ID) %>% 
+#              dplyr::select(ID, feature_by, featuretype) %>% 
+#              dplyr::summarise(Gene_id = paste(feature_by, collapse = "|"),
+#                               Gene_feature = paste(featuretype, collapse = "|"))
+#   
+#   features = as.data.table(features)
+#   
+#   who = which(!duplicated(temp$ID))
+#   temp = temp[who, ]
+#   
+#   map = base::match(features$ID, temp$ID)
+#   temp[map, ]$feature_by = features$Gene_id
+#   temp[map, ]$featuretype = features$Gene_feature
+#   
+#   total[[i]] = temp
+#   
+# }
+# 
+# biodata = rbindlist(total)
+
+rm(features)
 
 names = colnames(biodata)
 names = str_replace(names, "feature_by", "Gene_id")
@@ -264,7 +275,7 @@ colnames(biodata) = names
 
 rm(list = setdiff(ls(), c("biodata", "meta", "start_time", "dir_name", "output_folder", "x", "res", "tad_file")))
 
-# Collapse on TADs ----------------------------------------------------------------
+# Annotate with TADs ----------------------------------------------------------------
 
 TAD = fread(paste(dir_name, tad_file, sep = "/"), 
             header = F, 
