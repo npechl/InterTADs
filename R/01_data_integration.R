@@ -1,4 +1,4 @@
-# Loading libraries -----------------------------------------------------
+# Loading libraries ------------------------------------------------------------
 
 rm(list = ls())
 
@@ -11,29 +11,29 @@ start_time = Sys.time()
 
 #'
 #' Input parameters for Data Integration part
-#' 
+#'
 #' @param dir_name Directory of input datasets containing feature counts and frequency tables
-#' 
+#'
 #' @param output_folder Folder name for printing output tables
-#' 
+#'
 #' @param tech Human Genome Reference used
-#' 
+#'
 #' @param meta meta-data file name used
-#' 
+#'
 #' @param counts_dir Directory name of counts NGS data
-#' 
+#'
 #' @param freq_dir Directory name of freq NGS data
-#' 
+#'
 #' @param tad_file BED file containing information about TADs
-#' 
+#'
 
-dir_name = "Datasets"
+dir_name = "Datasets_bloodcancer/"
 
-output_folder = "results"
+output_folder = "results_bloodcancer/"
 
 tech = "hg19" # or "hg38"
 
-meta = "meta-data.csv"
+meta = "metaData_groups.csv"
 
 counts_dir = "counts"
 
@@ -41,11 +41,11 @@ freq_dir = "freq"
 
 tad_file = "hglft_genome_2dab_ec1330.bed"
 
-# Reading files ------------------------------------------------------------- 
+# Reading files ----------------------------------------------------------------
 
 #'
 #' Reading meta data file
-#' 
+#'
 
 meta = fread(paste(dir_name, meta, sep = "/"))
 who = meta == ""
@@ -54,7 +54,7 @@ meta = meta[which(who == 0), ]
 
 #'
 #' Getting input files
-#' 
+#'
 
 counts = list.files(paste(dir_name, counts_dir, sep = "/"))
 freq = list.files(paste(dir_name, freq_dir, sep = "/"))
@@ -68,72 +68,72 @@ biodata = list()
 
 #'
 #' Reading input frequency tables
-#' 
+#'
 
 if(length(freq) > 0){
   for(i in 1:length(freq)){
     new = fread(paste(dir_name, freq_dir, freq[i], sep = "/"))
-    
+
     keep = which(str_detect(freq[i], files))
     parent = keep
     keep = meta[,..keep]
     keep = as.character(unlist(keep))
-    
+
     new = cbind(new[,1:4], new[,..keep])
     colnames(new) = c("ID", "chromosome_name", "start_position", "end_position", names)
-    
+
     new$chromosome_name = str_to_lower(new$chromosome_name)
     new$chromosome_name = str_remove(new$chromosome_name, "chr")
-    
+
     if(max(new[,5:ncol(new)]) <= 1){
       new[,5:ncol(new)] = 100 * new[,5:ncol(new)]
     }
-    
+
     new$parent = parent
-    
+
     biodata[[i]] = new
   }
 }
 
 #'
 #' Reading input counts tables
-#' 
+#'
 
 if(length(counts) > 0){
   for(i in 1:length(counts)){
     new = fread(paste(dir_name, counts_dir, counts[i], sep = "/"))
-    
+
     keep = which(str_detect(counts[i], files))
     parent = keep
     keep = meta[,..keep]
     keep = as.character(unlist(keep))
-    
+
     new = cbind(new[,1:4], new[,..keep])
     colnames(new) = c("ID", "chromosome_name", "start_position", "end_position", names)
-    
+
     new$chromosome_name = str_to_lower(new$chromosome_name)
     new$chromosome_name = str_remove(new$chromosome_name, "chr")
-    
+
     temp = new[,5:ncol(new)]
-    
+
     temp = log(temp + 1)
     col.max = apply(temp, 2, max)
     col.max = as.numeric(col.max)
-    
+
     temp = t(temp) * (100 / col.max)
     temp = as.data.table(t(temp))
-    
+
     new = cbind(new[,1:4], temp)
-    
+
     new$parent = parent
-    
+
     biodata[[i + length(freq)]] = new
   }
 }
 
 biodata = rbindlist(biodata, use.names = FALSE)
 
-# Filtering ---------------------------------------------------------------------
+# Filtering --------------------------------------------------------------------
 
 #'
 #'  Keep chromosomes 1 - 22
@@ -141,15 +141,15 @@ biodata = rbindlist(biodata, use.names = FALSE)
 biodata = biodata[which(biodata$chromosome_name %in% as.character(1:22)), ]
 
 #'
-#' Remove all zeros records
+#' Remove all-zeros records
 #' 
-zero.ids = rep(0, length(names))
-zero.ids = paste(zero.ids, collapse = "")
+# zero.ids = rep(0, length(names))
+# zero.ids = paste(zero.ids, collapse = "")
 
-data.num.ids = unite(data = biodata[,..names], col = ids, sep = "")
-biodata = biodata[which(data.num.ids$ids != zero.ids), ]
+data.num.ids = base::rowSums(biodata[, meta$newNames, with = FALSE]) # unite(data = biodata[,..names], col = ids, sep = "")
+biodata = biodata[which(data.num.ids != 0), ]
 
-# Getting genomic features --------------------------------------------------------------------- 
+# Getting genomic features -----------------------------------------------------
 
 #'
 #' Getting gene names (expressed as entrez ids) and locus (e.g. exon, intron, cds etc.)
@@ -275,7 +275,7 @@ colnames(biodata) = names
 
 rm(list = setdiff(ls(), c("biodata", "meta", "start_time", "dir_name", "output_folder", "x", "res", "tad_file")))
 
-# Annotate with TADs ----------------------------------------------------------------
+# Annotate with TADs -----------------------------------------------------------
 
 TAD = fread(paste(dir_name, tad_file, sep = "/"), 
             header = F, 
@@ -340,7 +340,7 @@ rm(list = setdiff(ls(), c("biodata", "full", "meta", "start_time", "dir_name", "
 
 end_time = Sys.time()
 
-# Generating outputs ------------------------------------------------------------------------
+# Generating outputs -----------------------------------------------------------
 
 dir.create(output_folder, showWarnings = FALSE)
 
@@ -351,17 +351,17 @@ write.table(full, paste(output_folder, "/integrated-tad-table.csv", sep = ""),
             row.names = FALSE, sep = "\t", quote = FALSE)
 
 for(i in unique(biodata$parent)){
-  
+
   temp = biodata[which(biodata$parent == i), ]$ID
-  
+
   temp = temp[sample(1:length(temp), 3)]
-  
+
   temp = paste(temp, collapse = ", ")
-  
-  cat(c("File", i, ":", temp, "...", "\n\n"), 
+
+  cat(c("File", i, ":", temp, "...", "\n\n"),
       file = paste(output_folder, "/summary.txt", sep = ""),
       append = TRUE)
-  
-  
-  
+
+
+
 }

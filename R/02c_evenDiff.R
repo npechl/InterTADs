@@ -27,8 +27,8 @@ output_folder = "results_bloodcancer"
 meta = "metaData_groups.csv"
 
 names.meta = c("IGHV", 
-               "gain2p25.3", 
-               "del8p12", 
+               "gain2p25.3",
+               "del8p12",
                "gain8q24",
                "del9p21.3",
                "del11q22.3",
@@ -61,7 +61,7 @@ names.meta = c("IGHV",
                "NFKBIE",
                "PCLO",
                "UMODL1",
-               "XPO1",	
+               "XPO1",
                "ZC3H18")
 
 expr_data = 1
