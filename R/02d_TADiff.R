@@ -20,51 +20,52 @@ start_tad_time = Sys.time()
 #' 
 #' @param expr_data Parent index of expression data. If no expression is provided, place FALSE
 
-dir_name = "Datasets_bloodcancer"
+dir_name = "Datasets"
 
 output_folder = "results_bloodcancer"
 
-meta = "metaData_groups.csv"
+meta = "meta-data.csv"
 
-names.meta = c("IGHV", 
-               "gain2p25.3",
-               "del8p12",
-               "gain8q24",
-               "del9p21.3",
-               "del11q22.3",
-               "trisomy12",
-               "del13q14_any",
-               "del13q14_bi",
-               "del13q14_mono",
-               "del14q24.3",
-               "del15q15.1",
-               "del17p13",
-               "Chromothripsis",
-               "BRAF",
-               "KRAS",
-               "MYD88",
-               "NOTCH1",
-               "SF3B1",
-               "TP53",
-               "ACTN2",
-               "ATM",
-               "BIRC3",
-               "CPS1",
-               "EGR2",
-               "FLRT2",
-               "IRF2BP2",
-               "KLHL6",
-               "LRP1",
-               "MED12",
-               "MGA",
-               "MUC16",
-               "NFKBIE",
-               "PCLO",
-               "UMODL1",
-               "XPO1",
-               "ZC3H18")
+names.meta = c('groups')
+# names.meta = c("IGHV", 
+#                "gain2p25.3",
+#                "del8p12",
+#                "gain8q24",
+#                "del9p21.3",
+#                "del11q22.3",
+#                "trisomy12",
+#                "del13q14_any",
+#                "del13q14_bi",
+#                "del13q14_mono",
+#                "del14q24.3",
+#                "del15q15.1",
+#                "del17p13",
+#                "Chromothripsis",
+#                "BRAF",
+#                "KRAS",
+#                "MYD88",
+#                "NOTCH1",
+#                "SF3B1",
+#                "TP53",
+#                "ACTN2",
+#                "ATM",
+#                "BIRC3",
+#                "CPS1",
+#                "EGR2",
+#                "FLRT2",
+#                "IRF2BP2",
+#                "KLHL6",
+#                "LRP1",
+#                "MED12",
+#                "MGA",
+#                "MUC16",
+#                "NFKBIE",
+#                "PCLO",
+#                "UMODL1",
+#                "XPO1",
+#                "ZC3H18")
 
-expr_data = 1
+expr_data = 2
 
 
 

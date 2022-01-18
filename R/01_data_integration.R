@@ -27,13 +27,13 @@ start_time = Sys.time()
 #' @param tad_file BED file containing information about TADs
 #'
 
-dir_name = "Datasets_bloodcancer/"
+dir_name = "Datasets/"
 
 output_folder = "results_bloodcancer/"
 
 tech = "hg19" # or "hg38"
 
-meta = "metaData_groups.csv"
+meta = "meta-data.csv"
 
 counts_dir = "counts"
 

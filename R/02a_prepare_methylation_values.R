@@ -18,13 +18,13 @@ source("R/libraries.R")
 #' 
 #' @param meth_data Parent index of methylation data. If no methylation is provided, place FALSE
 
-dir_name = "Datasets_bloodcancer"
+dir_name = "Datasets"
 
 output_folder = "results_bloodcancer"
 
-meta = "metaData_groups.csv"
+meta = "meta-data.csv"
 
-meth_data = 2
+meth_data = 1
 
 data.all = fread(paste(output_folder, "/integrated-tad-table.csv", sep = ""),
                  sep = "\t")

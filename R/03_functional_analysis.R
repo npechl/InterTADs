@@ -50,7 +50,7 @@ source("R/visualization_enrich.R")
 
 tech <- "hg19" # or "hg38"
 
-exp_parent <- 1
+exp_parent <- 2
 
 dbs <- c("GO_Molecular_Function_2018",
          "GO_Biological_Process_2018",
@@ -70,26 +70,26 @@ min_genes <- 3
 
 system <- "win"
 
-dir_name <- "test_files"
+dir_name <- "Datasets"
 
 output_folder <- paste0("Outputs_whatever")
 
 start_time <- proc.time()
 # Set graph fonts --------------------
-set_graph_fonts(system)
+# set_graph_fonts(system)
 
 # Download hg gff file ----------------
 if (tech == "hg19") {
    
    download.file(url="ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_19/gencode.v19.annotation.gff3.gz",
                  destfile=paste0(dir_name,'/gencode.v19.annotation.gff3.gz'), 
-                 method='curl')
+                 method='auto')
    
 } else if (tech == "hg38") {
    
    download.file(url="ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_36/gencode.v36.annotation.gff3.gz",
                  destfile=paste0(dir_name,'/gencode.v36.annotation.gff3.gz'), 
-                 method='curl')
+                 method='auto')
    
 }
 

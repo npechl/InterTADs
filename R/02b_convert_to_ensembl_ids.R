@@ -20,13 +20,13 @@ library(biomaRt)
 #' 
 #' @param meth_data Parent index of methylation data. If no methylation is provided, place FALSE
 
-dir_name = "Datasets_bloodcancer"
+dir_name = "Datasets"
 
 output_folder = "results_bloodcancer"
 
 # meta = "metaData_groups.csv"
 
-expr_data = 1
+expr_data = 2
 
 data.all = fread(paste(output_folder, "/integrated-tad-table-methNorm.txt", sep = ""),
                  sep = "\t")
@@ -81,7 +81,7 @@ if(nrow(expression) > 0) {
 
 
 
-expression = rbindlist(expression)
+ensembl.expression = rbindlist(ensembl.expression)
   
 
 other = data.all[which(data.all$parent != expr_data), ]
