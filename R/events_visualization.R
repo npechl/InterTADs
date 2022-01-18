@@ -22,35 +22,35 @@ source("libraries.R")
 #' @param my_cex Sizes for printing images
 #' 
 
-dir_name = "Datasets"
+dir_name <- "Datasets"
 
-tad_folder = "output_tables_test"
+tad_folder <- "output_tables_test"
 
-meta = "meta-data.csv"
+meta <- "meta-data.csv"
 
-image_folder_name = "output_visualizations_test"
+image_folder_name <- "output_visualizations_test"
 
-diff_col = "groups"
-
-
-my_colors = c("black", "slateblue4", "red", "goldenrod4", "darkorange3")
-my_cex = c(1, 0.8, 1.2, 1.4)
+diff_col <- "groups"
 
 
-full.tads = fread(paste(tad_folder, "/integrated_table_with_tads.csv", sep = ""))
-tad.sign = fread(paste(tad_folder, "/sign_tad_statistics.csv", sep = ""))
+my_colors <- c("black", "slateblue4", "red", "goldenrod4", "darkorange3")
+my_cex <- c(1, 0.8, 1.2, 1.4)
 
-meta = fread(paste(dir_name, meta, sep = "/"))
-who = meta == ""
-who = apply(who, 1, sum)
-meta = meta[which(who == 0), ]
 
-groups = unique(meta[[diff_col]])
+full.tads <- fread(paste(tad_folder, "/integrated_table_with_tads.csv", sep = ""))
+tad.sign <- fread(paste(tad_folder, "/sign_tad_statistics.csv", sep = ""))
+
+meta <- fread(paste(dir_name, meta, sep = "/"))
+who <- meta == ""
+who <- apply(who, 1, sum)
+meta <- meta[which(who == 0), ]
+
+groups <- unique(meta[[diff_col]])
 
 dir.create(image_folder_name, showWarnings = FALSE)
 # image_folder_name = paste(image_folder_name, "/", sep = "")
 
-tad_to_visual = c("TAD2")
+tad_to_visual <- c("TAD2")
 # tad_to_visual = c(tad_to_visual,
 #                   tad.sign[which(tad.sign[,"mean"] == max(tad.sign[,"mean"])), ]$tad_name)
 # 
@@ -60,43 +60,43 @@ tad_to_visual = c("TAD2")
 # For every sign TAD ----------------------------------------------------------------------------
 
 for(j in tad_to_visual){
-  full.vtads = full.tads[which(full.tads$tad_name %in% j), ]
-  full.vtads$chromosome_name = paste("chr", full.vtads$chromosome_name,  sep = "")
+  full.vtads <- full.tads[which(full.tads$tad_name %in% j), ]
+  full.vtads$chromosome_name <- paste("chr", full.vtads$chromosome_name,  sep = "")
   
-  chr_to_visual = as.character(unique(full.vtads$chr))
-  start = min(unique(full.vtads$start))
-  end = max(unique(full.vtads$end))
-  region = toGRanges(data.frame(chr_to_visual, start, end))
-  tick.distance = (end - start)/6
+  chr_to_visual <- as.character(unique(full.vtads$chr))
+  start <- min(unique(full.vtads$start))
+  end <- max(unique(full.vtads$end))
+  region <- toGRanges(data.frame(chr_to_visual, start, end))
+  tick.distance <- (end - start)/6
   # tick.distance = tick.distance + (tick.distance / 5.9)
   
   ## Reading data -------------------------------------------------------------------
   
-  columns = c("ID", "chromosome_name", "start_position", "end_position", meta$newNames, "diff")
+  columns <- c("ID", "chromosome_name", "start_position", "end_position", meta$newNames, "diff")
   
-  full.vtads$range = full.vtads$end_position - full.vtads$start_position
+  full.vtads$range <- full.vtads$end_position - full.vtads$start_position
   
   ## Plotting ------------------------------------------------------------------------------
 
   dir.create(paste(image_folder_name, "/patients/", sep = ""), showWarnings = FALSE)
   
-  parents = unique(full.vtads$parent)
+  parents <- unique(full.vtads$parent)
   
   for(i in meta$newNames){
     # png(filename = paste(image_folder_name, "patients/", i, "_", j, ".png", sep = ""), width = 1150, height = 900)
     
-    kp = base::expression({
-      kp = plotKaryotype(genome = "hg19", plot.type = 4, zoom = region, cex = 1.5)
+    kp <- base::expression({
+      kp <- plotKaryotype(genome = "hg19", plot.type = 4, zoom = region, cex = 1.5)
       kpDataBackground(kp, data.panel = 1)
       kpAddBaseNumbers(kp, add.units = TRUE, tick.dist = tick.distance, cex = 1.25)
-      lb = c("0 %", "50 %", "100 %")
+      lb <- c("0 %", "50 %", "100 %")
       kpAxis(kp, r0 = 0, r1 = 1, ymin = 0, ymax = 100, side = 1, labels = lb)
       
       for(p in 1:length(parents)){
-        vis_data = full.vtads[which(full.vtads$parent == parents[p]), ]
+        vis_data <- full.vtads[which(full.vtads$parent == parents[p]), ]
         
-        numeric.vector = vis_data[[i]] 
-        numeric.vector = numeric.vector / 100
+        numeric.vector <- vis_data[[i]] 
+        numeric.vector <- numeric.vector / 100
         
         if(max(vis_data$range) <= 1){
             (kp, 
@@ -135,17 +135,17 @@ for(j in tad_to_visual){
   
   ## Filtering data ------------------------------------------------------------------
   
-  columns = c("ID", "chromosome_name", "start_position", "end_position", meta$newNames, "diff", "parent")
+  columns <- c("ID", "chromosome_name", "start_position", "end_position", meta$newNames, "diff", "parent")
   
-  full.vtads$range = full.vtads$end_position - full.vtads$start_position
+  full.vtads$range <- full.vtads$end_position - full.vtads$start_position
 
-  box_data = full.vtads[which(full.vtads$range > 1), ..columns]
+  box_data <- full.vtads[which(full.vtads$range > 1), ..columns]
   
   
-  rain_data = full.vtads[which(full.vtads$range <= 1), ..columns]
+  rain_data <- full.vtads[which(full.vtads$range <= 1), ..columns]
 
-  box_data = box_data %>% dplyr::group_by(start_position, end_position) %>% dplyr::filter(abs(diff) == max(abs(diff)))
-  box_data = as.data.table(box_data)
+  box_data <- box_data %>% dplyr::group_by(start_position, end_position) %>% dplyr::filter(abs(diff) == max(abs(diff)))
+  box_data <- as.data.table(box_data)
 
   
   ## Plotting ---------------------------------------------------------------------------
@@ -153,38 +153,38 @@ for(j in tad_to_visual){
   if(!is.null(groups)){
     
     for(i in 1:length(groups)){
-      keep = meta$newNames[which(meta[[diff_col]] == groups[i])]
+      keep <- meta$newNames[which(meta[[diff_col]] == groups[i])]
       
-      box_data$mean = apply(box_data[,..keep], 1, mean, na.rm = TRUE)
-      rain_data$mean = apply(rain_data[,..keep], 1, mean, na.rm = TRUE)
+      box_data$mean <- apply(box_data[,..keep], 1, mean, na.rm = TRUE)
+      rain_data$mean <- apply(rain_data[,..keep], 1, mean, na.rm = TRUE)
       
-      maximum_value = 100
-      minimum_value = 0
+      maximum_value <- 100
+      minimum_value <- 0
       
       # png(filename = paste(image_folder_name, j, "/", groups[i], ".png", sep = ""), 
       #     width = 1150, height = 900)
       
-      kp = base::expression({
+      kp <- base::expression({
         kp = plotKaryotype(genome = "hg19", plot.type = 4, zoom = region, cex = 1.5)
         kpDataBackground(kp, data.panel = 1)
         kpAddBaseNumbers(kp, add.units = TRUE, tick.dist = tick.distance, cex = 1.25)
         
-        lb = c(minimum_value, (maximum_value + minimum_value)/2, maximum_value)
-        lb = round(lb, digits = 2)
-        lb = paste(lb, "%", sep = " ")
+        lb <- c(minimum_value, (maximum_value + minimum_value)/2, maximum_value)
+        lb <- round(lb, digits = 2)
+        lb <- paste(lb, "%", sep = " ")
         kpAxis(kp, r0 = 0, r1 = 1, ymin = minimum_value, ymax = maximum_value, side = 1, labels = lb)
         
-        rain_data = rain_data[which(rain_data$mean <= maximum_value & rain_data$mean >= minimum_value), ]
-        box_data = box_data[which(box_data$mean <= maximum_value & box_data$mean >= minimum_value), ]
+        rain_data <- rain_data[which(rain_data$mean <= maximum_value & rain_data$mean >= minimum_value), ]
+        box_data <- box_data[which(box_data$mean <= maximum_value & box_data$mean >= minimum_value), ]
         
         for(p in 1:length(parents)){
           
-          r_vis_data = rain_data[which(rain_data$parent == parents[p]), ]
-          b_vis_data = box_data[which(box_data$parent == parents[p]), ]
+          r_vis_data <- rain_data[which(rain_data$parent == parents[p]), ]
+          b_vis_data <- box_data[which(box_data$parent == parents[p]), ]
           
           if(nrow(r_vis_data) > 0){
-            numeric.vector = r_vis_data$mean
-            numeric.vector = numeric.vector / maximum_value
+            numeric.vector <- r_vis_data$mean
+            numeric.vector <- numeric.vector / maximum_value
             kpPoints(kp, 
                      chr = r_vis_data$chromosome_name,
                      x = r_vis_data$end_position, 
@@ -195,8 +195,8 @@ for(j in tad_to_visual){
           
           
           if(nrow(b_vis_data) > 0){
-            numeric.vector = b_vis_data$mean
-            numeric.vector = numeric.vector / maximum_value
+            numeric.vector <- b_vis_data$mean
+            numeric.vector <- numeric.vector / maximum_value
             kpBars(kp, 
                    chr = b_vis_data$chr,
                    x0 = b_vis_data$start_position, 
@@ -221,21 +221,21 @@ for(j in tad_to_visual){
     # png(filename = paste(image_folder_name, j, "/", "Group_differences", ".png", sep = ""), 
     #     width = 1150, height = 900)
     
-    kp = base::expression({
+    kp <- base::expression({
       
       
-      kp = plotKaryotype(genome = "hg19", plot.type = 4, zoom = region, cex = 1.5)
+      kp <- plotKaryotype(genome = "hg19", plot.type = 4, zoom = region, cex = 1.5)
       kpDataBackground(kp, data.panel = 1)
       kpAddBaseNumbers(kp, add.units = TRUE, tick.dist = tick.distance, cex = 1.25)
       
       # all = c(rain_data$diff, box_data$diff)
       
-      maximum_value = 100
-      minimum_value = -100
+      maximum_value <- 100
+      minimum_value <- -100
       
-      lb = c(minimum_value, 0, maximum_value)
-      lb = round(lb, digits = 2)
-      lb = paste(lb, "%", sep = " ")
+      lb <- c(minimum_value, 0, maximum_value)
+      lb <- round(lb, digits = 2)
+      lb <- paste(lb, "%", sep = " ")
       kpAxis(kp, r0 = 0, r1 = 1, ymin = minimum_value, ymax = maximum_value, side = 1, labels = lb)
       
       for(p in 1:length(parents)){
@@ -245,10 +245,10 @@ for(j in tad_to_visual){
         
         if(nrow(r_vis_data) > 0){
           numeric.vector = r_vis_data$diff
-          who = numeric.vector > 0
-          numeric.vector[who] = numeric.vector[who] / maximum_value
-          numeric.vector[!who] = numeric.vector[!who] / abs(minimum_value)
-          numeric.vector = (numeric.vector + 1)/2
+          who <- numeric.vector > 0
+          numeric.vector[who] <- numeric.vector[who] / maximum_value
+          numeric.vector[!who] <- numeric.vector[!who] / abs(minimum_value)
+          numeric.vector <- (numeric.vector + 1)/2
           
           kpPoints(kp, 
                    chr = r_vis_data$chromosome_name,
@@ -259,17 +259,17 @@ for(j in tad_to_visual){
         }
         
         if(nrow(b_vis_data) > 0){
-          numeric.vector = b_vis_data$diff
-          who = numeric.vector > 0
-          numeric.vector[who] = numeric.vector[who] / maximum_value
-          numeric.vector[!who] = numeric.vector[!who] / abs(minimum_value)
-          numeric.vector = (numeric.vector + 1)/2
+          numeric.vector <- b_vis_data$diff
+          who <- numeric.vector > 0
+          numeric.vector[who] <- numeric.vector[who] / maximum_value
+          numeric.vector[!who] <- numeric.vector[!who] / abs(minimum_value)
+          numeric.vector <- (numeric.vector + 1)/2
           
-          bottom = rep(0.5, length(numeric.vector))
-          bottom[!who] = numeric.vector[!who]
+          bottom <- rep(0.5, length(numeric.vector))
+          bottom[!who] <- numeric.vector[!who]
           
-          up = rep(0.5, length(numeric.vector))
-          up[who] = numeric.vector[who]
+          up <- rep(0.5, length(numeric.vector))
+          up[who] <- numeric.vector[who]
           
           kpBars(kp, 
                  chr = b_vis_data$chromosome_name,
