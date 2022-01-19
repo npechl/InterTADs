@@ -23,13 +23,13 @@ new.names = meta$newNames
 
 one.run <- function(index){
   
-  statistics <- wilcox.test(unlist(tad.1[index, ]), 
-                            unlist(tad.2[index, ]), 
-                            na.rm=TRUE, 
-                            correct = FALSE)
+    statistics <- wilcox.test(unlist(tad.1[index, ]), 
+                                unlist(tad.2[index, ]), 
+                                na.rm=TRUE, 
+                                correct = FALSE)
   
   
-  return(statistics$p.value) 
+    return(statistics$p.value) 
 }
 
 ########## expr ########## 
@@ -90,8 +90,8 @@ var$pvalues = tad.all$p.values
 
 data.b = as.data.frame(var$pvalue)
 var$FDR = p.adjust(unlist(data.b),
-                   method = c("BH"), 
-                   n = nrow(data.b))
+                    method = c("BH"), 
+                    n = nrow(data.b))
 
 
 
@@ -103,16 +103,16 @@ tad_sum$category<- paste("TADs")
 ########## Generating output image ########## 
 
 table.FDR = rbind(expr[,c("FDR", "category")],
-                  meth[,c("FDR", "category")],
-                  var[,c("FDR", "category")],
-                  tad_sum[,c("FDR", "category")])
+                    meth[,c("FDR", "category")],
+                    var[,c("FDR", "category")],
+                    tad_sum[,c("FDR", "category")])
 
 table.FDR = table.FDR[which(!is.na(table.FDR$FDR)), ]
 
 gr  = ggplot(table.FDR, aes(y = category, x = FDR, color = category)) +
-      scale_color_brewer(palette="Dark2") +
-      geom_boxplot() +
-      theme_bw() +
-      theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+    scale_color_brewer(palette="Dark2") +
+    geom_boxplot() +
+    theme_bw() +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 

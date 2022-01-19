@@ -31,53 +31,53 @@ output_folder = "results_bloodcancer"
 meta = "metaData_groups.csv"
 
 names.meta = c("ConsClust",
-               "IC50beforeTreatment",
-               "treatedAfter",
-               "died",
-               "IGHV", 
-               "gain2p25.3", 
-               "del8p12", 
-               "gain8q24",
-               "del9p21.3",
-               "del11q22.3",
-               "trisomy12",
-               "del13q14_any",
-               "del13q14_bi",
-               "del13q14_mono",
-               "del14q24.3",
-               "del15q15.1",
-               "del17p13",
-               "Chromothripsis",
-               "BRAF",
-               "KRAS",
-               "MYD88",
-               "NOTCH1",
-               "SF3B1",
-               "TP53",
-               "ACTN2",
-               "ATM",
-               "BIRC3",
-               "CPS1",
-               "EGR2",
-               "FLRT2",
-               "IRF2BP2",
-               "KLHL6",
-               "LRP1",
-               "MED12",
-               "MGA",
-               "MUC16",
-               "NFKBIE",
-               "PCLO",
-               "UMODL1",
-               "XPO1",	
-               "ZC3H18")
+                "IC50beforeTreatment",
+                "treatedAfter",
+                "died",
+                "IGHV", 
+                "gain2p25.3", 
+                "del8p12", 
+                "gain8q24",
+                "del9p21.3",
+                "del11q22.3",
+                "trisomy12",
+                "del13q14_any",
+                "del13q14_bi",
+                "del13q14_mono",
+                "del14q24.3",
+                "del15q15.1",
+                "del17p13",
+                "Chromothripsis",
+                "BRAF",
+                "KRAS",
+                "MYD88",
+                "NOTCH1",
+                "SF3B1",
+                "TP53",
+                "ACTN2",
+                "ATM",
+                "BIRC3",
+                "CPS1",
+                "EGR2",
+                "FLRT2",
+                "IRF2BP2",
+                "KLHL6",
+                "LRP1",
+                "MED12",
+                "MGA",
+                "MUC16",
+                "NFKBIE",
+                "PCLO",
+                "UMODL1",
+                "XPO1",	
+                "ZC3H18")
 
 expr_data = 1
 
 file_to_read = "TP53_evenDiff.txt"
 
 data.all = fread(paste(output_folder, "/", file_to_read, sep = ""),
-                 sep = "\t")
+                sep = "\t")
 
 data.all$source = "methylation"
 data.all[which(data.all$parent == expr_data), ]$source = "expression"
@@ -90,13 +90,13 @@ meta = meta[which(who == 0), ]
 # Complex heatmap ----------------------
 
 column_ha = HeatmapAnnotation(Oakes = meta$ConsClust, 
-                              TTT = anno_points(meta$T5), 
-                              Mut_Status= meta$IGHV,
-                              #IGHV= meta$`IGHV Uppsala gene usage`,
-                              #SHM = anno_points(meta$`IGHV Uppsala % SHM`),
-                              col = list(Oakes = c("HP" = "darkorange2", "IP" = "lightgreen", "LP" = "lightblue3"),
-                                         Mut_Status = c("M" = "gray", "U" = "black")),
-                              na_col = "white")
+                                TTT = anno_points(meta$T5), 
+                                Mut_Status= meta$IGHV,
+                                #IGHV= meta$`IGHV Uppsala gene usage`,
+                                #SHM = anno_points(meta$`IGHV Uppsala % SHM`),
+                                col = list(Oakes = c("HP" = "darkorange2", "IP" = "lightgreen", "LP" = "lightblue3"),
+                                        Mut_Status = c("M" = "gray", "U" = "black")),
+                                na_col = "white")
 
 
 visualize_matrix = as.matrix(data.all[ ,meta$newNames, with = FALSE])
@@ -138,20 +138,20 @@ nevents_tad_annot$event_id = str_split(nevents_tad_annot$ID, ";", simplify = TRU
 ggplot(nevents_tad, aes(x = tad_name, y = -log10(adj.P.Val))) +
   
   # Show all points
-  geom_point(aes(color = tad_name), size = 1.3, alpha = 0.5) +
+    geom_point(aes(color = tad_name), size = 1.3, alpha = 0.5) +
   
   
-  geom_label_repel(data = nevents_tad_annot, 
-                   aes(x = factor(tad_name, levels = unique(tad_name)), 
-                       y = -log10(adj.P.Val), 
-                       label = event_id,
-                       fill = as.character(parent)),
-                   min.segment.length = 0.3) +
+    geom_label_repel(data = nevents_tad_annot, 
+                    aes(x = factor(tad_name, levels = unique(tad_name)), 
+                        y = -log10(adj.P.Val), 
+                        label = event_id,
+                        fill = as.character(parent)),
+                    min.segment.length = 0.3) +
   
-  scale_color_manual(values = rep(c("red", "blue"), length(unique(nevents_tad$tad_name)))) +
+    scale_color_manual(values = rep(c("red", "blue"), length(unique(nevents_tad$tad_name)))) +
   
-  theme_bw() +
-  theme( 
+    theme_bw() +
+    theme( 
     legend.position = "none",
     axis.text.x = element_text(angle = 45, hjust = 1),
     axis.title.x = element_blank()
@@ -162,7 +162,7 @@ ggplot(nevents_tad, aes(x = tad_name, y = -log10(adj.P.Val))) +
 data.hist = t(data.all[, meta$newNames, with = FALSE])
 
 fit = hclust(dist(data.hist, method = "euclidean"), 
-             method = "complete")
+                method = "complete")
 
 cut = cutree(fit, k = 3)
 
@@ -185,36 +185,36 @@ analysis_table$P.value = as.numeric(analysis_table$P.value)
 
 for (i in 1:length(names.meta)) {
   
-  meta.test = meta.all %>% select(names.meta[i], hclust_cut)
-  
-  inter = names.meta[i]
-  
-  meta.test = as.data.frame(meta.test)
-  meta.test = meta.test[!is.na(meta.test[[1]]),]
-  
-  colnames(meta.test) = c("factor", "cut")
-  
-  test_data = meta.test %>% 
-    group_by(cut) %>% count(factor)
-  
-  test_data = test_data %>% tidyr::spread(factor, n)
-  
-  test_data[is.na(test_data)] = 0
-  
-  test_data = as.matrix(test_data[,2:ncol(test_data)])
-  
-  x = fisher.test(test_data, alternative = "two.sided")
-  
-  
-  analysis_table[i,]$Property = inter
-  analysis_table[i,]$P.value = x$p.value
+    meta.test = meta.all %>% select(names.meta[i], hclust_cut)
+    
+    inter = names.meta[i]
+    
+    meta.test = as.data.frame(meta.test)
+    meta.test = meta.test[!is.na(meta.test[[1]]),]
+    
+    colnames(meta.test) = c("factor", "cut")
+    
+    test_data = meta.test %>% 
+        group_by(cut) %>% count(factor)
+    
+    test_data = test_data %>% tidyr::spread(factor, n)
+    
+    test_data[is.na(test_data)] = 0
+    
+    test_data = as.matrix(test_data[,2:ncol(test_data)])
+    
+    x = fisher.test(test_data, alternative = "two.sided")
+    
+    
+    analysis_table[i,]$Property = inter
+    analysis_table[i,]$P.value = x$p.value
   
 }
 
 write.table(analysis_table,
             file = paste(output_folder, "/", 
-                         str_replace(file_to_read, ".txt", "_metadata_significance.txt"), 
-                         sep = ""), 
+                        str_replace(file_to_read, ".txt", "_metadata_significance.txt"), 
+                        sep = ""), 
             row.names = FALSE, 
             quote = FALSE, 
             sep = "\t")
@@ -227,15 +227,15 @@ gos[which(gos$P.value <= 0.05), ]$col = "sign"
 
 # Diverging Barcharts
 gr = ggplot(gos, aes(x = marker, y = P.value , label = P.value, fill = col)) + 
-  geom_bar(stat = 'identity', width = 0.4, position = "dodge") +
-  scale_fill_manual(values = c("skip" = "gray75", "sign" = "gray30")) +
-  theme_bw() + 
-  theme(legend.position = "none") +
-  geom_hline(yintercept = 0.049, 
-             linetype = "dotted", 
-             color = "black", size = 0.9) +  
-  labs(y = "P value", x = "", title = "Meta data significance between groups") +
-  coord_flip()
+    geom_bar(stat = 'identity', width = 0.4, position = "dodge") +
+    scale_fill_manual(values = c("skip" = "gray75", "sign" = "gray30")) +
+    theme_bw() + 
+    theme(legend.position = "none") +
+    geom_hline(yintercept = 0.049, 
+                linetype = "dotted", 
+                color = "black", size = 0.9) +  
+    labs(y = "P value", x = "", title = "Meta data significance between groups") +
+    coord_flip()
   
 
 
@@ -253,44 +253,44 @@ analysis_table$P.value = as.numeric(analysis_table$P.value)
 
 for (i in 1:length(names.meta)) {
   
-  meta.test = meta.all %>% select(names.meta[i], hclust_cut)
-  inter = names.meta[i]
-  
-  meta.test = as.data.frame(meta.test)
-  meta.test = meta.test[!is.na(meta.test[[1]]),]
-  colnames(meta.test) = c("factor", "cut")
-  
-  test_data = meta.test %>% 
-    group_by(cut) %>% count(factor)
-  
-  test_data = test_data %>% tidyr::spread(factor, n)
-  
-  test_data[is.na(test_data)] = 0
-  
-  test_data = as.matrix(test_data[,2:ncol(test_data)])
-  
-  t.data1 = test_data[1,]
-  t.data2 = test_data[c(2:3),]
-  
-  t.data2 = colSums(t.data2)
-  
-  # sum.with = sum(t.data2$with)
-  # sum.non = sum(t.data2$non)
-  # 
-  # 
-  # t.data2 <- data.frame(
-  #   with = sum.with,
-  #   non = sum.non
-  # )
-  
-  t.data = rbind(t.data1, t.data2)
-  
-  
-  x = fisher.test(t.data, alternative = "two.sided")
-  
-  
-  analysis_table[i,1] = inter
-  analysis_table[i,2] = x$p.value
+    meta.test = meta.all %>% select(names.meta[i], hclust_cut)
+    inter = names.meta[i]
+    
+    meta.test = as.data.frame(meta.test)
+    meta.test = meta.test[!is.na(meta.test[[1]]),]
+    colnames(meta.test) = c("factor", "cut")
+    
+    test_data = meta.test %>% 
+        group_by(cut) %>% count(factor)
+    
+    test_data = test_data %>% tidyr::spread(factor, n)
+    
+    test_data[is.na(test_data)] = 0
+    
+    test_data = as.matrix(test_data[,2:ncol(test_data)])
+    
+    t.data1 = test_data[1,]
+    t.data2 = test_data[c(2:3),]
+    
+    t.data2 = colSums(t.data2)
+    
+    # sum.with = sum(t.data2$with)
+    # sum.non = sum(t.data2$non)
+    # 
+    # 
+    # t.data2 <- data.frame(
+    #   with = sum.with,
+    #   non = sum.non
+    # )
+    
+    t.data = rbind(t.data1, t.data2)
+    
+    
+    x = fisher.test(t.data, alternative = "two.sided")
+    
+    
+    analysis_table[i,1] = inter
+    analysis_table[i,2] = x$p.value
 }
 
 
@@ -302,22 +302,22 @@ gos[which(gos$P.value <= 0.05), ]$col = "sign"
 
 # Diverging Barcharts
 gr = ggplot(gos, aes(x = marker, y = P.value , label = P.value, fill = col)) + 
-  geom_bar(stat = 'identity', width = 0.4, position = "dodge") +
-  scale_fill_manual(values = c("skip" = "gray75", "sign" = "gray30")) +
-  theme_bw() + 
-  theme(legend.position = "none") +
-  geom_hline(yintercept = 0.049, 
-             linetype = "dotted", 
-             color = "black", size = 0.9) +  
-  labs(y = "P value", x = "", title = "Meta data significance between 1st group and others") +
-  coord_flip()
+    geom_bar(stat = 'identity', width = 0.4, position = "dodge") +
+    scale_fill_manual(values = c("skip" = "gray75", "sign" = "gray30")) +
+    theme_bw() + 
+    theme(legend.position = "none") +
+    geom_hline(yintercept = 0.049, 
+                linetype = "dotted", 
+                color = "black", size = 0.9) +  
+    labs(y = "P value", x = "", title = "Meta data significance between 1st group and others") +
+    coord_flip()
 
 # Clean eniroment --------------------
 
 rm(analysis_table, gos, 
-   cut.info, data.all, data.hist, 
-   fit, gr, meta.test, nevents_tad, 
-   nevents_tad_annot, t.data, test_data, x)
+    cut.info, data.all, data.hist, 
+    fit, gr, meta.test, nevents_tad, 
+    nevents_tad_annot, t.data, test_data, x)
 
 # Survival time ----------------------
 

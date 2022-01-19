@@ -93,170 +93,171 @@ rm(who)
 
 for (z in 1:length(names.meta)){
   
-  cat(c(names.meta[z], "\n"))
-  
-  analysis <- names.meta[z]
-  groups <- as.character(meta[[analysis]])
-  groups <- unique(groups)
-  groups <- groups[which(groups != "")]
-  groups <- groups[!is.na(groups)]
-  
-  group1 <- groups[1]
-  group2 <- groups[2]
-  
-  meta.keep <- meta[which(meta[[analysis]] == group1 | meta[[analysis]] == group2), ]
-  
-  sample.list <- meta.keep$newNames
-  
-  df <- data.all[,..sample.list]
-  
-  df <- as.data.frame(df)
-  row.names(df) <- data.all$ID
-  
-  pheno <- as.factor(meta.keep[[analysis]])
-  
-  phenoMat <- model.matrix(~pheno)
-  colnames(phenoMat) <- sub("^pheno", "", colnames(phenoMat))
-  
-  fit <- lmFit(object = df, design = phenoMat)
-  
-  gc()
-  set.seed(6)
-  fit <- eBayes(fit)
-  
-  gc()
-  top.rank <- topTable(fit, number = nrow(df), adjust.method = "fdr", sort.by = "p")
-  
-  sign.table <- top.rank[which(top.rank$adj.P.Val <= 0.01 & abs(top.rank$logFC) > 2), ]
-  
-  if (nrow(sign.table) == 0) {
+    cat(c(names.meta[z], "\n"))
     
-    cat(c("No statistical significant events for:", names.meta[z], "\n"))
+    analysis <- names.meta[z]
+    groups <- as.character(meta[[analysis]])
+    groups <- unique(groups)
+    groups <- groups[which(groups != "")]
+    groups <- groups[!is.na(groups)]
     
-    sign_table[z,1] <- analysis 
-    sign_table[z,2] <- "0" 
+    group1 <- groups[1]
+    group2 <- groups[2]
     
-  } else {
+    meta.keep <- meta[which(meta[[analysis]] == group1 | meta[[analysis]] == group2), ]
     
-    # annotate sign.table
+    sample.list <- meta.keep$newNames
     
-    sign.table$ID <- row.names(sign.table)
+    df <- data.all[,..sample.list]
     
-    sign.table <- merge(sign.table, 
-                       data.all, 
-                       by.x = "ID", 
-                       by.y = "ID")
+    df <- as.data.frame(df)
+    row.names(df) <- data.all$ID
     
-    sign.tad.info <- sign.table %>% 
-      dplyr::group_by(tad_name) %>% 
-      dplyr::summarise(count = n()) 
+    pheno <- as.factor(meta.keep[[analysis]])
     
+    phenoMat <- model.matrix(~pheno)
+    colnames(phenoMat) <- sub("^pheno", "", colnames(phenoMat))
     
+    fit <- lmFit(object = df, design = phenoMat)
     
-    # annotate tad.info table
+    gc()
+    set.seed(6)
+    fit <- eBayes(fit)
     
-    tad.info <- data.all %>% 
-      dplyr::group_by(tad_name) %>% 
-      dplyr::summarize(count = n()) 
+    gc()
+    top.rank <- topTable(fit, number = nrow(df), adjust.method = "fdr", sort.by = "p")
     
-    sign.tad.info <- merge(sign.tad.info, 
-                          tad.info, 
-                          by = "tad_name")
+    sign.table <- top.rank[which(top.rank$adj.P.Val <= 0.01 & abs(top.rank$logFC) > 2), ]
     
-    sign.tad.info$freq <- sign.tad.info$count.x / sign.tad.info$count.y * 100
-  
-    sign.tad.info$pvalue <- 1
-    
-    for (i in 1:nrow(sign.tad.info)) {
+    if (nrow(sign.table) == 0) {
       
-      sign.tad.info$pvalue[i] <- 1 - phyper(sign.tad.info$count.x[i], 
-                                           nrow(sign.table), 
-                                           nrow(df) - nrow(sign.table), 
-                                           sign.tad.info$count.y[i])
-      
-    }  
-    
-    
-    if(expr_data != FALSE){
-      
-      # get expression data
-      
-      expr <- data.all[which(data.all$parent == expr_data), ]
-      
-      df <- expr[,..sample.list]
-      
-      df <- as.data.frame(df)
-      row.names(df) <- expr$ID
-      
-      # build model
-      
-      fit <- lmFit(object = df, design = phenoMat)
-      
-      gc()
-      set.seed(6)
-      fit <- eBayes(fit)
-      
-      # get top rank events
-      
-      gc()
-      top.rank <- topTable(fit, number = nrow(df), adjust.method = "fdr")
-      
-      # any filtering ?
-      
-      # annotate sign.table (expression)
-      
-      sign.table.expr <- as.data.frame(top.rank)
-      
-      sign.table.expr$ID <- row.names(sign.table.expr)
-      
-      sign.table.expr <- merge(sign.table.expr, 
-                              expr, 
-                              by = "ID")
-      
-      sign.tad.expr <- sign.table.expr %>% 
-        dplyr::group_by(tad_name) %>% 
-        dplyr::summarise(mean_logFC = mean(abs(logFC)))
-      
-      
-      
-      # merge information
-      
-      tad.all.info <- merge(sign.tad.info, 
-                           sign.tad.expr, 
-                           by = "tad_name" )
-      
-      tad.all.info.f <- tad.all.info %>% 
-        filter(count.x > 4) %>% 
-        filter(pvalue < 0.01) %>% 
-        filter(freq > 15) %>% 
-        filter(mean_logFC > 2)
-      
-      sign_table[z,1] <- analysis 
-      sign_table[z,2] <- as.character(nrow(tad.all.info.f))
-      
-      
-      
-      # create output tables
-      
-      full.tads <- merge(tad.all.info.f, 
-                        data.all, 
-                        by = "tad_name")
-      
-      if(nrow(full.tads) > 0) {
+        cat(c("No statistical significant events for:", names.meta[z], "\n"))
         
-        write.table(full.tads, 
-                    file = paste(output_folder, "/", analysis, "_TADiff.txt", sep = ""), 
-                    col.names = TRUE, 
-                    row.names = FALSE, 
-                    quote = FALSE, 
-                    sep = "\t")
-        
-      }
+        sign_table[z,1] <- analysis 
+        sign_table[z,2] <- "0" 
     }
-    
-    # what's the value of `sign_table` if we don't have expression data
-    # which are the outputs if we don't have expression data
-  } 
+      
+    else {
+      
+        # annotate sign.table
+        
+        sign.table$ID <- row.names(sign.table)
+        
+        sign.table <- merge(sign.table, 
+                            data.all, 
+                            by.x = "ID", 
+                            by.y = "ID")
+        
+        sign.tad.info <- sign.table %>% 
+        dplyr::group_by(tad_name) %>% 
+        dplyr::summarise(count = n()) 
+        
+        
+        
+        # annotate tad.info table
+        
+        tad.info <- data.all %>% 
+        dplyr::group_by(tad_name) %>% 
+        dplyr::summarize(count = n()) 
+        
+        sign.tad.info <- merge(sign.tad.info, 
+                                tad.info, 
+                                by = "tad_name")
+        
+        sign.tad.info$freq <- sign.tad.info$count.x / sign.tad.info$count.y * 100
+      
+        sign.tad.info$pvalue <- 1
+        
+        for (i in 1:nrow(sign.tad.info)) {
+          
+            sign.tad.info$pvalue[i] <- 1 - phyper(sign.tad.info$count.x[i], 
+                                                nrow(sign.table), 
+                                                nrow(df) - nrow(sign.table), 
+                                                sign.tad.info$count.y[i])
+          
+        }  
+        
+        
+        if(expr_data != FALSE){
+          
+            # get expression data
+            
+            expr <- data.all[which(data.all$parent == expr_data), ]
+            
+            df <- expr[,..sample.list]
+            
+            df <- as.data.frame(df)
+            row.names(df) <- expr$ID
+            
+            # build model
+            
+            fit <- lmFit(object = df, design = phenoMat)
+            
+            gc()
+            set.seed(6)
+            fit <- eBayes(fit)
+            
+            # get top rank events
+            
+            gc()
+            top.rank <- topTable(fit, number = nrow(df), adjust.method = "fdr")
+            
+            # any filtering ?
+            
+            # annotate sign.table (expression)
+            
+            sign.table.expr <- as.data.frame(top.rank)
+            
+            sign.table.expr$ID <- row.names(sign.table.expr)
+            
+            sign.table.expr <- merge(sign.table.expr, 
+                                    expr, 
+                                    by = "ID")
+            
+            sign.tad.expr <- sign.table.expr %>% 
+            dplyr::group_by(tad_name) %>% 
+            dplyr::summarise(mean_logFC = mean(abs(logFC)))
+            
+            
+            
+            # merge information
+            
+            tad.all.info <- merge(sign.tad.info, 
+                                    sign.tad.expr, 
+                                    by = "tad_name" )
+            
+            tad.all.info.f <- tad.all.info %>% 
+            filter(count.x > 4) %>% 
+            filter(pvalue < 0.01) %>% 
+            filter(freq > 15) %>% 
+            filter(mean_logFC > 2)
+            
+            sign_table[z,1] <- analysis 
+            sign_table[z,2] <- as.character(nrow(tad.all.info.f))
+            
+            
+            
+            # create output tables
+            
+            full.tads <- merge(tad.all.info.f, 
+                                data.all, 
+                                by = "tad_name")
+            
+            if(nrow(full.tads) > 0) {
+              
+                write.table(full.tads, 
+                            file = paste(output_folder, "/", analysis, "_TADiff.txt", sep = ""), 
+                            col.names = TRUE, 
+                            row.names = FALSE, 
+                            quote = FALSE, 
+                            sep = "\t")
+              
+            }
+        }
+        
+        # what's the value of `sign_table` if we don't have expression data
+        # which are the outputs if we don't have expression data
+    } 
 }
 
 sign_table <- as.data.frame(sign_table)

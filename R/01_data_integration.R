@@ -71,28 +71,28 @@ biodata <- list()
 #'
 
 if(length(freq) > 0){
-  for(i in 1:length(freq)){
-    new <- fread(paste(dir_name, freq_dir, freq[i], sep = "/"))
-
-    keep <- which(str_detect(freq[i], files))
-    parent <- keep
-    keep <- meta[,..keep]
-    keep <- as.character(unlist(keep))
-
-    new <- cbind(new[,1:4], new[,..keep])
-    colnames(new) <- c("ID", "chromosome_name", "start_position", "end_position", names)
-
-    new$chromosome_name <- str_to_lower(new$chromosome_name)
-    new$chromosome_name <- str_remove(new$chromosome_name, "chr")
-
-    if(max(new[,5:ncol(new)]) <= 1){
-      new[,5:ncol(new)] <- 100 * new[,5:ncol(new)]
+    for(i in 1:length(freq)){
+        new <- fread(paste(dir_name, freq_dir, freq[i], sep = "/"))
+    
+        keep <- which(str_detect(freq[i], files))
+        parent <- keep
+        keep <- meta[,..keep]
+        keep <- as.character(unlist(keep))
+    
+        new <- cbind(new[,1:4], new[,..keep])
+        colnames(new) <- c("ID", "chromosome_name", "start_position", "end_position", names)
+    
+        new$chromosome_name <- str_to_lower(new$chromosome_name)
+        new$chromosome_name <- str_remove(new$chromosome_name, "chr")
+    
+        if(max(new[,5:ncol(new)]) <= 1){
+          new[,5:ncol(new)] <- 100 * new[,5:ncol(new)]
+        }
+    
+        new$parent <- parent
+    
+        biodata[[i]] <- new
     }
-
-    new$parent <- parent
-
-    biodata[[i]] <- new
-  }
 }
 
 #'
@@ -100,35 +100,35 @@ if(length(freq) > 0){
 #'
 
 if(length(counts) > 0){
-  for(i in 1:length(counts)){
-    new <- fread(paste(dir_name, counts_dir, counts[i], sep = "/"))
-
-    keep <- which(str_detect(counts[i], files))
-    parent <- keep
-    keep <- meta[,..keep]
-    keep <- as.character(unlist(keep))
-
-    new <- cbind(new[,1:4], new[,..keep])
-    colnames(new) <- c("ID", "chromosome_name", "start_position", "end_position", names)
-
-    new$chromosome_name <- str_to_lower(new$chromosome_name)
-    new$chromosome_name <- str_remove(new$chromosome_name, "chr")
-
-    temp <- new[,5:ncol(new)]
-
-    temp <- log(temp + 1)
-    col.max <- apply(temp, 2, max)
-    col.max <- as.numeric(col.max)
-
-    temp <- t(temp) * (100 / col.max)
-    temp <- as.data.table(t(temp))
-
-    new <- cbind(new[,1:4], temp)
-
-    new$parent <- parent
-
-    biodata[[i + length(freq)]] <- new
-  }
+    for(i in 1:length(counts)){
+        new <- fread(paste(dir_name, counts_dir, counts[i], sep = "/"))
+    
+        keep <- which(str_detect(counts[i], files))
+        parent <- keep
+        keep <- meta[,..keep]
+        keep <- as.character(unlist(keep))
+    
+        new <- cbind(new[,1:4], new[,..keep])
+        colnames(new) <- c("ID", "chromosome_name", "start_position", "end_position", names)
+    
+        new$chromosome_name <- str_to_lower(new$chromosome_name)
+        new$chromosome_name <- str_remove(new$chromosome_name, "chr")
+    
+        temp <- new[,5:ncol(new)]
+    
+        temp <- log(temp + 1)
+        col.max <- apply(temp, 2, max)
+        col.max <- as.numeric(col.max)
+    
+        temp <- t(temp) * (100 / col.max)
+        temp <- as.data.table(t(temp))
+    
+        new <- cbind(new[,1:4], temp)
+    
+        new$parent <- parent
+    
+        biodata[[i + length(freq)]] <- new
+    }
 }
 
 biodata <- rbindlist(biodata, use.names = FALSE)
@@ -157,11 +157,11 @@ biodata <- biodata[which(data.num.ids != 0), ]
 #' 
 if(tech == "hg19"){
   
-  txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
+    txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
   
 } else {
   
-  txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
+    txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
   
 }
 
@@ -169,8 +169,8 @@ feat <- genFeatures(txdb, reduce_ranges = FALSE, verbose = FALSE)
 feat <- feat@unlistData
 
 gr <- GRanges(seqnames = Rle(paste("chr", biodata$chromosome_name, sep = "")),
-             ranges = IRanges(start = as.numeric(biodata$start_position),
-                              end = as.numeric(biodata$end_position)))
+                ranges = IRanges(start = as.numeric(biodata$start_position),
+                                end = as.numeric(biodata$end_position)))
 
 overlaps <- findOverlaps(gr, feat)
 
@@ -222,7 +222,7 @@ rm(map, mapping, genes)
 #' 
 
 features <- biodata[, .(Gene_id = paste(feature_by, collapse = "|"),
-                       Gene_feature = paste(featuretype, collapse = "|")), by = ID]
+                        Gene_feature = paste(featuretype, collapse = "|")), by = ID]
 
 biodata <- biodata[which(!duplicated(biodata$ID)), ]
 
@@ -323,16 +323,16 @@ full <- merge(type1.df, biodata, by.x = "name.1", by.y = "ID")
 colnames(full)[1] <- "ID"
 
 keep <- c("chromosome_name", 
-         "tad_name", 
-         "tad_start", 
-         "tad_end", 
-         "ID", 
-         "start_position", 
-         "end_position", 
-         "Gene_id", 
-         "Gene_locus", 
-         "parent",
-         meta$newNames)
+        "tad_name", 
+        "tad_start", 
+        "tad_end", 
+        "ID", 
+        "start_position", 
+        "end_position", 
+        "Gene_id", 
+        "Gene_locus", 
+        "parent",
+        meta$newNames)
 
 full <- full[,..keep]
 
@@ -352,15 +352,15 @@ write.table(full, paste(output_folder, "/integrated-tad-table.csv", sep = ""),
 
 for(i in unique(biodata$parent)){
 
-  temp <- biodata[which(biodata$parent == i), ]$ID
-
-  temp <- temp[sample(1:length(temp), 3)]
-
-  temp <- paste(temp, collapse = ", ")
-
-  cat(c("File", i, ":", temp, "...", "\n\n"),
-      file = paste(output_folder, "/summary.txt", sep = ""),
-      append = TRUE)
+    temp <- biodata[which(biodata$parent == i), ]$ID
+  
+    temp <- temp[sample(1:length(temp), 3)]
+  
+    temp <- paste(temp, collapse = ", ")
+  
+    cat(c("File", i, ":", temp, "...", "\n\n"),
+        file = paste(output_folder, "/summary.txt", sep = ""),
+        append = TRUE)
 
 
 

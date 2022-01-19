@@ -27,7 +27,7 @@ meta <- "meta-data.csv"
 meth_data <- 1
 
 data.all <- fread(paste(output_folder, "/integrated-tad-table.csv", sep = ""),
-                 sep = "\t")
+sep = "\t")
 
 meta <- fread(paste(dir_name, meta, sep = "/"))
 who <- meta == ""
@@ -51,7 +51,7 @@ meth.regulatory <- meth.regulatory[!duplicated(meth.regulatory$ID), ]
 rm(meth.intergenic, meth.promoter, meth)
 
 for(i in sample.list){
-  meth.regulatory[[i]] <- 100 - meth.regulatory[[i]]
+    meth.regulatory[[i]] <- 100 - meth.regulatory[[i]]
 }
 
 other <- data.all[which(data.all$parent != meth_data), ]
