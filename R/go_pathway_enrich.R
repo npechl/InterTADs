@@ -330,7 +330,7 @@ produce_outputs <- function(data_with_p,
     data_visual <- data_with_p %>%
       dplyr::select(TAD, go_term, go_number, P.value, P.adjust)
     
-    data_with_p<- data_visual %>%
+    data_with_p <- data_visual %>%
       dplyr::group_by(TAD) %>%
       dplyr::summarise(TAD, 
                        go_term = paste(go_term, collapse = "|"),

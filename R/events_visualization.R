@@ -85,7 +85,7 @@ for(j in tad_to_visual){
   for(i in meta$newNames){
     # png(filename = paste(image_folder_name, "patients/", i, "_", j, ".png", sep = ""), width = 1150, height = 900)
     
-    kp <- base::expression({
+    kp <- expression({
       kp <- plotKaryotype(genome = "hg19", plot.type = 4, zoom = region, cex = 1.5)
       kpDataBackground(kp, data.panel = 1)
       kpAddBaseNumbers(kp, add.units = TRUE, tick.dist = tick.distance, cex = 1.25)
@@ -122,7 +122,7 @@ for(j in tad_to_visual){
       }
     })
     
-    saveImageHigh::save_as_png({base::eval(kp)},
+    saveImageHigh::save_as_png({eval(kp)},
                                file.name = file.path(image_folder_name, 
                                                      "patients", 
                                                      paste(i, "_", j, ".png", sep = "")),
@@ -164,7 +164,7 @@ for(j in tad_to_visual){
       # png(filename = paste(image_folder_name, j, "/", groups[i], ".png", sep = ""), 
       #     width = 1150, height = 900)
       
-      kp <- base::expression({
+      kp <- expression({
         kp = plotKaryotype(genome = "hg19", plot.type = 4, zoom = region, cex = 1.5)
         kpDataBackground(kp, data.panel = 1)
         kpAddBaseNumbers(kp, add.units = TRUE, tick.dist = tick.distance, cex = 1.25)
@@ -211,7 +211,7 @@ for(j in tad_to_visual){
         kpAddMainTitle(kp, main = j, cex = 1.5)
       })
       
-      saveImageHigh::save_as_png({base::eval(kp)},
+      saveImageHigh::save_as_png({eval(kp)},
                                  file.name = file.path(image_folder_name, j,
                                                        paste(groups[i], ".png", sep = "")),
                                  width = 14, height = 10)
@@ -221,7 +221,7 @@ for(j in tad_to_visual){
     # png(filename = paste(image_folder_name, j, "/", "Group_differences", ".png", sep = ""), 
     #     width = 1150, height = 900)
     
-    kp <- base::expression({
+    kp <- expression({
       
       
       kp <- plotKaryotype(genome = "hg19", plot.type = 4, zoom = region, cex = 1.5)
@@ -240,11 +240,11 @@ for(j in tad_to_visual){
       
       for(p in 1:length(parents)){
         
-        r_vis_data = rain_data[which(rain_data$parent == parents[p]), ]
-        b_vis_data = box_data[which(box_data$parent == parents[p]), ]
+        r_vis_data <- rain_data[which(rain_data$parent == parents[p]), ]
+        b_vis_data <- box_data[which(box_data$parent == parents[p]), ]
         
         if(nrow(r_vis_data) > 0){
-          numeric.vector = r_vis_data$diff
+          numeric.vector <- r_vis_data$diff
           who <- numeric.vector > 0
           numeric.vector[who] <- numeric.vector[who] / maximum_value
           numeric.vector[!who] <- numeric.vector[!who] / abs(minimum_value)
@@ -287,7 +287,7 @@ for(j in tad_to_visual){
       
     })
     
-    saveImageHigh::save_as_png({base::eval(kp)},
+    saveImageHigh::save_as_png({eval(kp)},
                                file.name = file.path(image_folder_name, j, "Group_differences.png"),
                                width = 14, height = 10)
     

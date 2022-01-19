@@ -484,7 +484,7 @@ per_tad_plots <- function(report_list,
   
   for (i in c(1:length(report_list))) {
     
-    tad_dir = paste0(image_output_folder, "/Plots per TADs/", report_list[[i]]$tad[1])
+    tad_dir <- paste0(image_output_folder, "/Plots per TADs/", report_list[[i]]$tad[1])
     dir.create(tad_dir,showWarnings = F)
     
     # plot 1
@@ -523,12 +523,12 @@ per_tad_plots <- function(report_list,
     
     if (nrow(tabl) > 30){
       
-      text = "Showing top 30 Terms, for the complete list consult the over-represented TFs in each tad.csv"
+      text <- "Showing top 30 Terms, for the complete list consult the over-represented TFs in each tad.csv"
       tabl <- tabl[1:30, ]
     
     } else {
       
-      text = "" 
+      text <- "" 
     }
     
     # plot 2
@@ -651,12 +651,12 @@ per_tfs_plots <- function(report_list,
     
     if (nrow(temp) > 29) {
       
-      text = "Showing top 30 Terms, for the complete list consult: TFs in different TADs.csv"
+      text <- "Showing top 30 Terms, for the complete list consult: TFs in different TADs.csv"
       temp <- temp[1:30, ]
     
     } else {
       
-      text = ""
+      text <- ""
     }
 
     p <- temp %>%

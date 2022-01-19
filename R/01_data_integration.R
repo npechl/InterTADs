@@ -146,7 +146,7 @@ biodata <- biodata[which(biodata$chromosome_name %in% as.character(1:22)), ]
 # zero.ids = rep(0, length(names))
 # zero.ids = paste(zero.ids, collapse = "")
 
-data.num.ids <- base::rowSums(biodata[, meta$newNames, with = FALSE]) # unite(data = biodata[,..names], col = ids, sep = "")
+data.num.ids <- rowSums(biodata[, meta$newNames, with = FALSE]) # unite(data = biodata[,..names], col = ids, sep = "")
 biodata <- biodata[which(data.num.ids != 0), ]
 
 # Getting genomic features -----------------------------------------------------
@@ -205,7 +205,7 @@ genes <- genes[!str_detect(genes, "INTER")]
 
 mapping <- map_entrez_ids(entrez.ids = genes, tech = tech)
 
-map <- base::match(biodata$feature_by, mapping$entrez.id)
+map <- match(biodata$feature_by, mapping$entrez.id)
 biodata$feature_by <- mapping[map, ]$hgnc.symbol
 
 rm(map, mapping, genes)
@@ -224,9 +224,9 @@ rm(map, mapping, genes)
 features <- biodata[, .(Gene_id = paste(feature_by, collapse = "|"),
                        Gene_feature = paste(featuretype, collapse = "|")), by = ID]
 
-biodata <- biodata[which(!base::duplicated(biodata$ID)), ]
+biodata <- biodata[which(!duplicated(biodata$ID)), ]
 
-who <- base::match(biodata$ID, features$ID)
+who <- match(biodata$ID, features$ID)
 
 biodata$feature_by <- features[who, ]$Gene_id
 biodata$featuretype <- features[who, ]$Gene_feature
@@ -318,7 +318,7 @@ rm(type1, gr1, gr2)
 
 #' Overlapping with TADs' table
 #' 
-full <- base::merge(type1.df, biodata, by.x = "name.1", by.y = "ID")
+full <- merge(type1.df, biodata, by.x = "name.1", by.y = "ID")
 
 colnames(full)[1] <- "ID"
 
