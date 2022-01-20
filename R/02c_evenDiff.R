@@ -1,4 +1,4 @@
-# Loading libraries ------------------------------------------------------
+# Loading libraries ------------------------------------------------------------
 
 rm(list = ls())
 
@@ -6,11 +6,12 @@ source("R/libraries.R")
 
 start_tad_time <- Sys.time()
 
-# Inputs ----------------------------------------------------------------------------------
+# Inputs -----------------------------------------------------------------------
 
 #' Input parameters for TADiff part
 #' 
-#' @param dir_name Directory of input datasets containing feature counts and frequency tables
+#' @param dir_name Directory of input datasets containing feature counts and 
+#' frequency tables
 #' 
 #' @param output_folder Folder name for printing output tables
 #' 
@@ -18,7 +19,8 @@ start_tad_time <- Sys.time()
 #' 
 #' @param names.meta meta data columns to process (names or indexes)
 #' 
-#' @param expr_data Parent index of expression data. If no expression is provided, place FALSE
+#' @param expr_data Parent index of expression data. 
+#' If no expression is provided, place FALSE
 
 dir_name <- "Datasets"
 
@@ -69,7 +71,8 @@ expr_data <- 2
 
 
 
-data.all <- fread(paste(output_folder, "/integrated-tad-table-methNorm.txt", sep = ""),
+data.all <- fread(paste(output_folder, "/integrated-tad-table-methNorm.txt",
+                        sep = ""),
 sep = "\t")
 
 data.all$ID <- paste(data.all$tad_name, data.all$ID, sep = ";")
@@ -93,7 +96,8 @@ diffevent <- matrix(data = "0",
                     nrow = length(names.meta), 
                     ncol = (length(unique(data.all$parent)) + 1))
 
-colnames(diffevent) <- c("Analysis", paste("p_", unique(data.all$parent), sep = ""))
+colnames(diffevent) <- c("Analysis", paste("p_", unique(data.all$parent),
+                                           sep = ""))
 
 rm(who)
 
@@ -110,7 +114,8 @@ for (z in 1:length(names.meta)){
     group1 <- groups[1]
     group2 <- groups[2]
     
-    meta.keep <- meta[which(meta[[analysis]] == group1 | meta[[analysis]] == group2), ]
+    meta.keep <- meta[which(meta[[analysis]] == group1 | meta[[analysis]] == 
+                              group2), ]
     
     sample.list <- meta.keep$newNames
     
@@ -131,9 +136,11 @@ for (z in 1:length(names.meta)){
     fit <- eBayes(fit)
     
     gc()
-    top.rank <- topTable(fit, number = nrow(df), adjust.method = "fdr", sort.by = "p")
+    top.rank <- topTable(fit, number = nrow(df), adjust.method = "fdr",
+                         sort.by = "p")
     
-    sign.table <- top.rank[which(top.rank$adj.P.Val <= 0.01 & abs(top.rank$logFC) > 4), ]
+    sign.table <- top.rank[which(top.rank$adj.P.Val <= 0.01 &
+                                   abs(top.rank$logFC) > 4), ]
   
     if (nrow(sign.table) == 0) {
     
@@ -164,7 +171,8 @@ for (z in 1:length(names.meta)){
         
         # final file - export
         write.table(sign.table,
-                    file = paste(output_folder, "/", analysis, "_evenDiff.txt", sep = ""), 
+                    file = paste(output_folder, "/", analysis, "_evenDiff.txt",
+                                 sep = ""), 
                     col.names = TRUE, 
                     row.names = FALSE, 
                     quote = FALSE, 

@@ -13,7 +13,8 @@ source("R/visualization_enrich.R")
 #' Functional analysis.
 #' 
 #' @description  
-#' Enrichment analysis with GO terms, KEGG pathways and motif enrichment with TFs. 
+#' Enrichment analysis with GO terms, KEGG pathways and motif enrichment 
+#' with TFs. 
 #' Optional step to be performed on the output files 
 #' of the `02c_evenDiff.R` and `02d_TADiff.R` scripts. 
 #' 
@@ -40,7 +41,8 @@ source("R/visualization_enrich.R")
 #' 
 #' @param min_genes min number of genes in over-represented terms
 #' 
-#' @param system RStudio supports different fonts for different operating systems
+#' @param system RStudio supports different fonts for different 
+#' operating systems
 #'  
 #' @param dir_name name or filepath of the input folder
 #'  
@@ -81,13 +83,15 @@ start_time <- proc.time()
 # Download hg gff file ----------------
 if (tech == "hg19") {
    
-    download.file(url="ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_19/gencode.v19.annotation.gff3.gz",
+    download.file(url="ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human
+                    /release_19/gencode.v19.annotation.gff3.gz",
                     destfile=paste0(dir_name,'/gencode.v19.annotation.gff3.gz'), 
                     method='auto')
    
 } else if (tech == "hg38") {
    
-    download.file(url="ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_36/gencode.v36.annotation.gff3.gz",
+    download.file(url="ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human
+                    /release_36/gencode.v36.annotation.gff3.gz",
                     destfile=paste0(dir_name,'/gencode.v36.annotation.gff3.gz'), 
                     method='auto')
    
@@ -132,7 +136,8 @@ if (!is_empty(files_evenDiff)) {
                                         p_adjust_method, 
                                         min_genes)
                 
-                if (!is.null(result)) assign(paste0('list_', name, '_all'), result)
+                if (!is.null(result)) assign(paste0('list_', name, '_all'),
+                                            result)
             }
            
         }
@@ -162,18 +167,21 @@ if (!is_empty(files_evenDiff)) {
         # Enrichment all
         if (exists("data_all")) {
             fwrite(data_all, 
-                    paste0(folder$go_all_outputs, "/over-represented GO terms-enrichment all.csv"), 
+                    paste0(folder$go_all_outputs,
+                            "/over-represented GO terms-enrichment all.csv"), 
                     row.names = FALSE, sep = "\t", quote = FALSE)
         }
         
         if (exists("list_GO_MF_all")) {
            
             fwrite(list_GO_MF_all$data_per_term,
-                    paste0(folder$go_all_outputs, "/GO MF Terms in different TADs.csv"), 
+                    paste0(folder$go_all_outputs,
+                            "/GO MF Terms in different TADs.csv"), 
                     row.names = FALSE, sep = "\t", quote = FALSE)
            
             fwrite(list_GO_MF_all$data_per_tad, 
-                    paste0(folder$go_all_outputs, "/over-represented GO MF terms-enrichment all.csv"), 
+                    paste0(folder$go_all_outputs,
+                            "/over-represented GO MF terms-enrichment all.csv"), 
                     row.names = FALSE, sep = "\t", quote = FALSE)
            
         }
@@ -181,12 +189,14 @@ if (!is_empty(files_evenDiff)) {
         if (exists("list_GO_BP_all")) {
            
             fwrite(list_GO_BP_all$data_per_term, 
-                    paste0(folder$go_all_outputs, "/GO BP Terms in different TADs.csv"), 
+                    paste0(folder$go_all_outputs,
+                            "/GO BP Terms in different TADs.csv"), 
                     row.names = FALSE, sep = "\t", quote = FALSE)
            
            
             fwrite(list_GO_BP_all$data_per_tad, 
-                    paste0(folder$go_all_outputs, "/over-represented GO BP terms-enrichment all.csv"), 
+                    paste0(folder$go_all_outputs,
+                            "/over-represented GO BP terms-enrichment all.csv"), 
                     row.names = FALSE, sep = "\t", quote = FALSE)
            
         }
@@ -194,12 +204,14 @@ if (!is_empty(files_evenDiff)) {
         if (exists("list_KEGG_all")) {
            
             fwrite(list_KEGG_all$data_per_tad, 
-                    paste0(folder$kegg_all_outputs, "/over-represented KEGG Pathways-enrichment all.csv"), 
+                    paste0(folder$kegg_all_outputs,
+                        "/over-represented KEGG Pathways-enrichment all.csv"), 
                     row.names = FALSE, sep = "\t", quote = FALSE)
            
            
             fwrite(list_KEGG_all$data_per_term, 
-                    paste0(folder$kegg_all_outputs, "/KEGG Pathways in different TADs.csv"), 
+                    paste0(folder$kegg_all_outputs,
+                            "/KEGG Pathways in different TADs.csv"), 
                     row.names = FALSE, sep = "\t", quote = FALSE)
            
         }
@@ -209,7 +221,8 @@ if (!is_empty(files_evenDiff)) {
         if (length(report_list) > 0) {
            
             fwrite(list_motif$table_per_tad, 
-                    paste0(folder$motif_outputs, "/over-represented TFs in each tad.csv"), 
+                    paste0(folder$motif_outputs,
+                            "/over-represented TFs in each tad.csv"), 
                     row.names = FALSE, sep = "\t", quote = FALSE)
            
             fwrite(list_motif$table_per_tfs, 
@@ -219,7 +232,8 @@ if (!is_empty(files_evenDiff)) {
             file.create(paste0(folder$motif_outputs,"/report MotifEA.txt"), 
                         showWarnings = FALSE)
            
-            dput(report_list, file = paste0(folder$motif_outputs,"/report MotifEA.txt"))
+            dput(report_list, file = paste0(folder$motif_outputs,
+                                            "/report MotifEA.txt"))
         }
         
         # Visualization -------------
@@ -275,7 +289,8 @@ if (!is_empty(files_TADiff)) {
         file_name <- str_remove(one_file, ".txt")
         folder <- create_folders(paste0(output_folder, "/", file_name))
         biodata <- fread(paste0(dir_name, "/", one_file))
-        # biodata <- biodata[which((biodata$significant == TRUE) & (tad_name == "TAD2886")), ]
+        # biodata <- biodata[which((biodata$significant == TRUE) &
+        #(tad_name == "TAD2886")), ]
         
         # Enrichment all
         list_all <- enrich_all(biodata, dbs, cut_off, criterio, type)
@@ -294,7 +309,8 @@ if (!is_empty(files_TADiff)) {
                                         p_adjust_method,
                                         min_genes)
                 
-                if (!is.null(result)) assign(paste0('list_', name, '_all'), result)
+                if (!is.null(result)) assign(paste0('list_', name, '_all'),
+                                                result)
             }
            
         }
@@ -324,7 +340,8 @@ if (!is_empty(files_TADiff)) {
                                         p_adjust_method, 
                                         min_genes)
                 
-                if (!is.null(result)) assign(paste0('list_', name, '_per_tad'), result)
+                if (!is.null(result)) assign(paste0('list_', name, '_per_tad'),
+                                                result)
             }
         }
            
@@ -356,17 +373,20 @@ if (!is_empty(files_TADiff)) {
         # Enrichment all
         if (exists("data_all")) {
             fwrite(data_all, 
-                    paste0(folder$go_all_outputs, "/over-represented GO terms-enrichment all.csv"), 
+                    paste0(folder$go_all_outputs,
+                            "/over-represented GO terms-enrichment all.csv"), 
                     row.names = FALSE, sep = "\t", quote = FALSE)
         }
         
         if (exists("list_GO_MF_all")) {
             fwrite(list_GO_MF_all$data_per_term,
-                    paste0(folder$go_all_outputs, "/GO MF Terms in different TADs.csv"), 
+                    paste0(folder$go_all_outputs,
+                            "/GO MF Terms in different TADs.csv"), 
                     row.names = FALSE, sep = "\t", quote = FALSE)
            
             fwrite(list_GO_MF_all$data_per_tad,
-                    paste0(folder$go_all_outputs, "/over-represented GO MF terms-enrichment all.csv"), 
+                    paste0(folder$go_all_outputs,
+                            "/over-represented GO MF terms-enrichment all.csv"), 
                     row.names = FALSE, sep = "\t", quote = FALSE)
            
         }
@@ -374,12 +394,14 @@ if (!is_empty(files_TADiff)) {
         if (exists("list_GO_BP_all")) {
            
             fwrite(list_GO_BP_all$data_per_term,
-                    paste0(folder$go_all_outputs, "/GO BP Terms in different TADs.csv"), 
+                    paste0(folder$go_all_outputs,
+                            "/GO BP Terms in different TADs.csv"), 
                     row.names = FALSE, sep = "\t", quote = FALSE)
            
            
             fwrite(list_GO_BP_all$data_per_tad,
-                    paste0(folder$go_all_outputs, "/over-represented GO BP terms-enrichment all.csv"), 
+                    paste0(folder$go_all_outputs,
+                            "/over-represented GO BP terms-enrichment all.csv"), 
                     row.names = FALSE, sep = "\t", quote = FALSE)
            
         }
@@ -387,12 +409,14 @@ if (!is_empty(files_TADiff)) {
         if (exists("list_KEGG_all")) {
            
             fwrite(list_KEGG_all$data_per_tad, 
-                    paste0(folder$kegg_all_outputs, "/over-represented KEGG Pathways-enrichment all.csv"), 
+                    paste0(folder$kegg_all_outputs,
+                        "/over-represented KEGG Pathways-enrichment all.csv"), 
                     row.names = FALSE, sep = "\t", quote = FALSE)
            
            
             fwrite(list_KEGG_all$data_per_term,
-                    paste0(folder$kegg_all_outputs, "/KEGG Pathways in different TADs.csv"), 
+                    paste0(folder$kegg_all_outputs,
+                            "/KEGG Pathways in different TADs.csv"), 
                     row.names = FALSE, sep = "\t", quote = FALSE)
   
         }
@@ -400,17 +424,20 @@ if (!is_empty(files_TADiff)) {
         # Enrichment per TAD  
         if (exists("data_per_tad")) {
             fwrite(data_per_tad, 
-                    paste0(folder$go_per_outputs, "/over-represented GO terms-enrichment per tad.csv"), 
+                    paste0(folder$go_per_outputs,
+                        "/over-represented GO terms-enrichment per tad.csv"), 
                     row.names = FALSE, sep = "\t", quote = FALSE)
         }
            
         if (exists("list_GO_MF_per_tad")) {
             fwrite(list_GO_MF_per_tad$data_per_term, 
-                    paste0(folder$go_per_outputs, "/GO MF Terms in different TADs.csv"), 
+                    paste0(folder$go_per_outputs,
+                            "/GO MF Terms in different TADs.csv"), 
                     row.names = FALSE, sep = "\t", quote = FALSE)
               
             fwrite(list_GO_MF_per_tad$data_per_tad, 
-                    paste0(folder$go_per_outputs, "/over-represented GO MF terms-enrichment per TAD.csv"), 
+                    paste0(folder$go_per_outputs,
+                        "/over-represented GO MF terms-enrichment per TAD.csv"), 
                     row.names = FALSE, sep = "\t", quote = FALSE)
         
         }
@@ -418,11 +445,13 @@ if (!is_empty(files_TADiff)) {
         if (exists("list_GO_BP_per_tad")) {
               
             fwrite(list_GO_BP_per_tad$data_per_term, 
-                    paste0(folder$go_per_outputs, "/GO BP Terms in different TADs.csv"), 
+                    paste0(folder$go_per_outputs,
+                            "/GO BP Terms in different TADs.csv"), 
                     row.names = FALSE, sep = "\t", quote = FALSE)
               
             fwrite(list_GO_BP_per_tad$data_per_tad, 
-                    paste0(folder$go_per_outputs, "/over-represented GO BP terms-enrichment per TAD.csv"), 
+                    paste0(folder$go_per_outputs,
+                        "/over-represented GO BP terms-enrichment per TAD.csv"), 
                     row.names = FALSE, sep = "\t", quote = FALSE)
               
         }
@@ -430,11 +459,13 @@ if (!is_empty(files_TADiff)) {
         if (exists("list_KEGG_per_tad")) {
               
             fwrite(list_KEGG_per_tad$data_per_tad, 
-                    paste0(folder$kegg_per_outputs, "/over-represented KEGG Pathways-enrichment per TAD.csv"), 
+                    paste0(folder$kegg_per_outputs,
+                    "/over-represented KEGG Pathways-enrichment per TAD.csv"), 
                     row.names = FALSE, sep = "\t", quote = FALSE)
               
             fwrite(list_KEGG_per_tad$data_per_term, 
-                    paste0(folder$kegg_per_outputs, "/KEGG Pathways in different TADs.csv"), 
+                    paste0(folder$kegg_per_outputs,
+                            "/KEGG Pathways in different TADs.csv"), 
                     row.names = FALSE, sep = "\t", quote = FALSE)
         }
     
@@ -443,16 +474,19 @@ if (!is_empty(files_TADiff)) {
         if (length(report_list) > 0) {
            
             fwrite(list_motif$table_per_tad, 
-                    paste0(folder$motif_outputs, "/over-represented TFs in each tad.csv"), 
+                    paste0(folder$motif_outputs,
+                            "/over-represented TFs in each tad.csv"), 
                     row.names = FALSE, sep = "\t", quote = FALSE)
            
             fwrite(list_motif$table_per_tfs, 
                     paste0(folder$motif_outputs, "/TFs in different TADs.csv"), 
                     row.names = FALSE, sep = "\t", quote = FALSE)
            
-            file.create(paste0(folder$motif_outputs,"/report MotifEA.txt"), showWarnings = FALSE)
+            file.create(paste0(folder$motif_outputs,"/report MotifEA.txt"),
+                        showWarnings = FALSE)
            
-            dput(report_list, file = paste0(folder$motif_outputs,"/report MotifEA.txt"))
+            dput(report_list, file = paste0(folder$motif_outputs,
+                                            "/report MotifEA.txt"))
         }
         
         # Visualization --------------
@@ -513,8 +547,8 @@ if (!is_empty(files_TADiff)) {
         }
         
         rm(list_all, list_GO_MF_all, list_GO_BP_all, list_KEGG_all, data_all,
-            list_per_tad, list_GO_MF_per_tad, list_GO_BP_per_tad, list_KEGG_per_tad, 
-            data_per_tad, list_motif, report_list)
+            list_per_tad, list_GO_MF_per_tad, list_GO_BP_per_tad,
+            list_KEGG_per_tad, data_per_tad, list_motif, report_list)
     }
    
 }

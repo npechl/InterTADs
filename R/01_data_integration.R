@@ -12,7 +12,8 @@ start_time <- Sys.time()
 #'
 #' Input parameters for Data Integration part
 #'
-#' @param dir_name Directory of input datasets containing feature counts and frequency tables
+#' @param dir_name Directory of input datasets containing feature counts and
+#'  frequency tables
 #'
 #' @param output_folder Folder name for printing output tables
 #'
@@ -80,7 +81,8 @@ if(length(freq) > 0){
         keep <- as.character(unlist(keep))
     
         new <- cbind(new[,1:4], new[,..keep])
-        colnames(new) <- c("ID", "chromosome_name", "start_position", "end_position", names)
+        colnames(new) <- c("ID", "chromosome_name", "start_position",
+                           "end_position", names)
     
         new$chromosome_name <- str_to_lower(new$chromosome_name)
         new$chromosome_name <- str_remove(new$chromosome_name, "chr")
@@ -109,7 +111,8 @@ if(length(counts) > 0){
         keep <- as.character(unlist(keep))
     
         new <- cbind(new[,1:4], new[,..keep])
-        colnames(new) <- c("ID", "chromosome_name", "start_position", "end_position", names)
+        colnames(new) <- c("ID", "chromosome_name", "start_position",
+                           "end_position", names)
     
         new$chromosome_name <- str_to_lower(new$chromosome_name)
         new$chromosome_name <- str_remove(new$chromosome_name, "chr")
@@ -146,13 +149,15 @@ biodata <- biodata[which(biodata$chromosome_name %in% as.character(1:22)), ]
 # zero.ids = rep(0, length(names))
 # zero.ids = paste(zero.ids, collapse = "")
 
-data.num.ids <- rowSums(biodata[, meta$newNames, with = FALSE]) # unite(data = biodata[,..names], col = ids, sep = "")
+data.num.ids <- rowSums(biodata[, meta$newNames, with = FALSE]) 
+# unite(data = biodata[,..names], col = ids, sep = "")
 biodata <- biodata[which(data.num.ids != 0), ]
 
 # Getting genomic features -----------------------------------------------------
 
 #'
-#' Getting gene names (expressed as entrez ids) and locus (e.g. exon, intron, cds etc.)
+#' Getting gene names (expressed as entrez ids) and locus 
+#' (e.g. exon, intron, cds etc.)
 #' based on chromosomal location
 #' 
 if(tech == "hg19"){
@@ -222,7 +227,8 @@ rm(map, mapping, genes)
 #' 
 
 features <- biodata[, .(Gene_id = paste(feature_by, collapse = "|"),
-                        Gene_feature = paste(featuretype, collapse = "|")), by = ID]
+                        Gene_feature = paste(featuretype, collapse = "|")),
+                    by = ID]
 
 biodata <- biodata[which(!duplicated(biodata$ID)), ]
 
@@ -248,7 +254,9 @@ biodata$featuretype <- features[who, ]$Gene_feature
 #              dplyr::group_by(ID) %>% 
 #              dplyr::select(ID, feature_by, featuretype) %>% 
 #              dplyr::summarise(Gene_id = paste(feature_by, collapse = "|"),
-#                               Gene_feature = paste(featuretype, collapse = "|"))
+#                               Gene_feature = paste(featuretype,
+#                               collapse = "|"))
+#
 #   
 #   features = as.data.table(features)
 #   
@@ -273,7 +281,8 @@ names <- str_replace(names, "featuretype", "Gene_locus")
 
 colnames(biodata) <- names
 
-rm(list = setdiff(ls(), c("biodata", "meta", "start_time", "dir_name", "output_folder", "x", "res", "tad_file")))
+rm(list = setdiff(ls(), c("biodata", "meta", "start_time", "dir_name",
+                          "output_folder", "x", "res", "tad_file")))
 
 # Annotate with TADs -----------------------------------------------------------
 
@@ -289,7 +298,8 @@ TAD <- fread(paste(dir_name, tad_file, sep = "/"),
 
 #' Reordering
 #' 
-data.over <- biodata[,c("ID", "chromosome_name", "start_position", "end_position")]
+data.over <- biodata[,c("ID", "chromosome_name", "start_position",
+                        "end_position")]
 data.over$chromosome_name <- paste("chr", data.over$chromosome_name, sep = "")
 data.over <- data.over[,c(2,3,4,1)]
 
@@ -303,7 +313,8 @@ colnames(data.over) <- paste(c("chr", "start", "end", "name"))
 #' Make GRanges object
 #' 
 gr1 <- with(TAD, GRanges(chr, IRanges(start = start, end = end, names = name)))
-gr2 <- with(data.over, GRanges(chr, IRanges(start = start, end = end, names = name)))
+gr2 <- with(data.over, GRanges(chr, IRanges(start = start, end = end,
+                                            names = name)))
 
 #'
 #' Completely overlapping
@@ -336,7 +347,8 @@ keep <- c("chromosome_name",
 
 full <- full[,..keep]
 
-rm(list = setdiff(ls(), c("biodata", "full", "meta", "start_time", "dir_name", "output_folder", "x", "res")))
+rm(list = setdiff(ls(), c("biodata", "full", "meta", "start_time", "dir_name",
+                          "output_folder", "x", "res")))
 
 end_time <- Sys.time()
 

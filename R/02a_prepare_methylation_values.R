@@ -1,14 +1,15 @@
-# Loading libraries -------------------------------------------------------- 
+# Loading libraries ------------------------------------------------------------
 
 rm(list = ls())
 
 source("R/libraries.R")
 
-# Inputs --------------------------------------------------------------------------
+# Inputs -----------------------------------------------------------------------
 
 #' Input parameters for TADiff part
 #' 
-#' @param dir_name Directory of input datasets containing feature counts and frequency tables
+#' @param dir_name Directory of input datasets containing feature counts 
+#' and frequency tables
 #' 
 #' @param output_folder Folder name for printing output tables
 #' 
@@ -16,7 +17,8 @@ source("R/libraries.R")
 #' 
 #' @param names.meta meta data columns to process (names or indexes)
 #' 
-#' @param meth_data Parent index of methylation data. If no methylation is provided, place FALSE
+#' @param meth_data Parent index of methylation data. 
+#' If no methylation is provided, place FALSE
 
 dir_name <- "Datasets"
 
@@ -59,7 +61,8 @@ other <- data.all[which(data.all$parent != meth_data), ]
 data.all <- rbind(meth.regulatory, other)
 
 write.table(data.all, 
-            file = paste(output_folder, "/integrated-tad-table-methNorm.txt", sep = ""), 
+            file = paste(output_folder, "/integrated-tad-table-methNorm.txt",
+                         sep = ""), 
             col.names = TRUE, 
             row.names = FALSE, 
             quote = FALSE, 
