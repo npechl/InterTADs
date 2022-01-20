@@ -32,7 +32,8 @@ map_entrez_ids <- function(entrez.ids, tech = "h19"){
         not.found <- not.found[which(!(not.found %in% merge$entrez.id))]
       }
     
-    mapping <- rbind(mapping, data.table("entrez.id" = not.found, "hgnc.symbol" = NA)) 
+    mapping <- rbind(mapping, data.table("entrez.id" = not.found,
+                                            "hgnc.symbol" = NA)) 
     mapping <- mapping[order(mapping$hgnc.symbol), ]
     
     mapping <- unique(mapping)

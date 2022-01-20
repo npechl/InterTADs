@@ -81,9 +81,11 @@ compare_density_plot <- function(string,
                                 type,
                                 data_visual) {
   
-    data_plot <- data.table(p_value = c(data_visual$p_value, data_visual$p_adjust),
+    data_plot <- data.table(p_value = c(data_visual$p_value, 
+                                        data_visual$p_adjust),
                             Type = c(rep_len("P value", nrow(data_visual)),
-                                    rep_len("Adjusted P value", nrow(data_visual))))
+                                    rep_len("Adjusted P value", 
+                                            nrow(data_visual))))
    
     p <- ggplot(data = data_plot, aes(x = p_value, group = Type, fill = Type)) +
         geom_density(adjust = 1.5, alpha = .4) +
@@ -96,8 +98,10 @@ compare_density_plot <- function(string,
                 panel.grid.minor = element_blank(), 
                 axis.line = element_line(colour = "black"),
                 plot.title = element_text(size = 22),
-                axis.title.x = element_text(size = 18, vjust = 0.5, hjust = 0.5),
-                axis.title.y = element_text(size = 18, vjust = 1.5, hjust = 0.5),
+                axis.title.x = element_text(size = 18, vjust = 0.5, 
+                                            hjust = 0.5),
+                axis.title.y = element_text(size = 18, vjust = 1.5, 
+                                            hjust = 0.5),
                 axis.text.x = element_text(size = 14, color = "black"),
                 axis.text.y = element_text(size = 14, color = "black"),
                 legend.text = element_text(size = 14),
@@ -105,7 +109,8 @@ compare_density_plot <- function(string,
         )
   
     save_image(print(p), 
-                file.name = paste0(string, "/", "Density plot-P values of ", type, ".png"),
+                file.name = paste0(string, "/", "Density plot-P values of ", 
+                                    type, ".png"),
                 res = 200)
     
     rm(data_plot, p)
@@ -143,7 +148,8 @@ histogram_plot <- function(string,
     
     p <- data_plot %>%
         ggplot(aes(x = as.factor(reorder(Term, n)), y = n)) +
-        geom_histogram(fill = "#66ccff", color = "#e9ecef", alpha = 0.9, stat = "identity") +
+        geom_histogram(fill = "#66ccff", color = "#e9ecef", alpha = 0.9, 
+                        stat = "identity") +
         labs(title = paste0("Top ", type, " in different TADs")) +
         xlab(type) +
         ylab("Number of TADs") +
@@ -156,12 +162,14 @@ histogram_plot <- function(string,
                 plot.title = element_text(size = 20),
                 axis.text.x = element_text(size = 20),
                 axis.text.y = element_text(size = 14, color = "black"),
-                axis.title.x = element_text(size = 20, vjust = 0.5, hjust = 0.5),
+                axis.title.x = element_text(size = 20, vjust = 0.5, 
+                                            hjust = 0.5),
                 axis.title.y = element_text(size = 20, vjust = 0.5, hjust = 0.5)
         )
    
     save_image(print(p), 
-                file.name = paste0(string, "/",type," in different TADs", ".png"),
+                file.name = paste0(string, "/",type," in different TADs", 
+                                    ".png"),
                 height = (0.5 * nrow(data_plot) + 2), 
                 width = 22,
                 res = 100)
@@ -169,7 +177,8 @@ histogram_plot <- function(string,
     rm(p)
     
     #plot 2.5
-    colnames(data_plot) <- str_replace(colnames(data_plot), "n", "number_of_tads")
+    colnames(data_plot) <- str_replace(colnames(data_plot), "n", 
+                                        "number_of_tads")
    
     p <- data_plot %>%
         ggplot(aes(x = as.factor(reorder(Term,  -p_adjust)), 
@@ -189,8 +198,10 @@ histogram_plot <- function(string,
                 plot.subtitle = element_text(size = 22),
                 axis.text.x = element_text(size = 24),
                 axis.text.y = element_text(size = 14, colour = "black"),
-                axis.title.x = element_text(size = 28, vjust = 0.5, hjust = 0.5),
-                axis.title.y = element_text(size = 28, vjust = 0.5, hjust = 0.5),
+                axis.title.x = element_text(size = 28, vjust = 0.5, 
+                                            hjust = 0.5),
+                axis.title.y = element_text(size = 28, vjust = 0.5, 
+                                            hjust = 0.5),
                 legend.title = element_text(size = 24),
                 legend.text = element_text(size = 14)
         ) +
@@ -259,21 +270,25 @@ network_plot <- function(string,
     
    
     network <- ggraph(g) +
-        geom_edge_link(aes(color = group), alpha = 1, linemitre = 10, n = 1000) +     
+        geom_edge_link(aes(color = group), alpha = 1, linemitre = 10, 
+                        n = 1000) +     
         geom_node_point(size = 5, shape = 21, stroke = 1,
                         fill = 'white', color = 'black') +
-        geom_node_text(aes(label = name), repel = TRUE, size = 5 , fontface = "bold") +
+        geom_node_text(aes(label = name), repel = TRUE, size = 5 , 
+                        fontface = "bold") +
         theme_void() +
         ggtitle(label = paste0("Top ", type, " Network Graph")) +
         theme(
-            plot.title = element_text(size = 20, hjust = 0.5, vjust = 0.5, face = "bold"),
+            plot.title = element_text(size = 20, hjust = 0.5, vjust = 0.5, 
+                                    face = "bold"),
             legend.text = element_text(size = 14),
             legend.key.width = unit(1,"cm"),
             legend.title = element_text(size = 14)
         )
     
     save_image(print(network), 
-                file.name = paste0(string, "/Top ",type," network graph", ".png"),
+                file.name = paste0(string, "/Top ",type," network graph", 
+                                    ".png"),
                 height = 7, width = 17, res = 100)
 
     rm(g, network, edges, from_to, temp, nodes, groups, gos,
@@ -311,21 +326,26 @@ group_plots <- function(string,
         group_by(Term)
     new_grouping <- group_split(tad_grouping)
     
-    dir.create(paste0(string, "/Adjusted P values per ", type), showWarnings = FALSE)
+    dir.create(paste0(string, "/Adjusted P values per ", type), 
+                showWarnings = FALSE)
     
     iterations <- c(1:length(new_grouping))
     
     for (i in iterations) {
       
         temp <- new_grouping[[i]]
-        if (str_detect(type,"GO", negate = TRUE))   temp$Term <- rep_len("", nrow(temp))
+        if (str_detect(type,"GO", negate = TRUE))   temp$Term <- rep_len("", 
+                                                                nrow(temp))
         
         temp$ID <- str_replace(temp$ID, "/", "-")
         
         p <- temp %>%
-            ggplot(aes(x = as.factor(reorder(TAD, -p_adjust)), y = p_adjust)) +
-            geom_histogram(fill="#66ccff", color="#e9ecef", stat = "identity", width = 0.8) +
-            labs(title = paste0("Adjusted P values of ", temp$ID[1], " in different TADs"), 
+            ggplot(aes(x = as.factor(reorder(TAD, -p_adjust)), 
+                    y = p_adjust)) +
+            geom_histogram(fill="#66ccff", color="#e9ecef", stat = "identity", 
+                            width = 0.8) +
+            labs(title = paste0("Adjusted P values of ", temp$ID[1], 
+                                " in different TADs"), 
                 subtitle = temp$Term[1]) +
             ylab("Adjusted P value")+
             xlab("TAD number") +
@@ -336,8 +356,10 @@ group_plots <- function(string,
                 axis.line = element_line(colour = "black"),
                 plot.title = element_text(size = 14, face = "bold"),
                 plot.subtitle = element_text(size = 11),
-                axis.title.x = element_text(size = 13, hjust = 0.5, vjust = 0.5, face = "bold"),
-                axis.title.y = element_text(size = 13, hjust = 0.5, vjust = 0.5, face = "bold"),
+                axis.title.x = element_text(size = 13, hjust = 0.5, vjust = 0.5, 
+                                            face = "bold"),
+                axis.title.y = element_text(size = 13, hjust = 0.5, vjust = 0.5, 
+                                            face = "bold"),
                 axis.text.x = element_text(size = 13, color = "black"),
                 axis.text.y = element_text(size = 13, color = "black")
             ) +
@@ -345,7 +367,8 @@ group_plots <- function(string,
     
         save_image(print(p), 
                     file.name = paste0(string, "/Adjusted P values per ", type, 
-                                      "/Adjusted P values of ",temp$ID[1], ".png"),
+                                        "/Adjusted P values of ",temp$ID[1], 
+                                        ".png"),
                     height = (0.5 * nrow(temp) + 2),
                     width = 7, res = 100)
     }
@@ -355,7 +378,8 @@ group_plots <- function(string,
         group_by(TAD)
     new_grouping <- group_split(tad_grouping)
     
-    dir.create(paste0(string, "/Adjusted P values per TAD"), showWarnings = FALSE)
+    dir.create(paste0(string, "/Adjusted P values per TAD"), 
+                showWarnings = FALSE)
     
     iterations <- c(1:length(new_grouping))
     
@@ -363,7 +387,8 @@ group_plots <- function(string,
       
         temp <- new_grouping[[i]]
         if (nrow(temp) > 30) {
-            text = paste0("Showing top 30 Terms, for the complete list consult the ",
+            text = paste0("Showing top 30 Terms, 
+                            for the complete list consult the ",
                         type, " in different TADs.csv")
             temp <- temp[1:30, ]
         } else {
@@ -372,8 +397,10 @@ group_plots <- function(string,
        
         p <- temp %>%
             ggplot(aes(x = as.factor(reorder(Term, -p_adjust)), y = p_adjust)) +
-            geom_histogram(fill="#66ccff", color="#e9ecef", stat = "identity", width = 0.8) +
-            labs(title = paste0("Adjusted P values of ", type, " in ", temp$TAD[1]), 
+            geom_histogram(fill="#66ccff", color="#e9ecef", stat = "identity", 
+                            width = 0.8) +
+            labs(title = paste0("Adjusted P values of ", type, " in ", 
+                                temp$TAD[1]), 
                     subtitle = text) +
             ylab("Adjusted P value") +
             xlab(type) +
@@ -384,8 +411,10 @@ group_plots <- function(string,
                     axis.line = element_line(colour = "black"),
                     plot.title = element_text(size = 14, face = "bold"),
                     plot.subtitle = element_text(size = 11),
-                    axis.title.x = element_text(size = 13, hjust = 0.5, vjust = 0.5,face = "bold"),
-                    axis.title.y = element_text(size = 13, hjust = 0.5, vjust = 0.5, face = "bold"),
+                    axis.title.x = element_text(size = 13, hjust = 0.5, 
+                                                vjust = 0.5,face = "bold"),
+                    axis.title.y = element_text(size = 13, hjust = 0.5, 
+                                                vjust = 0.5, face = "bold"),
                     axis.text.x = element_text(size = 13, color = "black"),
                     axis.text.y = element_text(size = 13, color = "black")
             ) +
@@ -393,7 +422,8 @@ group_plots <- function(string,
         
         save_image(print(p), 
                     file.name =paste0(string, "/Adjusted P values per TAD/",
-                                    "Adjusted P values of ",temp$TAD[1], ".png"), 
+                                    "Adjusted P values of ",temp$TAD[1], 
+                                    ".png"), 
                     height = (0.5 * nrow(temp) + 2), 
                     width = 13, res = 100)
         
@@ -407,7 +437,8 @@ group_plots <- function(string,
 
 
 # #This function is called from the "enrichrVisual.R" script
-# #It creates a folder with graphs of KEGG pathways' maps using the Pathview tool
+# #It creates a folder with graphs of KEGG pathways' 
+# #maps using the Pathview tool
 # #The folder name is "Pathview"
 # pathVisual <- function(pathview.input , output_folder){
 #   
@@ -442,7 +473,8 @@ group_plots <- function(string,
 #                     pathway.id =  path$ID[1],
 #                     species    = "hsa",
 #                     gene.idtype = "SYMBOL",
-#                     same.layer = F,   #two-layer graph (node colors and labels are added + official gene symbols)
+#                     same.layer = F,   #two-layer graph (node colors and labels 
+#                     are added + official gene symbols)
 #                     kegg.dir = dir ,
 #                     kegg.native = T,
 #                     na.col = "white",keys.align = "y") 
@@ -477,14 +509,16 @@ group_plots <- function(string,
 per_tad_plots <- function(report_list,
                         image_output_folder) {
   
-    dir.create(paste0(image_output_folder, "/Plots per TADs"), showWarnings = FALSE)
+    dir.create(paste0(image_output_folder, "/Plots per TADs"), 
+                    showWarnings = FALSE)
    
     data_plot <- data.table(P.value = numeric(),
                             Adjusted.P.value = numeric())
     
     for (i in c(1:length(report_list))) {
       
-        tad_dir <- paste0(image_output_folder, "/Plots per TADs/", report_list[[i]]$tad[1])
+        tad_dir <- paste0(image_output_folder, "/Plots per TADs/", 
+                            report_list[[i]]$tad[1])
         dir.create(tad_dir,showWarnings = F)
         
         # plot 1
@@ -506,7 +540,8 @@ per_tad_plots <- function(report_list,
         tabl <- report_list[[i]]
         
         data_plot <- rbind(data_plot, data.table(P.value = tabl$p.value,
-                                                Adjusted.P.value = tabl$adjusted.p.value))
+                                                Adjusted.P.value = 
+                                                    tabl$adjusted.p.value))
         
         # Exclude uncharacterized motifs
         tabl <- tabl[str_detect(tabl$id, "UW.Motif.", negate = TRUE),]
@@ -523,7 +558,8 @@ per_tad_plots <- function(report_list,
         
         if (nrow(tabl) > 30){
           
-            text <- "Showing top 30 Terms, for the complete list consult the over-represented TFs in each tad.csv"
+            text <- "Showing top 30 Terms, for the complete list consult 
+                    the over-represented TFs in each tad.csv"
             tabl <- tabl[1:30, ]
         
         } else {
@@ -535,7 +571,8 @@ per_tad_plots <- function(report_list,
         p <- tabl %>%
             ggplot(aes(x = as.factor(reorder(target, -adjusted.p.value)), 
                         y = adjusted.p.value)) +
-            geom_histogram(fill="#66ccff", color="#e9ecef", stat = "identity", width = 0.8) +
+            geom_histogram(fill="#66ccff", color="#e9ecef", stat = "identity", 
+                            width = 0.8) +
             labs(title = paste0("Adjusted P values of TFs in ", tabl$tad[1]), 
                     subtitle = text) +
             ylab("Mean Adjusted P value") +
@@ -547,8 +584,10 @@ per_tad_plots <- function(report_list,
                     axis.line = element_line(colour = "black"),
                     plot.title = element_text(size = 28, face = "bold"),
                     plot.subtitle = element_text(size = 15),
-                    axis.title.x = element_text(size = 24,hjust = 0.5, vjust = 0.5, face = "bold"),
-                    axis.title.y = element_text(size = 24,hjust = 0.5, vjust = 0.5, face = "bold"),
+                    axis.title.x = element_text(size = 24,hjust = 0.5, 
+                                                vjust = 0.5, face = "bold"),
+                    axis.title.y = element_text(size = 24,hjust = 0.5, 
+                                                vjust = 0.5, face = "bold"),
                     axis.text.x = element_text(size = 18, color = "black"),
                     axis.text.y = element_text(size = 18, color = "black")
             ) +
@@ -617,7 +656,8 @@ per_tfs_plots <- function(report_list,
     data_visual$adjusted_p_value <- as.numeric(data_visual$adjusted_p_value)
     data_visual <- data_visual %>%
         group_by(tfs, tad, top_motif)%>%
-        summarise(tfs, tad, adjusted_p_value = mean(adjusted_p_value), motifs, top_motif) %>%
+        summarise(tfs, tad, adjusted_p_value = mean(adjusted_p_value), motifs, 
+                    top_motif) %>%
         unique()
     
     data_visual <- data_visual[which(data_visual$tfs != "NA"), ]
@@ -635,7 +675,8 @@ per_tfs_plots <- function(report_list,
         folder_name <- str_replace_all(folder_name," / ","-")
         folder_name <- str_replace_all(folder_name,":","-") 
         
-        string <- paste0(image_output_folder, "/Transcription Factors/", folder_name[1])
+        string <- paste0(image_output_folder, "/Transcription Factors/", 
+                            folder_name[1])
         dir.create(string, showWarnings = FALSE)
         
         # plot 1
@@ -651,7 +692,8 @@ per_tfs_plots <- function(report_list,
         
         if (nrow(temp) > 29) {
           
-            text <- "Showing top 30 Terms, for the complete list consult: TFs in different TADs.csv"
+            text <- "Showing top 30 Terms, for the complete list consult: 
+                        TFs in different TADs.csv"
             temp <- temp[1:30, ]
         
         } else {
@@ -662,8 +704,10 @@ per_tfs_plots <- function(report_list,
         p <- temp %>%
             ggplot(aes(x = as.factor(reorder(tad, -adjusted_p_value)),
                         y = adjusted_p_value)) +
-            geom_histogram(fill="#66ccff", color="#e9ecef", stat = "identity", binwidth = 0.8) +
-            labs(title = paste0("Adjusted P values of ", folder_name[1], " in different TADs"), 
+            geom_histogram(fill="#66ccff", color="#e9ecef", stat = "identity", 
+                            binwidth = 0.8) +
+            labs(title = paste0("Adjusted P values of ", folder_name[1], 
+                                " in different TADs"), 
                 subtitle = text) +
             ylab("Mean Adjusted P value") +
             xlab("TAD number") +
@@ -674,8 +718,10 @@ per_tfs_plots <- function(report_list,
                     axis.line = element_line(colour = "black"),
                     plot.title = element_text(size = 16, face = "bold"),
                     plot.subtitle = element_text(size = 13),
-                    axis.title.x = element_text(size = 15, hjust = 0.5, vjust = 0.5,face = "bold"),
-                    axis.title.y = element_text(size = 15, hjust = 0.5, vjust = 0.5, face = "bold"),
+                    axis.title.x = element_text(size = 15, hjust = 0.5, 
+                                                vjust = 0.5,face = "bold"),
+                    axis.title.y = element_text(size = 15, hjust = 0.5, 
+                                                vjust = 0.5, face = "bold"),
                     axis.text.x = element_text(size = 14, color = "black"),
                     axis.text.y = element_text(size = 14, color = "black")
             ) +
@@ -736,7 +782,8 @@ per_tfs_plots <- function(report_list,
     
     if (nrow(data_plot) > 29)  data_plot <- data_plot[1:30, ]
   
-    colnames(data_plot) <- str_replace(colnames(data_plot), "n", "number_of_tads")
+    colnames(data_plot) <- str_replace(colnames(data_plot), "n", 
+                                        "number_of_tads")
     
     p <- data_plot %>%
         ggplot(aes(x = as.factor(reorder(tfs,  number_of_tads)),
@@ -744,7 +791,8 @@ per_tfs_plots <- function(report_list,
                     fill = number_of_tads)) +
         geom_histogram(color = "#e9ecef", stat = "identity", width = 0.8) +
         labs(title = paste0("Top Transcription Factors in different TADs"), 
-            subtitle = "Bar color corresponds to number of TADs each Term was found") +
+            subtitle = "Bar color corresponds to number of TADs 
+                        each Term was found") +
         xlab("Transcription Factor") +
         ylab("Mean Adjusted P value") +
         coord_flip() +
@@ -757,15 +805,18 @@ per_tfs_plots <- function(report_list,
                 plot.subtitle = element_text(size = 16),
                 axis.text.x = element_text(size = 22, color = "black"),
                 axis.text.y = element_text(size = 16, color = "black"),
-                axis.title.x = element_text(size = 24, vjust = 0.5, hjust = 0.5),
-                axis.title.y = element_text(size = 24, vjust = 0.5, hjust = 0.5),
+                axis.title.x = element_text(size = 24, vjust = 0.5, 
+                                            hjust = 0.5),
+                axis.title.y = element_text(size = 24, vjust = 0.5, 
+                                            hjust = 0.5),
                 legend.title = element_text(size = 16),
                 legend.text = element_text(size = 14)
         ) +
         guides(fill = guide_legend(title = "number of TADs"))
     
     save_image(print(p), 
-                file.name = paste0(image_output_folder, "/Top Transcription Factors.png"),
+                file.name = paste0(image_output_folder, 
+                                    "/Top Transcription Factors.png"),
                 height = 8, width = 14, res = 100)
     
     rm(data_plot, p)
@@ -785,7 +836,8 @@ per_tfs_plots <- function(report_list,
     
     if (nrow(data_plot) > 9)  data_plot <- data_plot[1:10, ]
     
-    colnames(data_plot) <- str_replace(colnames(data_plot), "n", "number_of_tads")
+    colnames(data_plot) <- str_replace(colnames(data_plot), "n", 
+                                        "number_of_tads")
     
     data_plot <- setorder(data_plot, -adjusted_p_value)
     
@@ -793,7 +845,8 @@ per_tfs_plots <- function(report_list,
         ggplot(aes(x = as.factor(reorder(tfs, -adjusted_p_value)),
                     y = adjusted_p_value)) +
         geom_histogram(color = "#e9ecef",stat = "identity", width = 0.5) +
-        labs(title = "Top 10 Transcription Factors in different TADs and their top motifs") +  
+        labs(title = "Top 10 Transcription Factors in different TADs 
+                        and their top motifs") +  
         xlab("Transcription Factor") +
         ylab("Mean Adjusted P value") +
         coord_flip() +
@@ -846,7 +899,8 @@ per_tfs_plots <- function(report_list,
                         widths = c(5, 2))
     
     save_image(print(figure), 
-                file.name =paste0(image_output_folder, "/Top 10 Transcription Factors.png"),
+                file.name =paste0(image_output_folder, 
+                                    "/Top 10 Transcription Factors.png"),
                 height = 15, width = 15, res = 100)
     
     rm(hist_plot, labels_plot, logos, empty, figure,
@@ -860,9 +914,11 @@ per_tfs_plots <- function(report_list,
 density_plot <- function(data_density, 
                         image_output_folder) {
   
-    data_plot <- data.table(P.value = c(data_density$P.value, data_density$Adjusted.P.value),
+    data_plot <- data.table(P.value = c(data_density$P.value, 
+                                        data_density$Adjusted.P.value),
                             Type = c(rep_len("P value", nrow(data_density)),
-                                    rep_len("Adjusted P value", nrow(data_density))))
+                                    rep_len("Adjusted P value", 
+                                            nrow(data_density))))
     
     p <- ggplot(data = data_plot, aes(x = P.value, group = Type, fill = Type)) +
         geom_density(adjust = 2, alpha = .8) +
@@ -875,8 +931,10 @@ density_plot <- function(data_density,
                 panel.grid.minor = element_blank(), 
                 axis.line = element_line(colour = "black"),
                 plot.title = element_text(size = 16),
-                axis.title.x = element_text(size = 15, vjust = 0.5, hjust = 0.5),
-                axis.title.y = element_text(size = 15, vjust = 1.5, hjust = 0.5),
+                axis.title.x = element_text(size = 15, vjust = 0.5, 
+                                            hjust = 0.5),
+                axis.title.y = element_text(size = 15, vjust = 1.5, 
+                                            hjust = 0.5),
                 axis.text.x = element_text(size = 14, color = "black"),
                 axis.text.y = element_text(size = 14, color = "black"),
                 legend.text = element_text(size = 14),
@@ -884,7 +942,8 @@ density_plot <- function(data_density,
         )
     
     save_image(print(p), 
-                file.name =paste0(image_output_folder, "/Density plot-P values of Motifs.png"),
+                file.name =paste0(image_output_folder, 
+                                    "/Density plot-P values of Motifs.png"),
                 res = 100)
     
     rm(data_plot, p)

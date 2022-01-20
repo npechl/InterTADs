@@ -36,10 +36,12 @@ motifs_enrich <- function(biodata,
    
     for (i in c(1:nrow(seq_tad_number))) {
       
-        sequence <- readDNAStringSet(paste0(motif_output_folder, "/seq_perTADs.fasta"), 
+        sequence <- readDNAStringSet(paste0(motif_output_folder,
+                                            "/seq_perTADs.fasta"), 
                                     format="fasta", 
                                     skip = (seq_tad_number$start[i] - 1), 
-                                    nrec = (seq_tad_number$end[i] - seq_tad_number$start[i] + 1))
+                                    nrec = (seq_tad_number$end[i] - 
+                                            seq_tad_number$start[i] + 1))
         
         res <- motifEnrichment(sequence, PWMLogn.hg19.MotifDb.Hsap)
         report <- groupReport(res, by.top.motifs = TRUE)
@@ -101,7 +103,8 @@ motif_outputs <- function(report_list) {
             dplyr::summarise(tad = tad,
                             tfs = paste(target, collapse = "|"),
                             motifs = paste(id, collapse = "|"),
-                            adjusted_p_value = paste(adjusted.p.value, collapse = "|"),
+                            adjusted_p_value = paste(adjusted.p.value,
+                                                    collapse = "|"),
                             p_value = paste(p.value, collapse = "|"), ) %>%
             as.data.table() %>%
             unique()
@@ -120,7 +123,8 @@ motif_outputs <- function(report_list) {
             group_by(target,tad) %>%
             dplyr::summarise(target, 
                             tad,
-                            adjusted_p_value = paste(adjusted.p.value, collapse = "|"),
+                            adjusted_p_value = paste(adjusted.p.value, 
+                                                    collapse = "|"),
                             motifs = paste(id, collapse = "|"), ) %>%
             as.data.table() %>%
             unique()
@@ -136,7 +140,8 @@ motif_outputs <- function(report_list) {
         group_by(tfs) %>%
         dplyr::summarise(tfs,
                         tad = paste(tad,collapse ="|"),
-                        adjusted_p_value = paste(adjusted_p_value, collapse = "|"),
+                        adjusted_p_value = paste(adjusted_p_value, 
+                                                collapse = "|"),
                         motifs = paste(motifs, collapse = "|"), ) %>%
         as.data.table() %>%
         unique()
@@ -176,7 +181,8 @@ motif_outputs <- function(report_list) {
                 min_adjusted_p_value = min(adjusted_p_value), 
                 id, adjusted_p_value)
     
-    who_top <- which(top_motifs$adjusted_p_value == top_motifs$min_adjusted_p_value)
+    who_top <- which(top_motifs$adjusted_p_value == 
+                                    top_motifs$min_adjusted_p_value)
     
     top_motifs <- top_motifs[who_top, ]
     
@@ -236,7 +242,8 @@ prepare_sequences <- function(data,
     data_ensg <- data[data$parent == exp_parent, ] 
     data_ensg$partID <- unlist(lapply(strsplit(data_ensg$ID,";"), '[[', 2))
     
-    gr <- GRanges(seqnames = Rle(paste("chr", data_ensg$chromosome_name, sep = "")),
+    gr <- GRanges(seqnames = Rle(paste("chr", data_ensg$chromosome_name, 
+                                        sep = "")),
                 ranges = IRanges(start = as.numeric(data_ensg$start_position),
                                     end = as.numeric(data_ensg$end_position)))
     
@@ -255,7 +262,8 @@ prepare_sequences <- function(data,
     strand_data <- cbind(data_ensg[overlaps_from, 1:7], 
                         file_hg[overlaps_to, ])
     
-    strand_data <- strand_data[str_detect(strand_data$attributes, strand_data$partID), ]
+    strand_data <- strand_data[str_detect(strand_data$attributes, 
+                                            strand_data$partID), ]
   
     data_ensg <- strand_data[, -c("attributes")]
     
@@ -265,10 +273,12 @@ prepare_sequences <- function(data,
     who_minus <- which(data_ensg$strand == "-")
     
     data_ensg$end_position[who_plus] <- data_ensg$start_position[who_plus]
-    data_ensg$start_position[who_plus] <- data_ensg$start_position[who_plus] - 2000
+    data_ensg$start_position[who_plus] <- data_ensg$start_position
+                                                            [who_plus] - 2000
     
     data_ensg$start_position[who_minus] <- data_ensg$end_position[who_minus] 
-    data_ensg$end_position[who_minus] <- data_ensg$end_position[who_minus] + 2000
+    data_ensg$end_position[who_minus] <- data_ensg$end_position
+                                                            [who_minus] + 2000
     
     data_ensg <- data_ensg %>% 
         dplyr::select(tad_name, start_position, end_position, 
@@ -279,12 +289,15 @@ prepare_sequences <- function(data,
     data$AA <- c(1:nrow(data))
     
     keep_parent_ID <- unique(data[,c("AA", "ID", "parent")])
-    keep_parent_ID <- keep_parent_ID[order(keep_parent_ID$AA, decreasing = TRUE),]
+    keep_parent_ID <- keep_parent_ID[order(keep_parent_ID$AA, 
+                                            decreasing = TRUE),]
     
-    new_data <- GRanges(seqnames = Rle(paste0(data$chromosome_name, "_", data$tad_name)),
-                        ranges = IRanges(start = as.numeric(data$start_position),
+    new_data <- GRanges(seqnames = Rle(paste0(data$chromosome_name, "_", 
+                                                data$tad_name)),
+                        ranges = IRanges(start = as.numeric(data$
+                                                            start_position),
                                         end = as.numeric(data$end_position)),
-                        use.names = data$ID)
+                                        use.names = data$ID)
     
     new_data <- reduce(new_data, with.revmap = TRUE)
     
@@ -308,7 +321,8 @@ prepare_sequences <- function(data,
                                             paste0(as.character(k), " "),
                                             keep_parent_ID$ID[k])
         
-        new_data$parent[who] <- paste0(keep_parent_ID$parent[k], "|", new_data$parent[who]) 
+        new_data$parent[who] <- paste0(keep_parent_ID$parent[k], "|", 
+                                        new_data$parent[who]) 
     } 
     
     new_data$parent <- str_sub(new_data$parent, 
@@ -381,7 +395,8 @@ get_dna_sequences <- function(input_data,
             ext <- paste0("/sequence/region/human/", chr, ":", start, "..", end,
                             "?coord_system_version=", hg_version)
             
-            r <- httr::GET(paste(server, ext, sep = ""), content_type("text/plain"))
+            r <- httr::GET(paste(server, ext, sep = ""), 
+                            content_type("text/plain"))
             
             seq <- rbind(seq, data.table(dna_seq = httr::content(r),
                                         tad = data$tad_name[j]))
