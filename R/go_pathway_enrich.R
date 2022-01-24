@@ -53,8 +53,9 @@ create_folders <- function(output_folder) {
     }
     
     rm(go_output_folder, kegg_output_folder, go_all_outputs, go_all_images,
-        kegg_all_outputs, kegg_all_images, motif_output_folder, image_output_folder,
-        go_per_outputs, go_per_images, kegg_per_outputs, kegg_per_images)
+        kegg_all_outputs, kegg_all_images, motif_output_folder,
+        image_output_folder, go_per_outputs, go_per_images,
+        kegg_per_outputs, kegg_per_images)
     
     return(folder)
 }
@@ -78,7 +79,8 @@ enrich_all <- function(biodata,
         separate_rows(Gene_id, sep = "\\|") %>%
         as.data.table()
     
-    who_annotated <- which((data_selected$Gene_id != "NA") & (data_selected$Gene_id != ""))
+    who_annotated <- which((data_selected$Gene_id != "NA") &
+                            (data_selected$Gene_id != ""))
     data_selected <- data_selected[who_annotated, ]
     
     data_selected <- data_selected %>%
@@ -105,7 +107,8 @@ enrich_all <- function(biodata,
         } 
         else if (criterio == "adjusted p-value") {
           
-            enriched_terms <- subset(enriched_terms, Adjusted.P.value < threshold)
+            enriched_terms <- subset(enriched_terms,
+                                    Adjusted.P.value < threshold)
         }
         
         result[[i]] <- enriched_terms
@@ -141,7 +144,8 @@ enrich_per_tad <- function(biodata,
         separate_rows(Gene_id, sep = "\\|") %>%
         as.data.table() 
     
-    full_tads <- full_tads[which((full_tads$Gene_id != "NA") & (full_tads$Gene_id != "")), ]
+    full_tads <- full_tads[which((full_tads$Gene_id != "NA") &
+                                    (full_tads$Gene_id != "")), ]
     full_tads <- unique(full_tads)
     
     unique_tads <- unique(full_tads$tad_name)
@@ -169,7 +173,8 @@ enrich_per_tad <- function(biodata,
             } 
             else if (criterio == "adjusted p-value") {
               
-                enriched_terms <- subset(enriched_terms, Adjusted.P.value < threshold)
+                enriched_terms <- subset(enriched_terms,
+                                        Adjusted.P.value < threshold)
             }
             
             if (i==1) {
@@ -211,9 +216,12 @@ data_analysis <- function(enriched_terms,
     # Calculate number of genes per term in database 
     enriched_terms <- enriched_terms %>%
         separate(Overlap, c("numerator", "denominator"), sep = "\\/")
-    enriched_terms$numerator <- as.numeric(as.character(enriched_terms$numerator))
-    enriched_terms$denominator <- as.numeric(as.character(enriched_terms$denominator))
-    enriched_terms <- enriched_terms[which(enriched_terms$numerator >= min_genes), ]
+    enriched_terms$numerator <- as.numeric(as.character
+                                            (enriched_terms$numerator))
+    enriched_terms$denominator <- as.numeric(as.character
+                                            (enriched_terms$denominator))
+    enriched_terms <- enriched_terms[which
+                                    (enriched_terms$numerator >= min_genes), ]
     
     if (nrow(enriched_terms) == 0)  return(NULL)
     
@@ -293,9 +301,11 @@ calculate_pvalue <- function(data_extended,
                                 sample_size, 
                                 lower.tail = FALSE)
             
-            data_with_p <- rbind(data_with_p, data.table(Term = as.character(terms_number[j, 1]),
-                                                        TAD = as.character(tad),
-                                                        P.value = as.numeric(p_value[1])))
+            data_with_p <- rbind(data_with_p, 
+                                data.table(Term = 
+                                    as.character(terms_number[j, 1]),
+                                    TAD = as.character(tad),
+                                    P.value = as.numeric(p_value[1])))
             
         }
     }
@@ -303,7 +313,8 @@ calculate_pvalue <- function(data_extended,
     data_with_p <- data_with_p[which(data_with_p$P.value != "NA"), ]
     
     # Adjust p values
-    data_with_p$P.adjust <- p.adjust(data_with_p$P.value, method = p_adjust_method)
+    data_with_p$P.adjust <- p.adjust(data_with_p$P.value, 
+                                method = p_adjust_method)
     
     rm(data_extended, tads, tad, tad_terms, terms_number, iter, 
         hit_in_sample, who, hit_in_pop, fail_in_pop, tad_genes, 
@@ -355,9 +366,11 @@ produce_outputs <- function(data_with_p,
         column_id   <- paste0(type, "_number")
         column_p    <- paste0(type, "_p_value")
         column_adj  <- paste0(type, "_p_adjust")
-        colnames(data_with_p)   <- c("TAD", column_term, column_id, column_p, column_adj)
+        colnames(data_with_p)   <- c("TAD", column_term, column_id, column_p,
+                                    column_adj)
         colnames(data_visual)   <- c("TAD", "Term", "ID", "p_value", "p_adjust")
-        colnames(data_per_term) <- c("go_term", "go_id", "TAD", "p_value", "p_adjust")
+        colnames(data_per_term) <- c("go_term", "go_id", "TAD", "p_value",
+                                    "p_adjust")
         
     }
     else{
@@ -402,7 +415,8 @@ produce_outputs <- function(data_with_p,
 # 
 # 
 # # This function is called by the "enrichmentAnalysis.R" script
-# # It is used to query the KEGG Pathway DB about the Kegg ids of the pathways returned from the enrichment analysis
+# # It is used to query the KEGG Pathway DB about the Kegg ids of the pathways
+# # returned from the enrichment analysis
 # getKEGGIds <- function(enriched_KEGG, genes_diff){
 #   
 #   enriched_KEGG <- enriched_KEGG %>%
@@ -435,7 +449,8 @@ produce_outputs <- function(data_with_p,
 #   genes_diff <- genes_diff %>% 
 #     separate_rows(Gene_id, sep = "\\|") %>%
 #     as.data.table()
-#   genes_diff <- genes_diff[which((genes_diff$Gene_id != "NA") &(genes_diff$Gene_id !="")), ]
+#   genes_diff <- genes_diff[which((genes_diff$Gene_id != "NA") &
+#                   (genes_diff$Gene_id !="")), ]
 #   
 #   output.csv <- data.table(Term = character(),
 #                            ID = character(),
@@ -462,7 +477,8 @@ produce_outputs <- function(data_with_p,
 #     
 #     output.path <- path %>%
 #       group_by(Term, ID) %>%
-#       summarise(Term, ID, Genes = paste0(Genes, collapse = "|"),diff = paste0(diff, collapse ="|")) %>%
+#       summarise(Term, ID, Genes = paste0(Genes, collapse = "|"),
+#       diff = paste0(diff, collapse ="|")) %>%
 #       unique()
 #     
 #     output.csv <- rbind(output.csv, output.path)
