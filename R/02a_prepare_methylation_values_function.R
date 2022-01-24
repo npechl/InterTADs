@@ -1,6 +1,6 @@
 # Loading libraries ------------------------------------------------------------
 
-rm(list = ls())
+# rm(list = ls())
 
 source("R/libraries.R")
 
@@ -20,50 +20,58 @@ source("R/libraries.R")
 #' @param meth_data Parent index of methylation data. 
 #' If no methylation is provided, place FALSE
 
-dir_name <- "Datasets"
-
-output_folder <- "results_bloodcancer"
-
-meta <- "meta-data.csv"
-
-meth_data <- 1
-
-data.all <- fread(paste(output_folder, "/integrated-tad-table.csv", sep = ""),
-sep = "\t")
-
-meta <- fread(paste(dir_name, meta, sep = "/"))
-who <- meta == ""
-who <- apply(who, 1, sum, na.rm = TRUE)
-meta <- meta[which(who == 0), ]
 
 
-sample.list <- meta$newNames
+prepare_methylation_values <- function (dir_name = "Datasets",
+                                        output_folder = "results_bloodcancer",
+                                        meta = "meta-data.csv",
+                                        meth_data = 1){
+    
+    data.all <- fread(paste(output_folder, "/integrated-tad-table.csv", 
+                        sep = ""),
+                        sep = "\t")
+    meta <- fread(paste(dir_name, meta, sep = "/"))
+    who <- meta == ""
+    who <- apply(who, 1, sum, na.rm = TRUE)
+    meta <- meta[which(who == 0), ]
+    
+    
+    sample.list <- meta$newNames
+    
+    
+    meth <- data.all[which(data.all$parent == meth_data), ]
+    
+    
+    meth.promoter <- meth[which(str_detect(meth$Gene_locus, "promoter")), ]
+    
+    meth.intergenic <- meth[which(str_detect(meth$Gene_locus, "intergenic")), ]
+    
+    meth.regulatory <- rbind(meth.promoter, meth.intergenic)
+    meth.regulatory <- meth.regulatory[!duplicated(meth.regulatory$ID), ]
+    
+    rm(meth.intergenic, meth.promoter, meth)
+    
+    for(i in sample.list){
+        meth.regulatory[[i]] <- 100 - meth.regulatory[[i]]
+    }
+    
+    other <- data.all[which(data.all$parent != meth_data), ]
+    
+    data.all <- rbind(meth.regulatory, other)
+    
+    write.table(data.all, 
+                file = paste(output_folder, 
+                "/integrated-tad-table-methNorm.txt",
+                sep = ""), 
+                col.names = TRUE, 
+                row.names = FALSE, 
+                quote = FALSE, 
+                sep = "\t")
 
 
-meth <- data.all[which(data.all$parent == meth_data), ]
-
-
-meth.promoter <- meth[which(str_detect(meth$Gene_locus, "promoter")), ]
-
-meth.intergenic <- meth[which(str_detect(meth$Gene_locus, "intergenic")), ]
-
-meth.regulatory <- rbind(meth.promoter, meth.intergenic)
-meth.regulatory <- meth.regulatory[!duplicated(meth.regulatory$ID), ]
-
-rm(meth.intergenic, meth.promoter, meth)
-
-for(i in sample.list){
-    meth.regulatory[[i]] <- 100 - meth.regulatory[[i]]
+ return(NULL)
 }
 
-other <- data.all[which(data.all$parent != meth_data), ]
 
-data.all <- rbind(meth.regulatory, other)
 
-write.table(data.all, 
-            file = paste(output_folder, "/integrated-tad-table-methNorm.txt",
-                         sep = ""), 
-            col.names = TRUE, 
-            row.names = FALSE, 
-            quote = FALSE, 
-            sep = "\t")
+
