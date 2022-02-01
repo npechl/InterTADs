@@ -266,7 +266,7 @@ functional_analysis<- function(tech = "hg19",
                 list_KEGG_all,data_all, report_list)
         }
        
-    }
+    
     
     
     # TADiff files ----------------
@@ -534,17 +534,18 @@ functional_analysis<- function(tech = "hg19",
                             list_motif$data_visual, 
                             report_list,
                             criterio)
-            }
+                }
             
             rm(list_all, list_GO_MF_all, list_GO_BP_all, list_KEGG_all, 
                 data_all,list_per_tad, list_GO_MF_per_tad, list_GO_BP_per_tad,
                 list_KEGG_per_tad, data_per_tad, list_motif, report_list)
-        }
+            }
        
-    }
+        }
 
+    }
     return(NULL)
-}
+}    
 # Time measurements ----------
 
 end_time <- proc.time()
