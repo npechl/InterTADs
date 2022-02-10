@@ -1,4 +1,0 @@
-Total time in secs
-user: 1.18200000000002
-system: 2.34900000000002
-elapsed: 49.0529999999999
