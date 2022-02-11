@@ -48,6 +48,30 @@
 #'
 #' @param output_folder name or filepath of the output folder
 #'
+#' @import pryr
+#' @import PWMEnrich
+#' @import PWMEnrich.Hsapiens.background
+#' @import tidyverse
+#' @import data.table
+#' @import ggseqlogo
+#' @import seqinr
+#' @import httr
+#' @import jsonlite
+#' @import xml2
+#' @import stats
+#' @import igraph
+#' @import ggraph
+#' @import hrbrthemes
+#' @import extrafont
+#' @import gridExtra
+#' @import saveImageHigh
+#' @import KEGGREST
+#' @import ggpubr
+#' @import systemPipeR
+#' @import GenomicRanges
+#' @import ape
+#' @import enrichR
+#'
 #' @description
 #'
 #' @return

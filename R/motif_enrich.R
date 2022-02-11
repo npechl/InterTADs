@@ -314,12 +314,12 @@ prepare_sequences <- function(data,
     who_minus <- which(data_ensg$strand == "-")
 
     data_ensg$end_position[who_plus] <- data_ensg$start_position[who_plus]
-    data_ensg$start_position[who_plus] <- data_ensg$start_position
-                                                            [who_plus] - 2000
+    data_ensg$start_position[who_plus] <-
+        data_ensg$start_position[who_plus] - 2000
 
     data_ensg$start_position[who_minus] <- data_ensg$end_position[who_minus]
-    data_ensg$end_position[who_minus] <- data_ensg$end_position
-                                                            [who_minus] + 2000
+    data_ensg$end_position[who_minus] <-
+        data_ensg$end_position[who_minus] + 2000
 
     data_ensg <- data_ensg %>%
         dplyr::select(tad_name, start_position, end_position,

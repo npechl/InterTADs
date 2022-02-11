@@ -1,12 +1,67 @@
 Package: InterTADs
-Title: What the Package Does (One Line, Title Case)
+Title: Integration of multi-omics data based on chromatin configuration 
+    of the genome.
 Version: 0.0.0.9000
-Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+Date: 2022-2-10
+Authors@R: c(
+    person(given = "Nikolaos",
+            family = "Pechlivanis",
+            role = c("aut", "cre"),
+            email = "nikosp41@gmail.com",
+            comment = c(ORCID = "0000-0003-2502-612X")),
+            person("Maria", "Tsagiopoulou", email = "-", role = "aut"),
+            person("Maria Christina", "Maniou", email = "-", role = "aut"),
+            person("Aspasia", "Orfanou", email = "-", role = "aut"),
+            person("Fotis E.", "Psomopoulos", email = "-", role = "aut"))
+Description: InterTADs is an open-source tool written in R, for integrating 
+    multi-omics data (e.g. DNA methylation, expression, mutation) from the same 
+    physical source (e.g. patient) taking into account the chromatin c
+    onfiguration of the genome, i.e. the topologically associating domains 
+    (TADs).
+License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
+biocViews: 
+    GenomicRanges, 
+    KEGGREST, 
+    PWMEnrich.Hsapiens.background,
+    PWMEnrich,
+    limma,
+    TxDb.Hsapiens.UCSC.hg38.knownGene,
+    TxDb.Hsapiens.UCSC.hg19.knownGene,
+    org.Hs.eg.db,
+    systemPipeR
+Imports:
+    systemPipeR,
+    data.table,
+    tidyverse,
+    org.Hs.eg.db,
+    TxDb.Hsapiens.UCSC.hg19.knownGene,
+    TxDb.Hsapiens.UCSC.hg38.knownGene,
+    annotables,
+    GenomicRanges,
+    gplots,
+    gghalves,
+    limma,
+    pryr,
+    PWMEnrich,
+    PWMEnrich.Hsapiens.background,
+    ggseqlogo,
+    seqinr,
+    httr,
+    jsonlite,
+    xml2,
+    stats,
+    igraph,
+    ggraph,
+    hrbrthemes,
+    extrafont,
+    gridExtra,
+    saveImageHigh,
+    KEGGREST,
+    ggpubr,
+    GenomicRanges,
+    ape,
+    enrichR
+URL: https://github.com/BiodataAnalysisGroup/InterTADs

@@ -20,6 +20,19 @@
 #' @param meth_data Parent index of methylation data.
 #' If no methylation is provided, place FALSE
 #'
+#' @import data.table
+#' @import systemPipeR
+#' @import data.table
+#' @import tidyverse
+#' @import org.Hs.eg.db
+#' @import TxDb.Hsapiens.UCSC.hg19.knownGene
+#' @import TxDb.Hsapiens.UCSC.hg38.knownGene
+#' @import annotables
+#' @import GenomicRanges
+#' @import gplots
+#' @import gghalves
+#' @import limma
+#'
 #' @description
 #'
 #' @return
