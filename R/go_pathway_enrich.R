@@ -81,6 +81,8 @@ create_folders <- function(output_folder) {
 #' @param threshold
 #' @param criterio
 #' @param type
+#' @import dplyr
+#' @impot enrichR
 #'
 #' @description
 #' It performs enrichment analysis using the Enrichr tool.
@@ -159,6 +161,8 @@ enrich_all <- function(biodata,
 #' @param threshold
 #' @param criterio
 #' @param type
+#' @import dplyr
+#'
 #'
 #' @description
 #' It performs enrichment analysis using the Enrichr tool.
@@ -252,7 +256,7 @@ enrich_per_tad <- function(biodata,
 #' @param genes_coverage
 #' @param p_adjust_method
 #' @param min_genes
-#'
+#' @import dplyr
 #' @description
 #' It manipulates the enriched data and performs hypergeometric test.
 #'
@@ -327,6 +331,7 @@ data_analysis <- function(enriched_terms,
 #' @param data_selected
 #' @param genes_coverage
 #' @param p_adjust_method
+#' @miport dplyr
 #'
 #' @description
 #' It is used to calcualte the P value and the adjusted P value

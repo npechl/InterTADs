@@ -191,6 +191,7 @@ compare_density_plot <- function(string,
 #' @param string
 #' @param type
 #' @param data_visual
+#' @import dplyr
 #'
 #' @description
 #' The first one shows the Terms that were found in the most TADs
@@ -624,6 +625,9 @@ group_plots <- function(string,
 #'
 #' @param report_list
 #' @param image_output_folder
+#' @importFrom methods new
+#' @importFrom grDevices dev.off png
+#' @import dplyr
 #'
 #' @return
 #'
@@ -761,7 +765,8 @@ per_tad_plots <- function(report_list,
 #' @param report_list
 #' @param data_visual
 #' @param image_output_folder
-#'
+#' @importFrom graphics plot.new
+#' @import dplyr
 #' @return
 #'
 #' @export
@@ -1057,6 +1062,8 @@ per_tfs_plots <- function(report_list,
 #'
 #' @param data_density
 #' @param image_output_folder
+#' @import data.table
+#' @importFrom  ggplot2 ggplot
 #' @description
 #' @return
 #'

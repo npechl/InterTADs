@@ -1,6 +1,6 @@
 Package: InterTADs
 Title: Integration of multi-omics data based on chromatin configuration 
-    of the genome.
+    of the genome
 Version: 0.0.0.9000
 Date: 2022-2-10
 Authors@R: c(
@@ -23,7 +23,6 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
 biocViews: 
-    GenomicRanges, 
     KEGGREST, 
     PWMEnrich.Hsapiens.background,
     PWMEnrich,
@@ -33,6 +32,7 @@ biocViews:
     org.Hs.eg.db,
     systemPipeR
 Imports:
+    methods,
     systemPipeR,
     data.table,
     tidyverse,
@@ -61,7 +61,11 @@ Imports:
     saveImageHigh,
     KEGGREST,
     ggpubr,
-    GenomicRanges,
     ape,
-    enrichR
+    enrichR,
+    biomaRt,
+    stringr,
+    AnnotationDbi,
+    dplyr,
+    ggplot2
 URL: https://github.com/BiodataAnalysisGroup/InterTADs

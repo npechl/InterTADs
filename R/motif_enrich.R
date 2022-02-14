@@ -13,6 +13,7 @@
 #' @param cut_off
 #' @param tech
 #' @param exp_parent
+#' @importFrom utils data write.table
 #'
 #' @description
 #' It performs enrichment analysis using the PWMEnrich tool.

@@ -34,7 +34,7 @@
 #' @import gplots
 #' @import gghalves
 #' @import limma
-#'
+#' @import dplyr
 #' @description
 #'
 #' @return

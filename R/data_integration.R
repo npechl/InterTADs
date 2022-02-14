@@ -28,6 +28,7 @@
 #' @param tad_file BED file containing information about TADs
 #'
 #' @import data.table
+#@importFrom data.table fread
 #' @import systemPipeR
 #' @import data.table
 #' @import tidyverse
@@ -39,6 +40,9 @@
 #' @import gplots
 #' @import gghalves
 #' @import limma
+#' @import dplyr
+#' @importFrom utils data download.file write.table
+#' @importFrom stringr str_detect str_replace
 #'
 #' @description
 #'
@@ -72,7 +76,7 @@ data_integration <- function(dir_name = "Datasets/",
     #' Reading meta data file
     #'
 
-    meta <- fread(paste(dir_name, meta, sep = "/"))
+    meta <- data.table::fread(paste(dir_name, meta, sep = "/"))
     who <- meta == ""
     who <- apply(who, 1, sum, na.rm = TRUE)
     meta <- meta[which(who == 0), ]
@@ -159,6 +163,7 @@ data_integration <- function(dir_name = "Datasets/",
     }
 
     biodata <- rbindlist(biodata, use.names = FALSE)
+
 
     # Filtering ----------------------------------------------------------------
 
@@ -251,10 +256,20 @@ data_integration <- function(dir_name = "Datasets/",
     #' --------------------------
     #' index1 --- MYC|RUNX1T1, exon|intron
     #'
+    biodata <- as.data.table(biodata)
+    is.data.table(biodata)
+    #print(class(biodata))
+    ################
+    features <- biodata %>%
+                group_by(ID) %>%
+                dplyr::select(ID, feature_by, featuretype) %>%
+                summarise(Gene_id = paste(feature_by, collapse = "|"),
+                            Gene_feature = paste(featuretype, collapse = "|"))
 
-    features <- biodata[,.(Gene_id = paste('feature_by', collapse = "|"),
-                            Gene_feature = paste('featuretype', collapse = "|")),
-                        by = ID]
+    ###############
+    # features <- biodata[,.(Gene_id = paste(feature_by, collapse = "|"),
+    #                         Gene_feature = paste(featuretype, collapse = "|"),by = ID)
+    #                     ]
 
     biodata <- biodata[which(!duplicated(biodata$ID)), ]
 
@@ -340,7 +355,7 @@ data_integration <- function(dir_name = "Datasets/",
             "parent",
             meta$newNames)
 
-    full <- full[,..keep]
+    full <- full[,keep,with=FALSE] #keep,with=FALSE  full[,..keep]
 
     rm(list = setdiff(ls(), c("biodata",
                             "full",
@@ -388,10 +403,12 @@ data_integration <- function(dir_name = "Datasets/",
     return(NULL)
 }
 
-data_integration (dir_name = "Datasets/",
-                             output_folder = "results_bloodcancer/",
-                             tech = "hg19",
-                             meta = "meta-data.csv",
-                             counts_dir = "counts",
-                             freq_dir = "freq",
-                             tad_file = "hglft_genome_2dab_ec1330.bed")
+
+
+# dir_name = "Datasets/"
+# output_folder = "results_bloodcancer/"
+# tech = "hg19"
+# meta = "meta-data.csv"
+# counts_dir = "counts"
+# freq_dir = "freq"
+# tad_file = "hglft_genome_2dab_ec1330.bed"
