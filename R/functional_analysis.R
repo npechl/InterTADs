@@ -49,6 +49,7 @@
 #' @param output_folder name or filepath of the output folder
 #'
 #' @import pryr
+#' @import data.table
 #' @import PWMEnrich
 #' @import PWMEnrich.Hsapiens.background
 #' @import tidyverse
@@ -71,6 +72,7 @@
 #' @import GenomicRanges
 #' @import ape
 #' @import enrichR
+#' @import rlang
 #'
 #' @description
 #'
@@ -79,6 +81,37 @@
 #' @export
 #'
 #' @examples
+#' functional_analysis(tech = "hg19",
+#' exp_parent = 2,
+#' dbs = c("GO_Molecular_Function_2018",
+#' "GO_Biological_Process_2018",
+#' "KEGG_2019_Human"),
+#' type = c("GO_MF", "GO_BP", "KEGG"),
+#' genes_cover = c(11459, 14433, 7802),
+#' p_adjust_method = "fdr",
+#' cut_off = 0.05,
+#' criterio = "adjusted p-value",
+#' min_genes = 3,
+#' system = "win",
+#' dir_name = "Datasets",
+#' output_folder = paste0("Outputs"))
+
+
+
+# tech = "hg19"
+# exp_parent = 2
+# dbs = c("GO_Molecular_Function_2018",
+#         "GO_Biological_Process_2018",
+#         "KEGG_2019_Human")
+# type = c("GO_MF", "GO_BP", "KEGG")
+# genes_cover = c(11459, 14433, 7802)
+# p_adjust_method = "fdr"
+# cut_off = 0.05
+# criterio = "adjusted p-value"
+# min_genes = 3
+# system = "win"
+# dir_name = "Datasets"
+# output_folder = paste0("Outputs")
 
 functional_analysis<- function(tech = "hg19",
                                 exp_parent = 2,
@@ -92,25 +125,24 @@ functional_analysis<- function(tech = "hg19",
                                 criterio = "adjusted p-value",
                                 min_genes = 3,
                                 system = "win",
-                                dir_name = "Datasets"){
-                                #output_folder = paste0("Outputs_whatever")){
+                                dir_name = "Datasets",
+                                output_folder = paste0("Outputs")){
 
-    start_time <- proc.time()
+
     # Set graph fonts --------------------
     # set_graph_fonts(system)
 
     # Download hg gff file ----------------
     if (tech == "hg19") {
 
-        download.file(url="ftp://ftp.ebi.ac.uk/pub/databases/gencode
-                    /Gencode_human/release_19/gencode.v19.annotation.gff3.gz",
+        download.file(
+        url="ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_19/gencode.v19.annotation.gff3.gz",
                     destfile=paste0(dir_name,'/gencode.v19.annotation.gff3.gz'),
                     method='auto')
 
     } else if (tech == "hg38") {
 
-        download.file(url="ftp://ftp.ebi.ac.uk/pub/databases/gencode
-                    /Gencode_human/release_36/gencode.v36.annotation.gff3.gz",
+        download.file(url="ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_36/gencode.v36.annotation.gff3.gz",
                     destfile=paste0(dir_name,'/gencode.v36.annotation.gff3.gz'),
                     method='auto')
 
@@ -120,7 +152,7 @@ functional_analysis<- function(tech = "hg19",
 
     dir.create(output_folder, showWarnings = FALSE)
 
-    file.create(paste0(output_folder, "/time_info.txt"))
+    #file.create(paste0(output_folder, "/time_info.txt"))
 
     data_type <- data.table(type = type,
                             cover = as.numeric(genes_cover))
@@ -130,7 +162,7 @@ functional_analysis<- function(tech = "hg19",
 
     # evenDiff files --------------
 
-    if (!is_empty(files_evenDiff)) {
+    if (!rlang::is_empty(files_evenDiff)) {
 
         for (one_file in files_evenDiff) {
 
@@ -576,6 +608,12 @@ functional_analysis<- function(tech = "hg19",
     }
     return(NULL)
 }
+
+
+
+
+
+
 # # Time measurements ----------
 #
 # end_time <- proc.time()

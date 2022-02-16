@@ -16,7 +16,8 @@ functional_analysis(
   criterio = "adjusted p-value",
   min_genes = 3,
   system = "win",
-  dir_name = "Datasets"
+  dir_name = "Datasets",
+  output_folder = paste0("Outputs")
 )
 }
 \arguments{
@@ -59,4 +60,20 @@ Optional step to be performed on the output files
 of the \verb{02c_evenDiff.R} and \verb{02d_TADiff.R} scripts.
 
 
+}
+\examples{
+functional_analysis(tech = "hg19",
+exp_parent = 2,
+dbs = c("GO_Molecular_Function_2018",
+"GO_Biological_Process_2018",
+"KEGG_2019_Human"),
+type = c("GO_MF", "GO_BP", "KEGG"),
+genes_cover = c(11459, 14433, 7802),
+p_adjust_method = "fdr",
+cut_off = 0.05,
+criterio = "adjusted p-value",
+min_genes = 3,
+system = "win",
+dir_name = "Datasets",
+output_folder = paste0("Outputs"))
 }

@@ -4,7 +4,12 @@
 \alias{ensembl_ids}
 \title{ensembl_ids}
 \usage{
-ensembl_ids(dir_name = NULL, output_folder = NULL, expr_data = NULL)
+ensembl_ids(
+  dir_name = NULL,
+  input_file = NULL,
+  output_folder = NULL,
+  expr_data = NULL
+)
 }
 \arguments{
 \item{dir_name}{Directory of input datasets containing feature counts and
@@ -22,9 +27,14 @@ TRUE if function runs properly
 
 }
 \examples{
-result_ensmbl <- ensembl_ids(dir_name = "Datasets",
-output_folder = 'results_bloodcancer',
+result_ensmbl <- ensembl_ids(
+dir_name = system.file("extdata","Datasets",package='InterTADs'),
+input_file=
+system.file("extdata","results_bloodcancer",
+"integrated-tad-table-methNorm.txt",package='InterTADs'),
+output_folder = system.file("extdata","results_bloodcancer",
+package='InterTADs'),
 expr_data = 2)
-print(result_ensmbl)
+
 
 }

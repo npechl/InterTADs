@@ -5,12 +5,11 @@
 #' @param tech
 #'
 #' @return
-#' @export
+#' @exports
 #'
 #' @examples
 map_entrez_ids <- function(entrez.ids, tech = "h19"){
-    print(tech)
-    print("___________")
+
     genes <- entrez.ids
 
     mapping <- AnnotationDbi::select(org.Hs.eg.db,

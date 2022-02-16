@@ -67,5 +67,6 @@ Imports:
     stringr,
     AnnotationDbi,
     dplyr,
-    ggplot2
+    ggplot2,
+    rlang
 URL: https://github.com/BiodataAnalysisGroup/InterTADs

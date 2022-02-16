@@ -51,8 +51,10 @@
 #' @export
 #'
 #' @examples
-#' data_integration (dir_name = "Datasets/",
-#' output_folder = "results_bloodcancer/",
+#' data_integration (
+#' dir_name = system.file("extdata","Datasets",package='InterTADs'),
+#' output_folder = system.file("extdata","results_bloodcancer",
+#' package='InterTADs'),
 #' tech = "hg19",
 #' meta = "meta-data.csv",
 #' counts_dir = "counts",
@@ -62,13 +64,13 @@
 
 
 
-data_integration <- function(dir_name = "Datasets/",
-                             output_folder = "results_bloodcancer/",
-                             tech = "hg19",
-                             meta = "meta-data.csv",
-                             counts_dir = "counts",
-                             freq_dir = "freq",
-                             tad_file = "hglft_genome_2dab_ec1330.bed"){
+data_integration <- function(dir_name = NULL,
+                             output_folder = NULL,
+                             tech = NULL,
+                             meta = NULL,
+                             counts_dir = NULL,
+                             freq_dir = NULL,
+                             tad_file = NULL){
 
     # Reading files ------------------------------------------------------------
 
@@ -257,8 +259,7 @@ data_integration <- function(dir_name = "Datasets/",
     #' index1 --- MYC|RUNX1T1, exon|intron
     #'
     biodata <- as.data.table(biodata)
-    is.data.table(biodata)
-    #print(class(biodata))
+
     ################
     features <- biodata %>%
                 group_by(ID) %>%
@@ -266,10 +267,6 @@ data_integration <- function(dir_name = "Datasets/",
                 summarise(Gene_id = paste(feature_by, collapse = "|"),
                             Gene_feature = paste(featuretype, collapse = "|"))
 
-    ###############
-    # features <- biodata[,.(Gene_id = paste(feature_by, collapse = "|"),
-    #                         Gene_feature = paste(featuretype, collapse = "|"),by = ID)
-    #                     ]
 
     biodata <- biodata[which(!duplicated(biodata$ID)), ]
 
@@ -405,10 +402,3 @@ data_integration <- function(dir_name = "Datasets/",
 
 
 
-# dir_name = "Datasets/"
-# output_folder = "results_bloodcancer/"
-# tech = "hg19"
-# meta = "meta-data.csv"
-# counts_dir = "counts"
-# freq_dir = "freq"
-# tad_file = "hglft_genome_2dab_ec1330.bed"

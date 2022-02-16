@@ -5,13 +5,13 @@
 \title{Input parameters for Data Integration part}
 \usage{
 data_integration(
-  dir_name = "Datasets/",
-  output_folder = "results_bloodcancer/",
-  tech = "hg19",
-  meta = "meta-data.csv",
-  counts_dir = "counts",
-  freq_dir = "freq",
-  tad_file = "hglft_genome_2dab_ec1330.bed"
+  dir_name = NULL,
+  output_folder = NULL,
+  tech = NULL,
+  meta = NULL,
+  counts_dir = NULL,
+  freq_dir = NULL,
+  tad_file = NULL
 )
 }
 \arguments{

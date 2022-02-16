@@ -18,7 +18,6 @@
 #'
 #' @import data.table
 #' @import systemPipeR
-#' @import data.table
 #' @import tidyverse
 #' @import org.Hs.eg.db
 #' @import TxDb.Hsapiens.UCSC.hg19.knownGene
@@ -38,15 +37,17 @@
 #' @export
 #'
 #' @examples
-#' result_evenDiff <- evenDiff(dir_name = "Datasets",
-#' output_folder = "results_bloodcancer",
+#' result_evenDiff <- evenDiff(
+#' dir_name = system.file("extdata","Datasets",package='InterTADs'),
+#' input_f = system.file("extdata","results_bloodcancer",
+#' "integrated-tad-table-methNorm.txt",package='InterTADs'),
+#' output_folder = system.file("extdata","results_bloodcancer",
+#' package='InterTADs'),
 #' meta = "meta-data.csv",
 #' names.meta = c('groups'))
 #'
 #' print(result_evenDiff)
 #'
-#'
-
 
 
 # names.meta = c("IGHV",
@@ -89,13 +90,12 @@
 
 
 evenDiff <- function(dir_name = NULL,
+                     input_f = NULL,
                     output_folder = NULL,
                     meta = NULL,
                     names.meta = NULL){
 
-    data.all <- fread(paste(output_folder, "/integrated-tad-table-methNorm.txt",
-                            sep = ""),
-    sep = "\t")
+    data.all <- fread(file = input_f,sep = "\t")
 
     data.all$ID <- paste(data.all$tad_name, data.all$ID, sep = ";")
 
@@ -222,7 +222,4 @@ evenDiff <- function(dir_name = NULL,
     return(TRUE)
 
 }
-
-
-
 

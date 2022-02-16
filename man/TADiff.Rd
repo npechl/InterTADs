@@ -31,3 +31,11 @@ If no expression is provided, place FALSE}
 \description{
 
 }
+\examples{
+TADiff(dir_name = system.file("extdata","Datasets",package='InterTADs'),
+output_folder = system.file("extdata","results_bloodcancer",
+package='InterTADs'),
+meta = "meta-data.csv",
+names.meta = c('groups'),
+expr_data = 2)
+}

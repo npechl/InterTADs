@@ -40,6 +40,12 @@
 #' @export
 #'
 #' @examples
+#' prepare_methylation_values(
+#' dir_name = system.file("extdata","Datasets",package='InterTADs'),
+#' output_folder = system.file("extdata","results_bloodcancer",
+#'                             package='InterTADs'),
+#' meta = "meta-data.csv",
+#' meth_data = 1)
 
 
 
@@ -49,8 +55,8 @@ prepare_methylation_values <- function (dir_name = NULL,
                                         meth_data = NULL){
 
     data.all <- fread(paste(output_folder, "/integrated-tad-table.csv",
-                        sep = ""),
-                        sep = "\t")
+                            sep = ""),
+                      sep = "\t")
     meta <- fread(paste(dir_name, meta, sep = "/"))
     who <- meta == ""
     who <- apply(who, 1, sum, na.rm = TRUE)

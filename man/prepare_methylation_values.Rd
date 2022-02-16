@@ -30,3 +30,11 @@ If no methylation is provided, place FALSE}
 \description{
 
 }
+\examples{
+prepare_methylation_values(
+dir_name = system.file("extdata","Datasets",package='InterTADs'),
+output_folder = system.file("extdata","results_bloodcancer",
+                            package='InterTADs'),
+meta = "meta-data.csv",
+meth_data = 1)
+}

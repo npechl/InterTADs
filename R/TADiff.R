@@ -42,6 +42,12 @@
 #' @export
 #'
 #' @examples
+#' TADiff(dir_name = system.file("extdata","Datasets",package='InterTADs'),
+#' output_folder = system.file("extdata","results_bloodcancer",
+#' package='InterTADs'),
+#' meta = "meta-data.csv",
+#' names.meta = c('groups'),
+#' expr_data = 2)
 
 
 TADiff<- function(dir_name = NULL,
@@ -304,9 +310,4 @@ TADiff<- function(dir_name = NULL,
     return(NULL)
 }
 
-#
-# TADiff(dir_name = "Datasets/",
-#       output_folder = "results_bloodcancer/",
-#       meta = "meta-data.csv",
-#       names.meta = c('groups'),
-#       expr_data = 2)
+
