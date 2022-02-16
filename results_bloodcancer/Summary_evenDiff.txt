@@ -1,2 +1,0 @@
-Analysis	p_1	p_2	p_3	total events
-groups	0	0	0	0
