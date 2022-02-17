@@ -1,14 +1,3 @@
-# Loading libraries ------------------------------------------------------------
-
-# rm(list = ls())
-
-# source("R/libraries.R")
-# source("R/helpers.R")
-
-#start_time <- Sys.time()
-
-# Inputs -----------------------------------------------------------------------
-
 #'
 #' Input parameters for Data Integration part
 #'
@@ -19,7 +8,7 @@
 #'
 #' @param tech Human Genome Reference used
 #'
-#' @param meta meta-data file name used
+#' @param sample_metadata sample_metadata-data file name used
 #'
 #' @param counts_dir Directory name of counts NGS data
 #'
@@ -28,7 +17,7 @@
 #' @param tad_file BED file containing information about TADs
 #'
 #' @import data.table
-#@importFrom data.table fread
+#' @importFrom data.table fread
 #' @import systemPipeR
 #' @import data.table
 #' @import tidyverse
@@ -51,146 +40,199 @@
 #' @export
 #'
 #' @examples
+#' 
 #' data_integration (
-#' dir_name = system.file("extdata","Datasets",package='InterTADs'),
-#' output_folder = system.file("extdata","results_bloodcancer",
-#' package='InterTADs'),
-#' tech = "hg19",
-#' meta = "meta-data.csv",
-#' counts_dir = "counts",
-#' freq_dir = "freq",
-#' tad_file = "hglft_genome_2dab_ec1330.bed")
-#'
+#'    dir_name = system.file("extdata","Datasets",package='InterTADs'),
+#'    output_folder = system.file("extdata","results_bloodcancer", package='InterTADs'),
+#'    tech = "hg19",
+#'    sample_metadata = "sample_metadata-data.csv",
+#'    counts_dir = "counts",
+#'    freq_dir = "freq",
+#'    tad_file = system.file("extdata", "Datasets", "hglft_genome_2dab_ec1330.bed", package="InterTADs")
+#' )
 
+data_integration <- function(
+    counts_folder = NULL,
+    counts_fls = NULL,
+    
+    freq_folder = NULL,
+    freq_fls = NULL
+    
+    mapping_file,
+    tad_file,
+    tech = "hg38"
+) {
 
+    
+    # Reading sample_metadata data file 
+    sample_metadata <- fread(
+        mapping_file, fill = TRUE
+    )
 
-data_integration <- function(dir_name = NULL,
-                             output_folder = NULL,
-                             tech = NULL,
-                             meta = NULL,
-                             counts_dir = NULL,
-                             freq_dir = NULL,
-                             tad_file = NULL){
-
-    # Reading files ------------------------------------------------------------
-
-    #'
-    #' Reading meta data file
-    #'
-
-    meta <- data.table::fread(paste(dir_name, meta, sep = "/"))
-    who <- meta == ""
-    who <- apply(who, 1, sum, na.rm = TRUE)
-    meta <- meta[which(who == 0), ]
-
-    #'
-    #' Getting input files
-    #'
-
-    counts <- list.files(paste(dir_name, counts_dir, sep = "/"))
-    freq <- list.files(paste(dir_name, freq_dir, sep = "/"))
-
-    files <- colnames(meta)
-    # files = files[which(!(files %in% c("groups", "newNames")))]
-
-    names <- meta$newNames
+    
+    
+    # Get input files
+    
+    if(is.null(freq_folder) & is.null(freq_fls)) {
+        
+        
+    } else if(is.null(freq_fls)) {
+        
+        freq_fls = list.files(
+            freq_folder,
+            full.names = TRUE
+        )
+        
+    } else {
+        
+        
+    }
+    
+    
+    
+    if(is.null(counts_folder) & is.null(counts_fls)) {
+        
+        
+    } else if(is.null(counts_fls)) {
+        
+        count_fls = list.files(
+            counts_folder,
+            full.names = TRUE
+        )
+        
+    } else {
+        
+        
+        
+    }
+    
 
     biodata <- list()
 
-    #'
-    #' Reading input frequency tables
-    #'
+    # Reading input frequency tables
+    if(length(freq_fls) > 0) {
+        
+        for(i in 1:length(freq_fls)) {
+            
+            new <- fread(freq_fls[i], fill = TRUE)
+            
+            keep0 <- apply(
+                sample_metadata[,2:ncol(sample_metadata)], 2, function(x, y) {
+                    
+                    return(length(which(y %in% x)))
+                    
+                }, colnames(new)
+            )
 
-    if(length(freq) > 0){
-        for(i in 1:length(freq)){
-            new <- fread(paste(dir_name, freq_dir, freq[i], sep = "/"))
-
-            keep <- which(str_detect(freq[i], files))
+            keep   <- names(which(keep0 == max(keep0))[1])
+            keep   <- which(colnames(sample_metadata) == keep)
             parent <- keep
-            keep <- meta[,keep,with=FALSE]
-            keep <- as.character(unlist(keep))
+            
+            file_mapping <- sample_metadata[, c(1, keep), with = FALSE]
+            file_mapping <- file_mapping[which(
+                !(is.na( file_mapping[[keep]] ))
+            ), ]
 
-            new <- cbind(new[,1:4], new[,keep,with=FALSE])
-            colnames(new) <- c("ID", "chromosome_name", "start_position",
-                               "end_position", names)
+            new <- cbind(new[,1:4], new[, file_mapping[[2]], with = FALSE])
+            
+            colnames(new) <- c(
+                "ID", 
+                "chromosome_name", 
+                "start_position", "end_position", 
+                file_mapping[[1]]
+            )
 
             new$chromosome_name <- str_to_lower(new$chromosome_name)
             new$chromosome_name <- str_remove(new$chromosome_name, "chr")
 
-            if(max(new[,5:ncol(new)]) <= 1){
-              new[,5:ncol(new)] <- 100 * new[,5:ncol(new)]
+            if( max(new[,5:ncol(new)]) <= 1 ){
+            
+              new[, 5:ncol(new)] <- 100 * new[, 5:ncol(new)]
+            
             }
 
             new$parent <- parent
 
             biodata[[i]] <- new
+            
         }
+        
     }
 
-    #'
-    #' Reading input counts tables
-    #'
-
-    if(length(counts) > 0){
-        for(i in 1:length(counts)){
-            new <- fread(paste(dir_name, counts_dir, counts[i], sep = "/"))
-
-            keep <- which(str_detect(counts[i], files))
+    # Reading input counts tables
+    if(length(counts_fls) > 0) {
+        
+        for(i in 1:length(counts_fls)){
+            
+            new <- fread(freq_fls[i], fill = TRUE)
+            
+            keep0 <- apply(
+                sample_metadata[,2:ncol(sample_metadata)], 2, function(x, y) {
+                    
+                    return(length(which(y %in% x)))
+                    
+                }, colnames(new)
+            )
+            
+            keep   <- names(which(keep0 == max(keep0))[1])
+            keep   <- which(colnames(sample_metadata) == keep)
             parent <- keep
-            keep <- meta[,keep,with=FALSE]
-            keep <- as.character(unlist(keep))
-
-            new <- cbind(new[,1:4], new[,keep,with=FALSE])
-            colnames(new) <- c("ID", "chromosome_name", "start_position",
-                               "end_position", names)
-
+            
+            file_mapping <- sample_metadata[, c(1, keep), with = FALSE]
+            file_mapping <- file_mapping[which(
+                !(is.na( file_mapping[[keep]] ))
+            ), ]
+            
+            new <- cbind(new[,1:4], new[, file_mapping[[2]], with = FALSE])
+            
+            colnames(new) <- c(
+                "ID", 
+                "chromosome_name", 
+                "start_position", "end_position", 
+                file_mapping[[1]]
+            )
+            
             new$chromosome_name <- str_to_lower(new$chromosome_name)
             new$chromosome_name <- str_remove(new$chromosome_name, "chr")
 
-            temp <- new[,5:ncol(new)]
-
-            temp <- log(temp + 1)
+            temp    <- new[,5:ncol(new)]
+            temp    <- log(temp + 1)
             col.max <- apply(temp, 2, max)
             col.max <- as.numeric(col.max)
 
             temp <- t(temp) * (100 / col.max)
             temp <- as.data.table(t(temp))
 
-            new <- cbind(new[,1:4], temp)
+            new <- cbind(new[, 1:4], temp)
 
             new$parent <- parent
 
-            biodata[[i + length(freq)]] <- new
+            biodata[[i + length(freq_fls)]] <- new
         }
+        
     }
 
-    biodata <- rbindlist(biodata, use.names = FALSE)
+    biodata <- rbindlist(biodata, use.names = TRUE, fill = TRUE)
 
 
-    # Filtering ----------------------------------------------------------------
+    # Filtering -----------------
 
-    #'
-    #'  Keep chromosomes 1 - 22
-    #'
-    biodata <- biodata[which(biodata$chromosome_name %in% as.character(1:22)), ]
+    #  Keep chromosomes 1 - 22
+    biodata <- biodata[which(
+        biodata$chromosome_name %in% as.character(1:22)
+    ), ]
 
-    #'
-    #' Remove all-zeros records
-    #'
-    # zero.ids = rep(0, length(names))
-    # zero.ids = paste(zero.ids, collapse = "")
+    # Remove all-zeros records
+    zeros   <- rowSums(biodata[, sample_metadata[[1]], with = FALSE])
+    biodata <- biodata[which(zeros != 0), ]
 
-    data.num.ids <- rowSums(biodata[, meta$newNames, with = FALSE])
-    # unite(data = biodata[,..names], col = ids, sep = "")
-    biodata <- biodata[which(data.num.ids != 0), ]
+    # Getting genomic features ---------------------------------
 
-    # Getting genomic features -------------------------------------------------
-
-    #'
-    #' Getting gene names (expressed as entrez ids) and locus
-    #' (e.g. exon, intron, cds etc.)
-    #' based on chromosomal location
-    #'
+    
+    # Get gene names (expressed as entrez ids) and locus
+    # (e.g. exon, intron, cds etc.)
+    # based on chromosomal location
+    
     if(tech == "hg19"){
 
         txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
@@ -202,41 +244,51 @@ data_integration <- function(dir_name = NULL,
     }
 
     feat <- genFeatures(txdb, reduce_ranges = FALSE, verbose = FALSE)
-    feat <- feat@unlistData
+    feat <- unlist(feat)
 
-    gr <- GRanges(seqnames = Rle(paste("chr",
-                                        biodata$chromosome_name, sep = "")),
-                    ranges = IRanges(start = as.numeric(biodata$start_position),
-                                    end = as.numeric(biodata$end_position)))
+    biodata_granges <- GRanges(
+        seqnames = Rle(
+            paste("chr", biodata$chromosome_name, sep = "")
+        ),
+        
+        ranges = IRanges(
+            start = as.numeric(biodata$start_position),
+            end = as.numeric(biodata$end_position)
+        )
+    )
 
-    overlaps <- findOverlaps(gr, feat)
+    overlaps <- findOverlaps(biodata_granges, feat)
 
-    overlaps.from <- overlaps@from
-    overlaps.to <- overlaps@to
+    # overlaps.from <- from(overlaps)
+    # overlaps.to   <- to(overlaps)
 
     rm(overlaps)
 
-    feat <- as.data.table(feat)
-    feat <- feat[,c("feature_by", "featuretype")]
-    feat$feature_by <- as.character(feat$feature_by)
+    feat <- data.table(
+        feature_by = as.character(feat$feature_by),
+        featuretype = as.character(feat$featuretype)
+    )
 
 
 
     rm(gr, temp, new, data.num.ids, txdb)
 
-    feat <- cbind(biodata[overlaps.from, 1:4], feat[overlaps.to, ])
-    biodata <- cbind(feat, biodata[overlaps.from, 5:ncol(biodata)])
+    feat <- cbind(
+        biodata[from(overlaps), 1:4], feat[to(overlaps), ]
+    )
+    
+    biodata <- cbind(
+        feat, biodata[from(overlaps), 5:ncol(biodata)]
+    )
 
     rm(feat, overlaps.from, overlaps.to, col.max, keep, names)
 
     biodata <- unique(biodata)
-    biodata[which(biodata$feature_by == "character(0)"), ]$feature_by <- "NA"
-    biodata[which(biodata$feature_by == ""), ]$feature_by <- "NA"
+    
+    biodata[which(biodata$feature_by == "character(0)"), ]$feature_by <- NA
+    biodata[which(biodata$feature_by == ""), ]$feature_by             <- NA
 
-    #'
-    #' Converting entrez ids to hgnc symbols
-    #'
-
+    # Converting entrez ids to hgnc symbols
     genes <- unique(biodata$feature_by)
     genes <- genes[which(genes != "NA")]
     genes <- genes[!str_detect(genes, "INTER")]
@@ -248,24 +300,20 @@ data_integration <- function(dir_name = NULL,
 
     rm(map, mapping, genes)
 
-    #'
-    #' Collapsing genes and feature type of same observation into same row
-    #'
-    #' e.g.
-    #'
-    #' index1 --- MYC, exon
-    #' index1 --- RUNX1T1, intron
-    #' --------------------------
-    #' index1 --- MYC|RUNX1T1, exon|intron
-    #'
-    biodata <- as.data.table(biodata)
+    #
+    # Collapsing genes and feature type of same observation into same row
+    #
+    # e.g.
+    #
+    # index1 --- MYC, exon
+    # index1 --- RUNX1T1, intron
+    # --------------------------
+    # index1 --- MYC|RUNX1T1, exon|intron
 
-    ################
-    features <- biodata %>%
-                group_by(ID) %>%
-                dplyr::select(ID, feature_by, featuretype) %>%
-                summarise(Gene_id = paste(feature_by, collapse = "|"),
-                            Gene_feature = paste(featuretype, collapse = "|"))
+    features <- biodata[, .(
+        Gene_id = paste(feature_by, collapse = ","),
+        Gene_feature = paste(featuretype, collapse = ",")
+    ), by = ID]
 
 
     biodata <- biodata[which(!duplicated(biodata$ID)), ]
@@ -284,102 +332,94 @@ data_integration <- function(dir_name = NULL,
 
     colnames(biodata) <- names
 
-    rm(list = setdiff(ls(), c("biodata", "meta", "start_time", "dir_name",
-                              "output_folder", "x", "res", "tad_file")))
+    # Annotate with TADs --------------------------------------
 
-    # Annotate with TADs -------------------------------------------------------
+    TAD <- fread(
+        tad_file,
+        header = FALSE, sep = "\t"
+    )
 
-    TAD <- fread(paste(dir_name, tad_file, sep = "/"),
-                header = F,
-                sep = "\t",
-                check.names = FALSE)
+    # Reordering
+    data.over <- biodata[, c(
+        "ID", "chromosome_name", "start_position", "end_position"
+    ), with = FALSE]
+    
+    data.over$chromosome_name <- paste0("chr", data.over$chromosome_name)
+    data.over                 <- data.over[,c(2,3,4,1)]
 
-    #'
-    #' Create a barcode
-    #'
-    # biodata$name = paste0(biodata$ID, biodata$Gene_id)
-
-    #' Reordering
-    #'
-    data.over <- biodata[,c("ID", "chromosome_name", "start_position",
-                            "end_position")]
-    data.over$chromosome_name <- paste("chr",
-                                        data.over$chromosome_name,
-                                        sep = "")
-    data.over <- data.over[,c(2,3,4,1)]
-
-    #'
-    #' Overlap of the TAD with events
-    #'
+    # Overlap of the TAD with events
     colnames(TAD) <- paste(c("chr", "start", "end", "name"))
     colnames(data.over) <- paste(c("chr", "start", "end", "name"))
 
-    #'
-    #' Make GRanges object
-    #'
-    gr1 <- with(TAD, GRanges(chr, IRanges(start = start,
-                                        end = end,
-                                        names = name)))
-    gr2 <- with(data.over, GRanges(chr, IRanges(start = start, end = end,
-                                                names = name)))
+    # Make GRanges object
+    TAD_gr <- with(
+        TAD, GRanges(
+            chr, IRanges(start = start, end = end, names = name)
+        )
+    )
+    
+    biodata_gr <- with(
+        data.over, GRanges(
+            chr, IRanges(start = start, end = end, names = name)
+        )
+    )
 
-    #'
-    #' Completely overlapping
-    #'
-    type1 <- findOverlaps(query = gr1, subject = gr2)
-
-    type1.df <- cbind(TAD[queryHits(type1),], data.over[subjectHits(type1),])
-    type1.df <- type1.df[,c(2,3,4,8)]
-    colnames(type1.df) <- c("tad_start", "tad_end", "tad_name", "name.1")
+    
+    # Completely overlapping
+    df0 <- findOverlaps(query = TAD_gr, subject = biodata_gr)
+    df1 <- cbind(TAD[queryHits(df0),], data.over[subjectHits(df0),])
+    df1 <- df1[,c(2,3,4,8)]
+    
+    colnames(df1) <- c("tad_start", "tad_end", "tad_name", "name.1")
 
     rm(type1, gr1, gr2)
 
     #' Overlapping with TADs' table
     #'
-    full <- merge(type1.df, biodata, by.x = "name.1", by.y = "ID")
+    full <- merge(df1, biodata, by.x = "name.1", by.y = "ID")
 
     colnames(full)[1] <- "ID"
 
-    keep <- c("chromosome_name",
-            "tad_name",
-            "tad_start",
-            "tad_end",
-            "ID",
-            "start_position",
-            "end_position",
-            "Gene_id",
-            "Gene_locus",
-            "parent",
-            meta$newNames)
+    full <- full[, c(
+        "chromosome_name",
+        "tad_name",
+        "tad_start",
+        "tad_end",
+        "ID",
+        "start_position",
+        "end_position",
+        "Gene_id",
+        "Gene_locus",
+        "parent",
+        sample_metadata[[1]]
+    ), with = FALSE] 
 
-    full <- full[,keep,with=FALSE] #keep,with=FALSE  full[,..keep]
-
-    rm(list = setdiff(ls(), c("biodata",
-                            "full",
-                            "meta",
-                            "start_time",
-                            "dir_name",
-                            "output_folder", "x", "res")))
+    # rm(list = setdiff(ls(), c("biodata",
+    #                         "full",
+    #                         "sample_metadata",
+    #                         "start_time",
+    #                         "dir_name",
+    #                         "output_folder", "x", "res")))
 
     #end_time <- Sys.time()
 
-    # Generating outputs -------------------------------------------------------
+    # Generating outputs -----------------------------
 
-    dir.create(output_folder, showWarnings = FALSE)
-
-    write.table(biodata,
-                paste(output_folder,
-                "/integrated-table.csv", sep = ""),
-                row.names = FALSE,
-                sep = "\t",
-                quote = FALSE)
-
-    write.table(full,
-                paste(output_folder,
-                "/integrated-tad-table.csv", sep = ""),
-                row.names = FALSE,
-                sep = "\t",
-                quote = FALSE)
+    # dir.create(output_folder, showWarnings = FALSE)
+    # 
+    # write.table(biodata,
+    #             paste(output_folder,
+    #             "/integrated-table.csv", sep = ""),
+    #             row.names = FALSE,
+    #             sep = "\t",
+    #             quote = FALSE)
+    # 
+    # write.table(full,
+    #             paste(output_folder,
+    #             "/integrated-tad-table.csv", sep = ""),
+    #             row.names = FALSE,
+    #             sep = "\t",
+    #             quote = FALSE)
 
     for(i in unique(biodata$parent)){
 
@@ -392,8 +432,6 @@ data_integration <- function(dir_name = NULL,
         cat(c("File", i, ":", temp, "...", "\n\n"),
             file = paste(output_folder, "/summary.txt", sep = ""),
             append = TRUE)
-
-
 
     }
 
