@@ -235,15 +235,23 @@ data_integration <- function(
     
     if(tech == "hg19"){
 
-        txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
+        feat <- genFeatures(
+            TxDb.Hsapiens.UCSC.hg19.knownGene, 
+            reduce_ranges = FALSE, 
+            verbose = FALSE
+        )
 
     } else {
 
-        txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
+        feat <- genFeatures(
+            TxDb.Hsapiens.UCSC.hg38.knownGene, 
+            reduce_ranges = FALSE, 
+            verbose = FALSE
+        )
 
     }
 
-    feat <- genFeatures(txdb, reduce_ranges = FALSE, verbose = FALSE)
+    
     feat <- unlist(feat)
 
     biodata_granges <- GRanges(
@@ -269,10 +277,6 @@ data_integration <- function(
         featuretype = as.character(feat$featuretype)
     )
 
-
-
-    rm(gr, temp, new, data.num.ids, txdb)
-
     feat <- cbind(
         biodata[from(overlaps), 1:4], feat[to(overlaps), ]
     )
@@ -280,8 +284,6 @@ data_integration <- function(
     biodata <- cbind(
         feat, biodata[from(overlaps), 5:ncol(biodata)]
     )
-
-    rm(feat, overlaps.from, overlaps.to, col.max, keep, names)
 
     biodata <- unique(biodata)
     
@@ -298,7 +300,6 @@ data_integration <- function(
     map <- match(biodata$feature_by, mapping$entrez.id)
     biodata$feature_by <- mapping[map, ]$hgnc.symbol
 
-    rm(map, mapping, genes)
 
     #
     # Collapsing genes and feature type of same observation into same row
@@ -320,11 +321,8 @@ data_integration <- function(
 
     who <- match(biodata$ID, features$ID)
 
-    biodata$feature_by <- features[who, ]$Gene_id
+    biodata$feature_by  <- features[who, ]$Gene_id
     biodata$featuretype <- features[who, ]$Gene_feature
-
-
-    rm(features)
 
     names <- colnames(biodata)
     names <- str_replace(names, "feature_by", "Gene_id")
