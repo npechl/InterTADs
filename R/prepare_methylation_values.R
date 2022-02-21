@@ -21,17 +21,6 @@
 #' If no methylation is provided, place FALSE
 #'
 #' @import data.table
-#' @import systemPipeR
-#' @import data.table
-#' @import tidyverse
-#' @import org.Hs.eg.db
-#' @import TxDb.Hsapiens.UCSC.hg19.knownGene
-#' @import TxDb.Hsapiens.UCSC.hg38.knownGene
-#' @import annotables
-#' @import GenomicRanges
-#' @import gplots
-#' @import gghalves
-#' @import limma
 #'
 #' @description
 #'
@@ -49,18 +38,14 @@
 
 
 
-prepare_methylation_values <- function (dir_name = NULL,
-                                        output_folder = NULL,
-                                        meta = NULL,
-                                        meth_data = NULL){
+prepare_methylation_values <- function (
+    integratedTADtable, 
+    mapping_file
+) {
 
-    data.all <- fread(paste(output_folder, "/integrated-tad-table.csv",
-                            sep = ""),
-                      sep = "\t")
-    meta <- fread(paste(dir_name, meta, sep = "/"))
-    who <- meta == ""
-    who <- apply(who, 1, sum, na.rm = TRUE)
-    meta <- meta[which(who == 0), ]
+    data.all <- fread(integratedTADtable)
+
+    meta <- fread(mapping_file)
 
 
     sample.list <- meta$newNames
@@ -76,8 +61,6 @@ prepare_methylation_values <- function (dir_name = NULL,
     meth.regulatory <- rbind(meth.promoter, meth.intergenic)
     meth.regulatory <- meth.regulatory[!duplicated(meth.regulatory$ID), ]
 
-    rm(meth.intergenic, meth.promoter, meth)
-
     for(i in sample.list){
         meth.regulatory[[i]] <- 100 - meth.regulatory[[i]]
     }
@@ -86,21 +69,5 @@ prepare_methylation_values <- function (dir_name = NULL,
 
     data.all <- rbind(meth.regulatory, other)
 
-    write.table(data.all,
-                file = paste(output_folder,
-                "/integrated-tad-table-methNorm.txt",
-                sep = ""),
-                col.names = TRUE,
-                row.names = FALSE,
-                quote = FALSE,
-                sep = "\t")
-
-
- return(NULL)
+    return(data.all)
 }
-
-
-# prepare_methylation_values(dir_name = "Datasets",
-#                            output_folder = "results_bloodcancer",
-#                            meta = "meta-data.csv",
-#                            meth_data = 1)

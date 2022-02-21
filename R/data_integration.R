@@ -1,6 +1,8 @@
 #'
 #' Input parameters for Data Integration part
 #'
+
+# TODO: ROXYZEN NEEDS TO BE UPDATED
 #' @param dir_name Directory of input datasets containing feature counts and
 #'  frequency tables
 #'
@@ -16,21 +18,14 @@
 #'
 #' @param tad_file BED file containing information about TADs
 #'
+# TODO: PLEASE CHECK IF THESE PACKAGES ARE OK WITH THE FUNCTIONALITY 
 #' @import data.table
-#' @importFrom data.table fread
 #' @import systemPipeR
-#' @import data.table
-#' @import tidyverse
 #' @import org.Hs.eg.db
 #' @import TxDb.Hsapiens.UCSC.hg19.knownGene
 #' @import TxDb.Hsapiens.UCSC.hg38.knownGene
 #' @import annotables
 #' @import GenomicRanges
-#' @import gplots
-#' @import gghalves
-#' @import limma
-#' @import dplyr
-#' @importFrom utils data download.file write.table
 #' @importFrom stringr str_detect str_replace
 #'
 #' @description
@@ -41,6 +36,7 @@
 #'
 #' @examples
 #' 
+# TODO: PLEASE UPDATE EXAMPLE
 #' data_integration (
 #'    dir_name = system.file("extdata","Datasets",package='InterTADs'),
 #'    output_folder = system.file("extdata","results_bloodcancer", package='InterTADs'),
@@ -56,7 +52,7 @@ data_integration <- function(
     counts_fls = NULL,
     
     freq_folder = NULL,
-    freq_fls = NULL
+    freq_fls = NULL,
     
     mapping_file,
     tad_file,
@@ -267,11 +263,6 @@ data_integration <- function(
 
     overlaps <- findOverlaps(biodata_granges, feat)
 
-    # overlaps.from <- from(overlaps)
-    # overlaps.to   <- to(overlaps)
-
-    rm(overlaps)
-
     feat <- data.table(
         feature_by = as.character(feat$feature_by),
         featuretype = as.character(feat$featuretype)
@@ -302,7 +293,8 @@ data_integration <- function(
 
 
     #
-    # Collapsing genes and feature type of same observation into same row
+    # Collapsing genes and feature type 
+    # of same observation into same row
     #
     # e.g.
     #
@@ -370,8 +362,6 @@ data_integration <- function(
     
     colnames(df1) <- c("tad_start", "tad_end", "tad_name", "name.1")
 
-    rm(type1, gr1, gr2)
-
     #' Overlapping with TADs' table
     #'
     full <- merge(df1, biodata, by.x = "name.1", by.y = "ID")
@@ -391,13 +381,6 @@ data_integration <- function(
         "parent",
         sample_metadata[[1]]
     ), with = FALSE] 
-
-    # rm(list = setdiff(ls(), c("biodata",
-    #                         "full",
-    #                         "sample_metadata",
-    #                         "start_time",
-    #                         "dir_name",
-    #                         "output_folder", "x", "res")))
 
     #end_time <- Sys.time()
 
@@ -433,7 +416,12 @@ data_integration <- function(
 
     }
 
-    return(NULL)
+    return(
+        list(
+            "IntegratedTADtable" = full,
+            "summary" = 
+        )
+    )
 }
 
 
