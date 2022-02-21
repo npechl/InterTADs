@@ -4,12 +4,7 @@
 \alias{prepare_methylation_values}
 \title{Input parameters for TADiff part}
 \usage{
-prepare_methylation_values(
-  dir_name = NULL,
-  output_folder = NULL,
-  meta = NULL,
-  meth_data = NULL
-)
+prepare_methylation_values(integratedTADtable, mapping_file)
 }
 \arguments{
 \item{dir_name}{Directory of input datasets containing feature counts
@@ -19,22 +14,14 @@ and frequency tables}
 
 \item{meta}{meta-data file name used}
 
+\item{names.meta}{meta data columns to process (names or indexes)}
+
 \item{meth_data}{Parent index of methylation data.
 If no methylation is provided, place FALSE}
-
-\item{names.meta}{meta data columns to process (names or indexes)}
 }
 \value{
 
 }
 \description{
 
-}
-\examples{
-prepare_methylation_values(
-dir_name = system.file("extdata","Datasets",package='InterTADs'),
-output_folder = system.file("extdata","results_bloodcancer",
-                            package='InterTADs'),
-meta = "meta-data.csv",
-meth_data = 1)
 }

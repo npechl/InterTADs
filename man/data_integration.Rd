@@ -5,30 +5,29 @@
 \title{Input parameters for Data Integration part}
 \usage{
 data_integration(
-  dir_name = NULL,
-  output_folder = NULL,
-  tech = NULL,
-  meta = NULL,
-  counts_dir = NULL,
-  freq_dir = NULL,
-  tad_file = NULL
+  counts_folder = NULL,
+  counts_fls = NULL,
+  freq_folder = NULL,
+  freq_fls = NULL,
+  mapping_file = mapping_file,
+  tad_file = tad_file,
+  tech = "hg38"
 )
 }
 \arguments{
-\item{dir_name}{Directory of input datasets containing feature counts and
-frequency tables}
+\item{counts_folder}{Path to a repository of counts NGS data}
 
-\item{output_folder}{Folder name for printing output tables}
+\item{counts_fls}{A vector of paths to files of counts NGS data}
 
-\item{tech}{Human Genome Reference used}
+\item{freq_folder}{Path to a repository of freq NGS data}
 
-\item{meta}{meta-data file name used}
+\item{freq_fls}{A vector of paths to files of freq NGS data}
 
-\item{counts_dir}{Directory name of counts NGS data}
-
-\item{freq_dir}{Directory name of freq NGS data}
+\item{mapping_file}{A meta-data file}
 
 \item{tad_file}{BED file containing information about TADs}
+
+\item{tech}{Homo sapiens (human) genome assembly}
 }
 \value{
 

@@ -29,17 +29,12 @@
 #' @export
 #'
 #' @examples
-#' prepare_methylation_values(
-#' dir_name = system.file("extdata","Datasets",package='InterTADs'),
-#' output_folder = system.file("extdata","results_bloodcancer",
-#'                             package='InterTADs'),
-#' meta = "meta-data.csv",
-#' meth_data = 1)
+
 
 
 
 prepare_methylation_values <- function (
-    integratedTADtable, 
+    integratedTADtable,
     mapping_file
 ) {
 
