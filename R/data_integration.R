@@ -20,7 +20,9 @@
 #'
 #' @description
 #'
-#' @return
+#' @return A list of integratedTADtable and summary. IntegratedTADtable contains
+#' all data info about TADs and summary explains types of different events
+#' (methylation,mutation,expression).
 #'
 #' @export
 #'
@@ -433,20 +435,7 @@ data_integration <- function(
 }
 
 
-# result<- data_integration (
-# counts_folder = system.file("extdata", "Datasets",
-#                          "counts", package="InterTADs"),
-# counts_fls = NULL,
-# freq_folder = system.file("extdata", "Datasets",
-#                          "freq", package="InterTADs"),
-# freq_fls = NULL,
-# mapping_file = system.file("extdata", "Datasets",
-#                          "meta-data.csv", package="InterTADs"),
-#
-# tad_file =system.file("extdata", "Datasets",
-#                      "hglft_genome_2dab_ec1330.bed", package="InterTADs"),
-# tech = "hg38"
-# )
+
 
 #
 # counts_folder = system.file("extdata", "Datasets",

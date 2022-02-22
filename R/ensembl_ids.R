@@ -1,72 +1,41 @@
-# Loading libraries ------------------------------------------------------------
-
-
-#
-# source("R/libraries.R")
-#
-# library(biomaRt)
-
 
 #' ensembl_ids
 #'
-#' @param dir_name Directory of input datasets containing feature counts and
-#' frequency tables
-#'
-#' @param output_folder Folder name for printing output tables
-#'
 #' @param expr_data Parent index of expression data.
-#' If no expression is provided, place FALSE
+#' @param input_file
+#'
 #' @import biomaRt
 #' @import data.table
-#' @import systemPipeR
-#' @import data.table
-#' @import tidyverse
-#' @import org.Hs.eg.db
-#' @import TxDb.Hsapiens.UCSC.hg19.knownGene
-#' @import TxDb.Hsapiens.UCSC.hg38.knownGene
-#' @import annotables
-#' @import GenomicRanges
-#' @import gplots
-#' @import gghalves
-#' @import limma
-#' @importFrom  utils data  write.table
 #'
 #' @description
 #'
 #' @return
-#' TRUE if function runs properly
+#' A table with matched ensembl_ids
 #'
 #'
 #' @export
 #'
 #' @examples
 #' result_ensmbl <- ensembl_ids(
-#' dir_name = system.file("extdata","Datasets",package='InterTADs'),
-#' input_file=
-#' system.file("extdata","results_bloodcancer",
-#' "integrated-tad-table-methNorm.txt",package='InterTADs'),
-#' output_folder = system.file("extdata","results_bloodcancer",
-#' package='InterTADs'),
-#' expr_data = 2)
+#' input_file= methylo_result,
+#' expr_data = 3)
 #'
 #'
 
 
 
 
-ensembl_ids <- function(dir_name = NULL,
-                        input_file = NULL,
-                        output_folder = NULL,
-                        expr_data = NULL){
+ensembl_ids <- function(input_file,
+                        expr_data = 3){
 
     # data.all <- fread(paste(output_folder,
     #                         input_file,
     #                         sep = ""),sep = "\t")
 
-    print(input_file)
-    data.all <- fread(input_file,sep = "\t")
+    #print(input_file)
+    data.all <- input_file
 
-    print(data.all)
+
     expression <- data.all[which(data.all$parent == expr_data), ]
 
     ensembl.expression <- list()
@@ -130,31 +99,26 @@ ensembl_ids <- function(dir_name = NULL,
 
     data.all <- rbind(expression, other)
 
-    write.table(data.all,
-                file = paste(output_folder,
-                             "/integrated-tad-table-methNorm-ensembl.txt",
-                             sep = ""),
-                col.names = TRUE,
-                row.names = FALSE,
-                quote = FALSE,
-                sep = "\t")
+
+    # write.table(data.all,
+    #             file = paste(output_folder,
+    #                          "/integrated-tad-table-methNorm-ensembl.txt",
+    #                          sep = ""),
+    #             col.names = TRUE,
+    #             row.names = FALSE,
+    #             quote = FALSE,
+    #             sep = "\t")
     if (length(ensembl.expression$chromosome_name)==0){
         message("None ensembl id was mached")
-        return(FALSE)
+        return(NULL)
     }
     else{
-        return(TRUE)
+
+        return(data.all)
     }
 
 }
 
 
-# result_ensmbl <- ensembl_ids(
-# dir_name = system.file("extdata","Datasets",package='InterTADs'),
-# input_file=
-# system.file("extdata","results_bloodcancer",
-# "integrated-tad-table-methNorm.txt",package='InterTADs'),
-# output_folder = system.file("extdata","results_bloodcancer",
-# package='InterTADs'),
-# expr_data = 2)
+
 
