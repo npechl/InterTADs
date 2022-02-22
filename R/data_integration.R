@@ -119,6 +119,8 @@ data_integration <- function(
             parent <- keep
 
             file_mapping <- sample_metadata[, c(1, keep), with = FALSE]
+            print('11111')
+            print(file_mapping)
             file_mapping <- file_mapping[which(
                 !(is.na( file_mapping[[2]] ))
             ), ]
@@ -154,7 +156,7 @@ data_integration <- function(
 
         for(i in 1:length(counts_fls)){
 
-            new <- fread(freq_fls[i], fill = TRUE)
+            new <- fread(counts_fls[i], fill = TRUE)
 
             keep0 <- apply(
                 sample_metadata[,2:ncol(sample_metadata)], 2, function(x, y) {
@@ -169,8 +171,9 @@ data_integration <- function(
             parent <- keep
 
             file_mapping <- sample_metadata[, c(1, keep), with = FALSE]
+            print(file_mapping)
             file_mapping <- file_mapping[which(
-                !(is.na( file_mapping[[keep]] ))
+                !(is.na( file_mapping[[2]] ))
             ), ]
 
             new <- cbind(new[,1:4], new[, file_mapping[[2]], with = FALSE])
@@ -406,8 +409,7 @@ data_integration <- function(
 
         temp <- paste(temp, collapse = ", ")
 
-        print(i)
-        print(temp)
+
         sum_table<- data.table(sum_table,rbind(i,temp))
 
         #setnames(sum_table,'parent_file','ID')
@@ -430,6 +432,35 @@ data_integration <- function(
 
 }
 
+
+# result<- data_integration (
+# counts_folder = system.file("extdata", "Datasets",
+#                          "counts", package="InterTADs"),
+# counts_fls = NULL,
+# freq_folder = system.file("extdata", "Datasets",
+#                          "freq", package="InterTADs"),
+# freq_fls = NULL,
+# mapping_file = system.file("extdata", "Datasets",
+#                          "meta-data.csv", package="InterTADs"),
+#
+# tad_file =system.file("extdata", "Datasets",
+#                      "hglft_genome_2dab_ec1330.bed", package="InterTADs"),
+# tech = "hg38"
+# )
+
+#
+# counts_folder = system.file("extdata", "Datasets",
+#                             "counts", package="InterTADs")
+# counts_fls = NULL
+# freq_folder = system.file("extdata", "Datasets",
+#                           "freq", package="InterTADs")
+# freq_fls = NULL
+# mapping_file = system.file("extdata", "Datasets",
+#                            "meta-data.csv", package="InterTADs")
+#
+# tad_file =system.file("extdata", "Datasets",
+#                       "hglft_genome_2dab_ec1330.bed", package="InterTADs")
+# tech = "hg38"
 
 
 
