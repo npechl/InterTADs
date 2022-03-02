@@ -1,14 +1,3 @@
-# Load libraries and functions -------------------
-
-#rm(list = ls())
-
-# source("R/libraries_enrich.R")
-# source("R/motif_enrich.R")
-# source("R/go_pathway_enrich.R")
-# source("R/visualization_enrich.R")
-
-# Inputs -----------------
-
 
 #' Functional analysis.
 #'

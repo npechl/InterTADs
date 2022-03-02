@@ -63,6 +63,7 @@ data_integration <- function(
 
 
 
+
     # Get input files
 
     if(is.null(freq_folder) & is.null(freq_fls)) {
@@ -100,6 +101,7 @@ data_integration <- function(
 
 
     biodata <- list()
+    parent = 0
 
     # Reading input frequency tables
     if(length(freq_fls) > 0) {
@@ -118,11 +120,11 @@ data_integration <- function(
 
             keep   <- names(which(keep0 == max(keep0))[1])
             keep   <- which(colnames(sample_metadata) == keep)
-            parent <- keep
+            # parent <- keep
+            parent = parent + 1
 
             file_mapping <- sample_metadata[, c(1, keep), with = FALSE]
-            print('11111')
-            print(file_mapping)
+
             file_mapping <- file_mapping[which(
                 !(is.na( file_mapping[[2]] ))
             ), ]
@@ -168,12 +170,14 @@ data_integration <- function(
                 }, colnames(new)
             )
 
+
             keep   <- names(which(keep0 == max(keep0))[1])
             keep   <- which(colnames(sample_metadata) == keep)
-            parent <- keep
+            # parent <- keep
+            parent = parent + 1
 
             file_mapping <- sample_metadata[, c(1, keep), with = FALSE]
-            print(file_mapping)
+
             file_mapping <- file_mapping[which(
                 !(is.na( file_mapping[[2]] ))
             ), ]
@@ -385,25 +389,12 @@ data_integration <- function(
 
     # Generating outputs -----------------------------
 
-    # dir.create(output_folder, showWarnings = FALSE)
-    #
-    # write.table(biodata,
-    #             paste(output_folder,
-    #             "/integrated-table.csv", sep = ""),
-    #             row.names = FALSE,
-    #             sep = "\t",
-    #             quote = FALSE)
-    #
-    # write.table(full,
-    #             paste(output_folder,
-    #             "/integrated-tad-table.csv", sep = ""),
-    #             row.names = FALSE,
-    #             sep = "\t",
-    #             quote = FALSE)
+
+    #eventsNEW<-as.data.table(full$ID)
 
     sum_table <- data.table()
 
-    print(sum_table)
+
     for(i in unique(biodata$parent)){
         temp <- biodata[which(biodata$parent == i), ]$ID
 
@@ -415,7 +406,7 @@ data_integration <- function(
         sum_table<- data.table(sum_table,rbind(i,temp))
 
         #setnames(sum_table,'parent_file','ID')
-        print(sum_table)
+
         #setnames(sum_table,c('i',"temp"),c('parent_file','ID'),skip_absent=TRUE)
 
         # cat(c("File", i, ":", temp, "...", "\n\n"),
@@ -437,20 +428,17 @@ data_integration <- function(
 
 
 
+
+
+# result<- data_integration (
+# counts_folder = '/Users/aspaor/Downloads/bloodcancer/counts',
+# counts_fls = NULL,
+# freq_folder = "/Users/aspaor/Downloads/bloodcancer/freq",
+# freq_fls = NULL,
+# mapping_file = "/Users/aspaor/Downloads/bloodcancer/metaData_groups.csv",
 #
-# counts_folder = system.file("extdata", "Datasets",
-#                             "counts", package="InterTADs")
-# counts_fls = NULL
-# freq_folder = system.file("extdata", "Datasets",
-#                           "freq", package="InterTADs")
-# freq_fls = NULL
-# mapping_file = system.file("extdata", "Datasets",
-#                            "meta-data.csv", package="InterTADs")
-#
-# tad_file =system.file("extdata", "Datasets",
-#                       "hglft_genome_2dab_ec1330.bed", package="InterTADs")
+# tad_file ='/Users/aspaor/Downloads/bloodcancer/hglft_genome_2dab_ec1330.bed',
 # tech = "hg38"
-
-
+# )
 
 

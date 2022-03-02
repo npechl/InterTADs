@@ -1,39 +1,14 @@
-# Loading libraries ------------------------------------------------------------
 
-#rm(list = ls())
-
-# source("R/libraries.R")
-#
-# start_tad_time <- Sys.time()
-
-# Inputs -----------------------------------------------------------------------
-
-#' Input parameters for TADiff part
-#'
-#' @param dir_name Directory of input datasets containing feature counts and
-#' frequency tables
-#'
-#' @param output_folder Folder name for printing output tables
-#'
-#' @param meta meta-data file name used
+#' TADiff
 #'
 #' @param names.meta meta data columns to process (names or indexes)
 #'
 #' @param expr_data Parent index of expression data.
 #' If no expression is provided, place FALSE
+#' @param mapping_file A meta-data file
+#' @param methylo_result
 #'
 #' @import data.table
-#' @import systemPipeR
-#' @import data.table
-#' @import tidyverse
-#' @import org.Hs.eg.db
-#' @import TxDb.Hsapiens.UCSC.hg19.knownGene
-#' @import TxDb.Hsapiens.UCSC.hg38.knownGene
-#' @import annotables
-#' @import GenomicRanges
-#' @import gplots
-#' @import gghalves
-#' @import limma
 #' @import dplyr
 #' @description
 #'
@@ -42,75 +17,36 @@
 #' @export
 #'
 #' @examples
-#' TADiff(dir_name = system.file("extdata","Datasets",package='InterTADs'),
-#' output_folder = system.file("extdata","results_bloodcancer",
-#' package='InterTADs'),
-#' meta = "meta-data.csv",
-#' names.meta = c('groups'),
-#' expr_data = 2)
+#' TADiff_result <- TADiff(
+#'
+#' mapping_file = system.file("extdata", "Datasets",
+#'                      "meta-data.csv", package="InterTADs"),
+#'                        methylo_result = methylo_result,
+#'                        names.meta = c("group"),
+#'                    expr_data = 3)
+#' TADiff_result
 
 
-TADiff<- function(dir_name = NULL,
-                  output_folder = NULL,
-                  meta = NULL,
+TADiff<- function(
+                  mapping_file = NULL,
+                  methylo_result,
                   names.meta = NULL,
                   expr_data = NULL){
 
-    # names.meta = c("IGHV",
-    #                "gain2p25.3",
-    #                "del8p12",
-    #                "gain8q24",
-    #                "del9p21.3",
-    #                "del11q22.3",
-    #                "trisomy12",
-    #                "del13q14_any",
-    #                "del13q14_bi",
-    #                "del13q14_mono",
-    #                "del14q24.3",
-    #                "del15q15.1",
-    #                "del17p13",
-    #                "Chromothripsis",
-    #                "BRAF",
-    #                "KRAS",
-    #                "MYD88",
-    #                "NOTCH1",
-    #                "SF3B1",
-    #                "TP53",
-    #                "ACTN2",
-    #                "ATM",
-    #                "BIRC3",
-    #                "CPS1",
-    #                "EGR2",
-    #                "FLRT2",
-    #                "IRF2BP2",
-    #                "KLHL6",
-    #                "LRP1",
-    #                "MED12",
-    #                "MGA",
-    #                "MUC16",
-    #                "NFKBIE",
-    #                "PCLO",
-    #                "UMODL1",
-    #                "XPO1",
-    #                "ZC3H18")
 
-    expr_data <- 2
-
-
-
-    data.all <- fread(paste(output_folder, "/integrated-tad-table-methNorm.txt",
-                            sep = ""),
-                        sep = "\t")
+    data.all <- methylo_result
 
     data.all$ID <- paste(data.all$tad_name, data.all$ID, sep = ";")
 
-    meta <- fread(paste(dir_name, meta, sep = "/"))
+
+    meta <- fread(mapping_file)
+
     who <- meta == ""
     who <- apply(who, 1, sum, na.rm = TRUE)
     meta <- meta[which(who == 0), ]
 
 
-    sample.list <- meta$newNames
+    sample.list <- meta[[1]]
     data.all$Mean <- rowMeans(data.all[,..sample.list])
 
 
@@ -120,7 +56,7 @@ TADiff<- function(dir_name = NULL,
     sign_table <- matrix(0, nrow = length(names.meta), ncol = 2)
 
     rm(who)
-
+    Diff_list <- list()
     for (z in 1:length(names.meta)){
 
         cat(c(names.meta[z], "\n"))
@@ -134,10 +70,10 @@ TADiff<- function(dir_name = NULL,
         group1 <- groups[1]
         group2 <- groups[2]
 
-        meta.keep <- meta[which(meta[[analysis]] == group1 | meta[[analysis]] ==
-                                    group2), ]
+        meta.keep <- meta[which(meta[[analysis]] == group1 |
+                                    meta[[analysis]] ==group2), ]
 
-        sample.list <- meta.keep$newNames
+        sample.list <- meta.keep[[1]]
 
         df <- data.all[,..sample.list]
 
@@ -145,6 +81,7 @@ TADiff<- function(dir_name = NULL,
         row.names(df) <- data.all$ID
 
         pheno <- as.factor(meta.keep[[analysis]])
+
 
         phenoMat <- model.matrix(~pheno)
         colnames(phenoMat) <- sub("^pheno", "", colnames(phenoMat))
@@ -170,6 +107,8 @@ TADiff<- function(dir_name = NULL,
 
             sign_table[z,1] <- analysis
             sign_table[z,2] <- "0"
+
+            full.tads = list()
         }
 
         else {
@@ -264,10 +203,10 @@ TADiff<- function(dir_name = NULL,
                                         by = "tad_name" )
 
                 tad.all.info.f <- tad.all.info %>%
-                filter(count.x > 4) %>%
-                filter(pvalue < 0.01) %>%
-                filter(freq > 15) %>%
-                filter(mean_logFC > 2)
+                    dplyr::filter(count.x > 4) %>%
+                    dplyr::filter(pvalue < 0.01) %>%
+                    dplyr::filter(freq > 15) %>%
+                    dplyr::filter(mean_logFC > 2)
 
                 sign_table[z,1] <- analysis
                 sign_table[z,2] <- as.character(nrow(tad.all.info.f))
@@ -280,17 +219,20 @@ TADiff<- function(dir_name = NULL,
                                     data.all,
                                     by = "tad_name")
 
-                if(nrow(full.tads) > 0) {
 
-                    write.table(full.tads,
-                                file = paste(output_folder, "/", analysis,
-                                                "_TADiff.txt", sep = ""),
-                                col.names = TRUE,
-                                row.names = FALSE,
-                                quote = FALSE,
-                                sep = "\t")
+                ################### CHECK IT   ##################################
+                # if(nrow(full.tads) > 0) {
+                Diff_list[[analysis]] = full.tads
+                    # write.table(full.tads,
+                    #             file = paste(output_folder, "/", analysis,
+                    #                             "_TADiff.txt", sep = ""),
+                    #             col.names = TRUE,
+                    #             row.names = FALSE,
+                    #             quote = FALSE,
+                    #             sep = "\t")
 
-                }
+
+                ##########################################################
             }
 
             # what's the value of `sign_table` if we don't have expression data
@@ -298,16 +240,20 @@ TADiff<- function(dir_name = NULL,
         }
     }
 
+
     sign_table <- as.data.frame(sign_table)
 
-    write.table(sign_table,
-                file = paste(output_folder, "/Summary_TADiff.txt", sep = ""),
-                col.names = TRUE,
-                row.names = FALSE,
-                quote = FALSE,
-                sep = "\t")
 
-    return(NULL)
+    return(list(Diff_list,sign_table))
 }
+
+
+# TADiff_result <- TADiff(
+#
+# mapping_file = "/Users/aspaor/Downloads/bloodcancer/metaData_groups.csv",
+#                        methylo_result = methylo_result,
+#                        names.meta = c("IGHV","Gender"),
+#                    expr_data = 2)
+# TADiff_result
 
 

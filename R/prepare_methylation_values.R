@@ -30,7 +30,7 @@
 prepare_methylation_values <- function (
     integratedTADtable,
     mapping_file,
-    meth_data = 2
+    meth_data
 ) {
 
     data.all <- integratedTADtable
@@ -38,30 +38,44 @@ prepare_methylation_values <- function (
     meta <- fread(mapping_file)
 
 
-    sample.list <- meta$newNames
+    sample.list <- meta[[1]]
 
 
-    meth <- data.all[which(data.all$parent == meth_data)]
 
-    meth.promoter <- meth[which(str_detect(meth$Gene_locus, "promoter")) ]
+    meth <- data.all[which(data.all$parent == meth_data),]
 
-    meth.intergenic <- meth[which(str_detect(meth$Gene_locus, "intergenic")) ]
+    meth.promoter <- meth[which(str_detect(meth$Gene_locus, "promoter")), ]
+
+    meth.intergenic <- meth[which(str_detect(meth$Gene_locus, "intergenic")), ]
 
     meth.regulatory <- rbind(meth.promoter, meth.intergenic)
-    meth.regulatory <- meth.regulatory[!duplicated(meth.regulatory$ID) ]
+    meth.regulatory <- meth.regulatory[!duplicated(meth.regulatory$ID), ]
 
     for(i in sample.list){
         meth.regulatory[[i]] <- 100 - meth.regulatory[[i]]
     }
 
-    other <- data.all[which(data.all$parent != meth_data) ]
+    other <- data.all[which(data.all$parent != meth_data), ]
 
     data.all <- rbind(meth.regulatory, other)
+
+
+    # write.table(data.all,
+    #             file = "./TESTintegrated-tad-table-methNormTEST.txt",
+    #
+    #             col.names = TRUE,
+    #             row.names = FALSE,
+    #             quote = FALSE,
+    #             sep = "\t")
 
     return(data.all)
 }
 
 
-
+# methylo_result <- prepare_methylation_values(
+#     integratedTADtable = result[[1]],
+#     mapping_file = "/Users/aspaor/Downloads/bloodcancer/metaData_groups.csv",
+#     meth_data = 1
+# )
 
 

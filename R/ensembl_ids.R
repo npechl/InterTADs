@@ -26,7 +26,7 @@
 
 
 ensembl_ids <- function(input_file,
-                        expr_data = 3){
+                        expr_data){
 
     # data.all <- fread(paste(output_folder,
     #                         input_file,
@@ -119,6 +119,8 @@ ensembl_ids <- function(input_file,
 
 }
 
-
+# new_result_ensmbl <- ensembl_ids(
+# input_file= methylo_result,
+# expr_data = 2)
 
 

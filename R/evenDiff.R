@@ -7,105 +7,47 @@
 
 #' evenDiff
 #'
-#' @param dir_name Directory of input datasets containing feature counts and
-#' frequency tables
-#'
-#' @param output_folder Folder name for printing output tables
-#'
-#' @param meta meta-data file name used
-#'
 #' @param names.meta meta data columns to process (names or indexes)
+#' @param mapping_file A meta-data file
+#' @param methylo_result
 #'
 #' @import data.table
-#' @import systemPipeR
-#' @import tidyverse
-#' @import org.Hs.eg.db
-#' @import TxDb.Hsapiens.UCSC.hg19.knownGene
-#' @import TxDb.Hsapiens.UCSC.hg38.knownGene
-#' @import annotables
-#' @import GenomicRanges
-#' @import gplots
-#' @import gghalves
 #' @import limma
 #'
 #' @description
 #'
 #' @return
-#' TRUE if function runs properly
-#'
 #'
 #' @export
 #'
 #' @examples
 #' result_evenDiff <- evenDiff(
-#' dir_name = system.file("extdata","Datasets",package='InterTADs'),
-#' input_f = system.file("extdata","results_bloodcancer",
-#' "integrated-tad-table-methNorm.txt",package='InterTADs'),
-#' output_folder = system.file("extdata","results_bloodcancer",
-#' package='InterTADs'),
-#' meta = "meta-data.csv",
-#' names.meta = c('groups'))
+#' mapping_file = system.file("extdata", "Datasets",
+#' "meta-data.csv", package="InterTADs"),
+#' methylo_result = methylo_result,
+#' names.meta = c('group'))
 #'
 #' print(result_evenDiff)
 #'
+#'
 
 
-# names.meta = c("IGHV",
-#                "gain2p25.3",
-#                "del8p12",
-#                "gain8q24",
-#                "del9p21.3",
-#                "del11q22.3",
-#                "trisomy12",
-#                "del13q14_any",
-#                "del13q14_bi",
-#                "del13q14_mono",
-#                "del14q24.3",
-#                "del15q15.1",
-#                "del17p13",
-#                "Chromothripsis",
-#                "BRAF",
-#                "KRAS",
-#                "MYD88",
-#                "NOTCH1",
-#                "SF3B1",
-#                "TP53",
-#                "ACTN2",
-#                "ATM",
-#                "BIRC3",
-#                "CPS1",
-#                "EGR2",
-#                "FLRT2",
-#                "IRF2BP2",
-#                "KLHL6",
-#                "LRP1",
-#                "MED12",
-#                "MGA",
-#                "MUC16",
-#                "NFKBIE",
-#                "PCLO",
-#                "UMODL1",
-#                "XPO1",
-#                "ZC3H18")
-
-
-evenDiff <- function(dir_name = NULL,
-                     input_f = NULL,
-                    output_folder = NULL,
-                    meta = NULL,
+evenDiff <- function(
+                    mapping_file = NULL,
+                    methylo_result,
                     names.meta = NULL){
 
-    data.all <- fread(file = input_f,sep = "\t")
+    data.all <- methylo_result
 
     data.all$ID <- paste(data.all$tad_name, data.all$ID, sep = ";")
 
-    meta <- fread(paste(dir_name, meta, sep = "/"))
+    meta <- fread(mapping_file)
     who <- meta == ""
     who <- apply(who, 1, sum, na.rm = TRUE)
     meta <- meta[which(who == 0), ]
 
 
-    sample.list <- meta$newNames
+    sample.list <- meta[[1]]
 
     who <- c("ID", "Gene_id", "parent")
 
@@ -122,9 +64,10 @@ evenDiff <- function(dir_name = NULL,
                                                sep = ""))
 
     rm(who)
-
+    Diff_list <- list()
     for (z in 1:length(names.meta)){
 
+        #print(names.meta[["IGHV"]])
         cat(c(names.meta[z], "\n"))
 
         analysis <- names.meta[z]
@@ -136,10 +79,12 @@ evenDiff <- function(dir_name = NULL,
         group1 <- groups[1]
         group2 <- groups[2]
 
+
         meta.keep <- meta[which(meta[[analysis]] == group1 | meta[[analysis]] ==
                                   group2), ]
 
-        sample.list <- meta.keep$newNames
+
+        sample.list <- meta.keep[[1]]
 
         df <- data.all[,..sample.list]
 
@@ -151,14 +96,14 @@ evenDiff <- function(dir_name = NULL,
         phenoMat <- model.matrix(~pheno)
         colnames(phenoMat) <- sub("^pheno", "", colnames(phenoMat))
 
-        fit <- lmFit(object = df, design = phenoMat)
+        fit <- limma::lmFit(object = df, design = phenoMat)
 
         gc()
         set.seed(6)
-        fit <- eBayes(fit)
+        fit <- limma::eBayes(fit)
 
         gc()
-        top.rank <- topTable(fit, number = nrow(df), adjust.method = "fdr",
+        top.rank <- limma::topTable(fit, number = nrow(df), adjust.method = "fdr",
                              sort.by = "p")
 
         sign.table <- top.rank[which(top.rank$adj.P.Val <= 0.01 &
@@ -182,25 +127,20 @@ evenDiff <- function(dir_name = NULL,
                                 by.x = "ID",
                                 by.y = "ID")
 
+
             sign.table <- merge(sign.table,
                                 data.all,
                                 by.x = "ID",
                                 by.y = "ID")
 
-            sign <- sign.genes %>% count(parents)
+            sign <- sign.genes %>% dplyr::count(parents)
+
 
             diffevent[z, 1] <- analysis
             diffevent[z, paste("p_", sign$parents, sep = "")] <- sign$n
 
-            # final file - export
-            write.table(sign.table,
-                        file = paste(output_folder, "/",
-                                    analysis, "_evenDiff.txt",
-                                    sep = ""),
-                        col.names = TRUE,
-                        row.names = FALSE,
-                        quote = FALSE,
-                        sep = "\t")
+            Diff_list[[analysis]] = sign.table
+
         }
     }
 
@@ -208,18 +148,25 @@ evenDiff <- function(dir_name = NULL,
 
     for(i in 2:ncol(diffevent)){
         diffevent[,i] <- as.numeric(diffevent[,i])
+        #print(diffevent[,i])
     }
 
-    diffevent$`total events` <- rowSums(diffevent[,2:ncol(diffevent)])
 
-    write.table(diffevent,
-                file = paste(output_folder, "/Summary_evenDiff.txt", sep = ""),
-                col.names = TRUE,
-                row.names = FALSE,
-                quote = FALSE,
-                sep = "\t")
+    diffevent$`total events` <- rowSums(diffevent[,2:ncol(diffevent)]) #rowSums
 
-    return(TRUE)
+
+
+    return(list(Diff_list,diffevent))
 
 }
 
+
+# result_evenDiff <- evenDiff(
+# mapping_file = "/Users/aspaor/Downloads/bloodcancer/metaData_groups.csv",
+# methylo_result = methylo_result,
+# names.meta = c("IGHV","Gender"))
+# mapping_file = "/Users/aspaor/Downloads/bloodcancer/metaData_groups.csv"
+# methylo_result = methylo_result
+# names.meta = c("IGHV","Gender")
+# #
+# print(result_evenDiff)
