@@ -2,20 +2,34 @@
 % Please edit documentation in R/motif_enrich.R
 \name{motifs_enrich}
 \alias{motifs_enrich}
-\title{This file contains functions used in the \verb{03_enrichmentAnalysis.R}
-script.
-This function is called by the \code{functional_analysis.R} script.
+\title{This function is called by the \code{functional_analysis.R} script.
 motifs_enrich}
 \usage{
 motifs_enrich(
   biodata,
-  motif_output_folder,
+  output_folder,
   dir_name,
   p_adjust_method,
   cut_off,
   tech,
-  exp_parent
+  exp_parent,
+  annotation_file
 )
+}
+\arguments{
+\item{output_folder}{name or filepath of the output folder}
+
+\item{dir_name}{name or filepath of the input folder}
+
+\item{p_adjust_method}{p adjustment method, the methods supported are:
+\verb{c("holm", "hochberg", "hommel", "bonferroni",}
+\verb{"BH", "BY", "fdr", "none")}}
+
+\item{cut_off}{cut-off Enrichr enrichment (adjusted) p-value}
+
+\item{tech}{Human Genome Reference used}
+
+\item{exp_parent}{number of the parent file of the expression data}
 }
 \value{
 

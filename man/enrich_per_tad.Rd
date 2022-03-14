@@ -2,10 +2,21 @@
 % Please edit documentation in R/go_pathway_enrich.R
 \name{enrich_per_tad}
 \alias{enrich_per_tad}
-\title{This function is called by the \verb{03_functional_analysis.R} script.
+\title{This function is called by the \code{functional_analysis.R} script.
 enrich_per_tad}
 \usage{
-enrich_per_tad(biodata, dbs, threshold, criterio, type)
+enrich_per_tad(biodata, dbs, cut_off, criterio, type)
+}
+\arguments{
+\item{dbs}{Databases used from EnrichR}
+
+\item{cut_off}{cut-off Enrichr enrichment (adjusted) p-value}
+
+\item{criterio}{Enrichr result column selected as criterio:
+\code{"p-value"} or \code{"adjusted p-value"}}
+
+\item{type}{the prevously selected databases acronyms used for the names
+of the outputs files e.g. GO_MF for GO_Molecular_Function_2018}
 }
 \value{
 
@@ -13,8 +24,4 @@ enrich_per_tad(biodata, dbs, threshold, criterio, type)
 \description{
 It performs enrichment analysis using the Enrichr tool.
 Enrichr input is the genes of the dataset grouped per TAD.
-}
-\examples{
-
-
 }

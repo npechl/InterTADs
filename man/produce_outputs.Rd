@@ -18,6 +18,3 @@ It manipulates the enriched data after the analysis and creates
 three output tables to be used for the Output csv files and the
 visualization.
 }
-\examples{
-
-}

@@ -1,86 +1,16 @@
-#' This file contains functions used in the `03_functional_analysis.R`
+#' This file contains functions used in the `functional_analysis.R`
 #' script.
 
-
-#' This function is called by the `03_functional_analysis.R` script.
-#' create_folders
-#'
-#' @param output_folder
-#'
-#' @description
-#' It creates the output folders.
-#'
-#' @return
-#'
-#' @export
-#'
-#' @examples
-#'
-create_folders <- function(output_folder) {
-
-    go_output_folder <- paste0(output_folder, "/GO EA Outputs")
-    kegg_output_folder <- paste0(output_folder, "/Pathways EA Outputs")
-    go_all_outputs <- paste0(go_output_folder, "/GO enrich all")
-    go_all_images <- paste0(go_all_outputs, "/Images")
-    kegg_all_outputs <- paste0(kegg_output_folder, "/Path enrich all")
-    kegg_all_images <- paste0(kegg_all_outputs, "/Images")
-    motif_output_folder <- paste0(output_folder, "/Motif EA Outputs")
-    image_output_folder <- paste0(motif_output_folder, "/Images")
-
-    dir.create(output_folder, showWarnings = FALSE)
-    dir.create(go_output_folder, showWarnings = FALSE)
-    dir.create(go_all_outputs, showWarnings = FALSE)
-    dir.create(go_all_images, showWarnings = FALSE)
-    dir.create(kegg_output_folder, showWarnings = FALSE)
-    dir.create(kegg_all_outputs, showWarnings = FALSE)
-    dir.create(kegg_all_images, showWarnings = FALSE)
-    dir.create(motif_output_folder, showWarnings = FALSE)
-    dir.create(image_output_folder, showWarnings = FALSE)
-
-    folder <- list(go_all_outputs = go_all_outputs,
-                    go_all_images = go_all_images,
-                    kegg_all_outputs = kegg_all_outputs,
-                    kegg_all_images = kegg_all_images,
-                    motif_outputs = motif_output_folder,
-                    motif_images = image_output_folder)
-
-    if (str_detect(output_folder, "TADiff")) {
-
-        go_per_outputs <- paste0(go_output_folder, "/GO enrich per TAD")
-        go_per_images <- paste0(go_per_outputs, "/Images")
-        kegg_per_outputs <- paste0(kegg_output_folder, "/Path enrich per TAD")
-        kegg_per_images <- paste0(kegg_per_outputs, "/Images")
-
-        dir.create(go_per_outputs, showWarnings = FALSE)
-        dir.create(go_per_images, showWarnings = FALSE)
-        dir.create(kegg_per_outputs, showWarnings = FALSE)
-        dir.create(kegg_per_images, showWarnings = FALSE)
-
-        folder <- append(folder, list(go_per_outputs = go_per_outputs,
-                                        go_per_images = go_per_images,
-                                        kegg_per_outputs = kegg_per_outputs,
-                                        kegg_per_images = kegg_per_images))
-    }
-
-    rm(go_output_folder, kegg_output_folder, go_all_outputs, go_all_images,
-        kegg_all_outputs, kegg_all_images, motif_output_folder,
-        image_output_folder, go_per_outputs, go_per_images,
-        kegg_per_outputs, kegg_per_images)
-
-    return(folder)
-}
-
-
-
-
-#' This function is called by the `03_functional_analysis.R` script.
+#' This function is called by the `functional_analysis.R` script.
 #' enrich_all
 #'
 #' @param biodata
-#' @param dbs
-#' @param threshold
-#' @param criterio
-#' @param type
+#' @param dbs Databases used from EnrichR
+#' @param cut_off cut-off Enrichr enrichment (adjusted) p-value
+#' @param criterio Enrichr result column selected as criterio:
+#'                `"p-value"` or `"adjusted p-value"`
+#' @param type the prevously selected databases acronyms used for the names
+#'             of the outputs files e.g. GO_MF for GO_Molecular_Function_2018
 #' @import dplyr
 #' @impot enrichR
 #'
@@ -92,14 +22,10 @@ create_folders <- function(output_folder) {
 #'
 #' @export
 #'
-#' @examples
-#'
-
-
 
 enrich_all <- function(biodata,
                         dbs,
-                        threshold,
+                        cut_off,
                         criterio,
                         type) {
 
@@ -131,13 +57,13 @@ enrich_all <- function(biodata,
 
         if (criterio == "p-value") {
 
-          enriched_terms <- subset(enriched_terms, P.value < threshold)
+          enriched_terms <- subset(enriched_terms, P.value < cut_off)
 
         }
         else if (criterio == "adjusted p-value") {
 
             enriched_terms <- subset(enriched_terms,
-                                    Adjusted.P.value < threshold)
+                                    Adjusted.P.value < cut_off)
         }
 
         result[[i]] <- enriched_terms
@@ -153,16 +79,18 @@ enrich_all <- function(biodata,
 }
 
 
-#' This function is called by the `03_functional_analysis.R` script.
+#' This function is called by the `functional_analysis.R` script.
 #' enrich_per_tad
 #'
 #' @param biodata
-#' @param dbs
-#' @param threshold
-#' @param criterio
-#' @param type
-#' @import dplyr
+#' @param dbs Databases used from EnrichR
+#' @param cut_off cut-off Enrichr enrichment (adjusted) p-value
+#' @param criterio Enrichr result column selected as criterio:
+#'                `"p-value"` or `"adjusted p-value"`
+#' @param type the prevously selected databases acronyms used for the names
+#'             of the outputs files e.g. GO_MF for GO_Molecular_Function_2018
 #'
+#' @import dplyr
 #'
 #' @description
 #' It performs enrichment analysis using the Enrichr tool.
@@ -173,13 +101,10 @@ enrich_all <- function(biodata,
 #'
 #' @export
 #'
-#' @examples
-#'
-#'
 
 enrich_per_tad <- function(biodata,
                             dbs,
-                            threshold,
+                            cut_off,
                             criterio,
                             type) {
 
@@ -216,13 +141,13 @@ enrich_per_tad <- function(biodata,
             enriched_terms <- as.data.table(enriched[[dbs[j]]])
             if (criterio == "p-value") {
 
-                enriched_terms <- subset(enriched_terms, P.value < threshold)
+                enriched_terms <- subset(enriched_terms, P.value < cut_off)
 
             }
             else if (criterio == "adjusted p-value") {
 
                 enriched_terms <- subset(enriched_terms,
-                                        Adjusted.P.value < threshold)
+                                        Adjusted.P.value < cut_off)
             }
 
             if (i==1) {
@@ -247,7 +172,7 @@ enrich_per_tad <- function(biodata,
 
 
 
-#' This function is called by the `03_functional_analysis.R` script.
+#' This function is called by the `functional_analysis.R` script.
 #' data_analysis
 #'
 #' @param enriched_terms
@@ -264,7 +189,7 @@ enrich_per_tad <- function(biodata,
 #'
 #' @export
 #'
-#' @examples
+
 
 
 data_analysis <- function(enriched_terms,
@@ -341,7 +266,6 @@ data_analysis <- function(enriched_terms,
 #'
 #' @export
 #'
-#' @examples
 
 calculate_pvalue <- function(data_extended,
                             data_selected,
@@ -417,7 +341,6 @@ calculate_pvalue <- function(data_extended,
 #'
 #' @export
 #'
-#' @examples
 #'
 
 produce_outputs <- function(data_with_p,
@@ -502,82 +425,3 @@ produce_outputs <- function(data_with_p,
 }
 
 
-#
-#
-# # This function is called by the "enrichmentAnalysis.R" script
-# # It is used to query the KEGG Pathway DB about the Kegg ids of the pathways
-# # returned from the enrichment analysis
-# getKEGGIds <- function(enriched_KEGG, genes_diff){
-#
-#   enriched_KEGG <- enriched_KEGG %>%
-#     dplyr::select(Term, Genes)
-#
-#   enriched_KEGG <- enriched_KEGG %>%
-#     group_by(Term) %>%
-#     summarise(Term,
-#               Genes = paste(Genes, collapse = ";"),) %>%
-#     as.data.table()
-#
-#   enriched_KEGG <- unique(enriched_KEGG)
-#
-#   enriched_KEGG$ID <- "NA"
-#   iter <- c(1:nrow(enriched_KEGG))
-#   for (i in iter){
-#     if (str_detect(enriched_KEGG$Term[i],"\\(")){
-#       split_term <- str_split(enriched_KEGG$Term[i],"\\(",simplify = T)
-#       enriched_KEGG$Term[i] <- split_term[1]
-#     }
-#     enriched_KEGG$Term[i] <- str_replace(enriched_KEGG$Term[i],"/","")
-#     k <- keggFind("pathway",c(enriched_KEGG$Term[i]))
-#     if (!is_empty(k)){
-#       enriched_KEGG$ID[i] <- str_replace(names(k[1]),"path:map","hsa")
-#     }
-#   }
-#
-#   enriched_KEGG <- enriched_KEGG[which(enriched_KEGG$ID != "NA"),]
-#
-#   genes_diff <- genes_diff %>%
-#     separate_rows(Gene_id, sep = "\\|") %>%
-#     as.data.table()
-#   genes_diff <- genes_diff[which((genes_diff$Gene_id != "NA") &
-#                   (genes_diff$Gene_id !="")), ]
-#
-#   output.csv <- data.table(Term = character(),
-#                            ID = character(),
-#                            Genes = character(),
-#                            diff = character())
-#   pathview.input <- data.table(Term = character(),
-#                                ID = character(),
-#                                Genes = character(),
-#                                diff = character())
-#
-#   loops <- c(1:nrow(enriched_KEGG))
-#   for (l in loops){
-#
-#     path <- enriched_KEGG[l]
-#     path <- path %>%
-#       separate_rows(Genes, sep = ";", convert = TRUE) %>%
-#       unique() %>%
-#       as.data.table()
-#     path <- merge(path, genes_diff,by.x = "Genes", by.y = "Gene_id")
-#     path <- group_by(path,Genes) %>%
-#       dplyr::summarise(ID,Term,Genes,diff = mean(diff)) %>%
-#       as.data.table() %>%
-#       unique()
-#
-#     output.path <- path %>%
-#       group_by(Term, ID) %>%
-#       summarise(Term, ID, Genes = paste0(Genes, collapse = "|"),
-#       diff = paste0(diff, collapse ="|")) %>%
-#       unique()
-#
-#     output.csv <- rbind(output.csv, output.path)
-#
-#     pathview.input <- rbind(pathview.input, path)
-#
-#   }
-#
-#   newlist <- list(pathview.input = pathview.input, output.csv = output.csv )
-#   return(newlist)
-# }
-#

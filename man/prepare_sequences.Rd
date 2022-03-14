@@ -5,10 +5,23 @@
 \title{This function is called by the \code{motifs_enrich} function.
 prepare_sequences}
 \usage{
-prepare_sequences(data, tech, motif_output_folder, exp_parent, dir_name)
+prepare_sequences(
+  data,
+  tech,
+  output_folder,
+  exp_parent,
+  dir_name,
+  annotation_file
+)
 }
 \arguments{
-\item{dir_name}{}
+\item{tech}{Human Genome Reference used}
+
+\item{output_folder}{name or filepath of the output folder}
+
+\item{exp_parent}{number of the parent file of the expression data}
+
+\item{dir_name}{name or filepath of the input folder}
 }
 \value{
 

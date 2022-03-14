@@ -5,39 +5,58 @@
 \title{evenDiff}
 \usage{
 evenDiff(
-  dir_name = NULL,
-  input_f = NULL,
-  output_folder = NULL,
-  meta = NULL,
-  names.meta = NULL
+  mapping_file = NULL,
+  methylo_result,
+  names.meta = NULL,
+  adj.PVal = NULL,
+  log_thr = NULL
 )
 }
 \arguments{
-\item{dir_name}{Directory of input datasets containing feature counts and
-frequency tables}
+\item{mapping_file}{A meta-data file}
 
-\item{output_folder}{Folder name for printing output tables}
-
-\item{meta}{meta-data file name used}
+\item{methylo_result}{}
 
 \item{names.meta}{meta data columns to process (names or indexes)}
 }
 \value{
-TRUE if function runs properly
+
 }
 \description{
 
 }
 \examples{
+result<- data_integration (
+counts_folder = system.file("extdata", "Datasets",
+                         "counts", package="InterTADs"),
+counts_fls = NULL,
+freq_folder = system.file("extdata", "Datasets",
+                         "freq", package="InterTADs"),
+freq_fls = NULL,
+mapping_file = system.file("extdata", "Datasets",
+                         "meta-data.csv", package="InterTADs"),
+
+tad_file =system.file("extdata", "Datasets",
+                     "hglft_genome_2dab_ec1330.bed", package="InterTADs"),
+tech = "hg38"
+)
+
+methylo_result <- prepare_methylation_values(
+integratedTADtable = result[[1]],
+mapping_file = system.file("extdata", "Datasets",
+                         "meta-data.csv", package="InterTADs"),
+meth_data = 2
+)
+
 result_evenDiff <- evenDiff(
-dir_name = system.file("extdata","Datasets",package='InterTADs'),
-input_f = system.file("extdata","results_bloodcancer",
-"integrated-tad-table-methNorm.txt",package='InterTADs'),
-output_folder = system.file("extdata","results_bloodcancer",
-package='InterTADs'),
-meta = "meta-data.csv",
-names.meta = c('groups'))
+mapping_file = system.file("extdata", "Datasets",
+"meta-data.csv", package="InterTADs"),
+methylo_result = methylo_result,
+names.meta = c('group'),
+adj.PVal = 0.01,
+log_thr = 4)
 
 print(result_evenDiff)
+
 
 }

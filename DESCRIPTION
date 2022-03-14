@@ -32,6 +32,8 @@ biocViews:
     org.Hs.eg.db,
     systemPipeR
 Imports:
+    S4Vectors,
+    IRanges,
     methods,
     systemPipeR,
     data.table,

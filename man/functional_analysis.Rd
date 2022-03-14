@@ -5,23 +5,28 @@
 \title{Functional analysis.}
 \usage{
 functional_analysis(
-  tech = "hg19",
-  exp_parent = 2,
-  dbs = c("GO_Molecular_Function_2018", "GO_Biological_Process_2018",
-    "KEGG_2019_Human"),
-  type = c("GO_MF", "GO_BP", "KEGG"),
-  genes_cover = c(11459, 14433, 7802),
-  p_adjust_method = "fdr",
-  cut_off = 0.05,
-  criterio = "adjusted p-value",
-  min_genes = 3,
-  system = "win",
-  dir_name = "Datasets",
-  output_folder = paste0("Outputs")
+  annotation_file = NULL,
+  tech = NULL,
+  files_evenDiff = NULL,
+  files_TADiff = NULL,
+  names.meta = NULL,
+  exp_parent = NULL,
+  dbs = NULL,
+  type = NULL,
+  genes_cover = NULL,
+  p_adjust_method = NULL,
+  cut_off = NULL,
+  criterio = NULL,
+  min_genes = NULL,
+  system = NULL,
+  dir_name = NULL,
+  output_folder = NULL
 )
 }
 \arguments{
 \item{tech}{Human Genome Reference used}
+
+\item{names.meta}{meta data columns to process (names or indexes)}
 
 \item{exp_parent}{number of the parent file of the expression data}
 
@@ -58,12 +63,57 @@ Enrichment analysis with GO terms, KEGG pathways and motif enrichment
 with TFs.
 Optional step to be performed on the output files
 of the \verb{02c_evenDiff.R} and \verb{02d_TADiff.R} scripts.
-
-
 }
 \examples{
-functional_analysis(tech = "hg19",
-exp_parent = 2,
+result<- data_integration (
+counts_folder = system.file("extdata", "Datasets",
+                         "counts", package="InterTADs"),
+counts_fls = NULL,
+freq_folder = system.file("extdata", "Datasets",
+                         "freq", package="InterTADs"),
+freq_fls = NULL,
+mapping_file = system.file("extdata", "Datasets",
+                         "meta-data.csv", package="InterTADs"),
+
+tad_file =system.file("extdata", "Datasets",
+                     "hglft_genome_2dab_ec1330.bed", package="InterTADs"),
+tech = "hg38"
+)
+
+methylo_result <- prepare_methylation_values(
+integratedTADtable = result[[1]],
+mapping_file = system.file("extdata", "Datasets",
+                         "meta-data.csv", package="InterTADs"),
+meth_data = 2
+)
+TADiff_result <- TADiff(
+
+mapping_file = system.file("extdata", "Datasets",
+                     "meta-data.csv", package="InterTADs"),
+                       methylo_result = methylo_result,
+                       names.meta = c("group"),
+                   expr_data = 3,
+                   adj.PVal = 0.01,
+                   log_thr = 2,
+                   tad_event = 4,
+                   pval_thr = 0.01,
+                   freq_thr = 15,
+                   mean_logFC_thr = 2)
+
+result_evenDiff <- evenDiff(
+mapping_file = system.file("extdata", "Datasets",
+"meta-data.csv", package="InterTADs"),
+methylo_result = methylo_result,
+names.meta = c('group'),
+adj.PVal = 0.01,
+log_thr = 4)
+
+func_anal_res <- functional_analysis(
+annotation_file = "/gencode.v36.annotation.gff3.gz",
+tech = "hg38",
+files_evenDiff = result_evenDiff[[1]],
+files_TADiff = TADiff_result[[1]],
+exp_parent = 3,
 dbs = c("GO_Molecular_Function_2018",
 "GO_Biological_Process_2018",
 "KEGG_2019_Human"),
@@ -74,6 +124,6 @@ cut_off = 0.05,
 criterio = "adjusted p-value",
 min_genes = 3,
 system = "win",
-dir_name = "Datasets",
+dir_name =  system.file("extdata", "Datasets", package="InterTADs"),
 output_folder = paste0("Outputs"))
 }

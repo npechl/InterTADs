@@ -7,9 +7,6 @@ motif_outputs}
 \usage{
 motif_outputs(report_list)
 }
-\arguments{
-\item{report_list}{}
-}
 \value{
 
 }
@@ -17,8 +14,4 @@ motif_outputs(report_list)
 It manipulates the enriched data after the analysis and creates
 three output data.tables to be used for the Output csv files and
 the visualization.
-}
-\examples{
-
-
 }

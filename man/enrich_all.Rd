@@ -2,10 +2,23 @@
 % Please edit documentation in R/go_pathway_enrich.R
 \name{enrich_all}
 \alias{enrich_all}
-\title{This function is called by the \verb{03_functional_analysis.R} script.
+\title{This file contains functions used in the \code{functional_analysis.R}
+script.
+This function is called by the \code{functional_analysis.R} script.
 enrich_all}
 \usage{
-enrich_all(biodata, dbs, threshold, criterio, type)
+enrich_all(biodata, dbs, cut_off, criterio, type)
+}
+\arguments{
+\item{dbs}{Databases used from EnrichR}
+
+\item{cut_off}{cut-off Enrichr enrichment (adjusted) p-value}
+
+\item{criterio}{Enrichr result column selected as criterio:
+\code{"p-value"} or \code{"adjusted p-value"}}
+
+\item{type}{the prevously selected databases acronyms used for the names
+of the outputs files e.g. GO_MF for GO_Molecular_Function_2018}
 }
 \value{
 
@@ -13,7 +26,4 @@ enrich_all(biodata, dbs, threshold, criterio, type)
 \description{
 It performs enrichment analysis using the Enrichr tool.
 Enrichr input is all the genes of the dataset.
-}
-\examples{
-
 }

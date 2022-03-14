@@ -2,23 +2,25 @@
 % Please edit documentation in R/TADiff.R
 \name{TADiff}
 \alias{TADiff}
-\title{Input parameters for TADiff part}
+\title{TADiff}
 \usage{
 TADiff(
-  dir_name = NULL,
-  output_folder = NULL,
-  meta = NULL,
+  mapping_file = NULL,
+  methylo_result,
   names.meta = NULL,
-  expr_data = NULL
+  expr_data = NULL,
+  adj.PVal = NULL,
+  log_thr = NULL,
+  tad_event = NULL,
+  pval_thr = NULL,
+  freq_thr = NULL,
+  mean_logFC_thr = NULL
 )
 }
 \arguments{
-\item{dir_name}{Directory of input datasets containing feature counts and
-frequency tables}
+\item{mapping_file}{A meta-data file}
 
-\item{output_folder}{Folder name for printing output tables}
-
-\item{meta}{meta-data file name used}
+\item{methylo_result}{}
 
 \item{names.meta}{meta data columns to process (names or indexes)}
 
@@ -32,10 +34,41 @@ If no expression is provided, place FALSE}
 
 }
 \examples{
-TADiff(dir_name = system.file("extdata","Datasets",package='InterTADs'),
-output_folder = system.file("extdata","results_bloodcancer",
-package='InterTADs'),
-meta = "meta-data.csv",
-names.meta = c('groups'),
-expr_data = 2)
+
+result<- data_integration (
+counts_folder = system.file("extdata", "Datasets",
+                         "counts", package="InterTADs"),
+counts_fls = NULL,
+freq_folder = system.file("extdata", "Datasets",
+                         "freq", package="InterTADs"),
+freq_fls = NULL,
+mapping_file = system.file("extdata", "Datasets",
+                         "meta-data.csv", package="InterTADs"),
+
+tad_file =system.file("extdata", "Datasets",
+                     "hglft_genome_2dab_ec1330.bed", package="InterTADs"),
+tech = "hg38"
+)
+
+methylo_result <- prepare_methylation_values(
+integratedTADtable = result[[1]],
+mapping_file = system.file("extdata", "Datasets",
+                         "meta-data.csv", package="InterTADs"),
+meth_data = 2
+)
+
+TADiff_result <- TADiff(
+
+mapping_file = system.file("extdata", "Datasets",
+                     "meta-data.csv", package="InterTADs"),
+                       methylo_result = methylo_result,
+                       names.meta = c("group"),
+                   expr_data = 3,
+                   adj.PVal = 0.01,
+                   log_thr = 2,
+                   tad_event = 4,
+                   pval_thr = 0.01,
+                   freq_thr = 15,
+                   mean_logFC_thr = 2)
+TADiff_result
 }

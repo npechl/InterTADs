@@ -18,6 +18,21 @@
 #' @export
 #'
 #' @examples
+#'
+#' result<- data_integration (
+#' counts_folder = system.file("extdata", "Datasets",
+#'                          "counts", package="InterTADs"),
+#' counts_fls = NULL,
+#' freq_folder = system.file("extdata", "Datasets",
+#'                          "freq", package="InterTADs"),
+#' freq_fls = NULL,
+#' mapping_file = system.file("extdata", "Datasets",
+#'                          "meta-data.csv", package="InterTADs"),
+#'
+#' tad_file =system.file("extdata", "Datasets",
+#'                      "hglft_genome_2dab_ec1330.bed", package="InterTADs"),
+#' tech = "hg38"
+#' )
 #' methylo_result <- prepare_methylation_values(
 #' integratedTADtable = result[[1]],
 #' mapping_file = system.file("extdata", "Datasets",
@@ -72,10 +87,6 @@ prepare_methylation_values <- function (
 }
 
 
-# methylo_result <- prepare_methylation_values(
-#     integratedTADtable = result[[1]],
-#     mapping_file = "/Users/aspaor/Downloads/bloodcancer/metaData_groups.csv",
-#     meth_data = 1
-# )
+
 
 

@@ -2,21 +2,17 @@
 % Please edit documentation in R/prepare_methylation_values.R
 \name{prepare_methylation_values}
 \alias{prepare_methylation_values}
-\title{Input parameters for TADiff part}
+\title{prepare_methylation_values}
 \usage{
-prepare_methylation_values(integratedTADtable, mapping_file)
+prepare_methylation_values(integratedTADtable, mapping_file, meth_data)
 }
 \arguments{
-\item{dir_name}{Directory of input datasets containing feature counts
-and frequency tables}
+\item{integratedTADtable}{IntegratedTADtable contains
+all data info about TADs}
 
-\item{output_folder}{Folder name for printing output tables}
+\item{mapping_file}{A meta-data file}
 
-\item{meta}{meta-data file name used}
-
-\item{names.meta}{meta data columns to process (names or indexes)}
-
-\item{meth_data}{Parent index of methylation data.
+\item{meth_data}{Parent index of methylation data, from meta-data.csv.
 If no methylation is provided, place FALSE}
 }
 \value{
@@ -24,4 +20,27 @@ If no methylation is provided, place FALSE}
 }
 \description{
 
+}
+\examples{
+
+result<- data_integration (
+counts_folder = system.file("extdata", "Datasets",
+                         "counts", package="InterTADs"),
+counts_fls = NULL,
+freq_folder = system.file("extdata", "Datasets",
+                         "freq", package="InterTADs"),
+freq_fls = NULL,
+mapping_file = system.file("extdata", "Datasets",
+                         "meta-data.csv", package="InterTADs"),
+
+tad_file =system.file("extdata", "Datasets",
+                     "hglft_genome_2dab_ec1330.bed", package="InterTADs"),
+tech = "hg38"
+)
+methylo_result <- prepare_methylation_values(
+integratedTADtable = result[[1]],
+mapping_file = system.file("extdata", "Datasets",
+                         "meta-data.csv", package="InterTADs"),
+meth_data = 2
+)
 }

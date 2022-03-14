@@ -1,18 +1,19 @@
-#' This file contains functions used in the `03_enrichmentAnalysis.R`
-#' script.
-
 
 
 #' This function is called by the `functional_analysis.R` script.
 #' motifs_enrich
 #'
 #' @param biodata
-#' @param motif_output_folder
-#' @param dir_name
-#' @param p_adjust_method
-#' @param cut_off
-#' @param tech
-#' @param exp_parent
+#' @param dir_name name or filepath of the input folder
+#' @param p_adjust_method p adjustment method, the methods supported are:
+#'                        `c("holm", "hochberg", "hommel", "bonferroni",`
+#'                        `"BH", "BY", "fdr", "none")`
+#' @param cut_off cut-off Enrichr enrichment (adjusted) p-value
+#' @param tech Human Genome Reference used
+#' @param output_folder name or filepath of the output folder
+#' @param annotation_file
+#' @param exp_parent number of the parent file of the expression data
+#'
 #' @importFrom utils data write.table
 #'
 #' @description
@@ -23,24 +24,25 @@
 #' @return
 #'
 #' @export
-#'
-#' @examples
+
 motifs_enrich <- function(biodata,
-                            motif_output_folder,
+                            output_folder,
                             dir_name,
                             p_adjust_method,
                             cut_off,
                             tech,
-                            exp_parent) {
+                            exp_parent,
+                          annotation_file) {
 
     motif_data <- prepare_sequences(biodata,
                                     tech,
-                                    motif_output_folder,
+                                    output_folder,
                                     exp_parent,
-                                    dir_name)
+                                    dir_name,
+                                    annotation_file)
 
     seq_tad_number <- get_dna_sequences(motif_data,
-                                        motif_output_folder,
+                                        output_folder,
                                         tech)
 
     # Perform motif enrichment analysis using PWMEnrich.
@@ -53,7 +55,7 @@ motifs_enrich <- function(biodata,
 
     for (i in c(1:nrow(seq_tad_number))) {
 
-        sequence <- readDNAStringSet(paste0(motif_output_folder,
+        sequence <- readDNAStringSet(paste0(output_folder,
                                             "/seq_perTADs.fasta"),
                                     format="fasta",
                                     skip = (seq_tad_number$start[i] - 1),
@@ -84,12 +86,11 @@ motifs_enrich <- function(biodata,
 }
 
 
-
 #' This function is called by the `functional_analysis.R` script.
 #' motif_outputs
 #'
 #' @param report_list
-#'
+#' @import dplyr
 #' @description
 #' It manipulates the enriched data after the analysis and creates
 #' three output data.tables to be used for the Output csv files and
@@ -98,8 +99,6 @@ motifs_enrich <- function(biodata,
 #' @return
 #'
 #' @export
-#'
-#' @examples
 #'
 #'
 
@@ -207,8 +206,10 @@ motif_outputs <- function(report_list) {
     top_motifs <- top_motifs %>%
         group_by(target) %>%
         summarise(target,
-                min_adjusted_p_value = min(adjusted_p_value),
+                min_adjusted_p_value = suppressWarnings(min(adjusted_p_value)),
                 id, adjusted_p_value)
+
+    #suppressWarnings(min(adjusted_p_value)) ## warning
 
     who_top <- which(top_motifs$adjusted_p_value ==
                                     top_motifs$min_adjusted_p_value)
@@ -237,11 +238,13 @@ motif_outputs <- function(report_list) {
 #' prepare_sequences
 #'
 #' @param data
-#' @param tech
-#' @param motif_output_folder
-#' @param exp_parent
-#' @param dir_name
+#' @param tech Human Genome Reference used
+#' @param output_folder name or filepath of the output folder
+#' @param exp_parent number of the parent file of the expression data
+#' @param annotation_file
+#' @param dir_name name or filepath of the input folder
 #'
+#' @import dplyr
 #' @description
 #' It is used to find the sequences, that correspond to TFBS
 #' from the genomic coordinates of the events.
@@ -250,17 +253,23 @@ motif_outputs <- function(report_list) {
 #'
 #' @export
 #'
-#' @examples
+#'
+
 prepare_sequences <- function(data,
                                 tech,
-                                motif_output_folder,
+                              output_folder,
                                 exp_parent,
-                                dir_name) {
+                                dir_name,
+                              annotation_file) {
 
     # Filter for the sequences related to TFs location
-    data <- data %>%
-        dplyr::select(tad_name, start_position, end_position,
-                    chromosome_name, parent, ID)
+    ##
+    # data <- data %>%
+    #     select(tad_name, start_position, end_position,
+    #                 chromosome_name, parent, ID)
+    ##
+    data <- data[,c("tad_name", "start_position", "end_position",
+                    "chromosome_name", "parent", "ID")]
 
     data_cg <- data[data$parent != exp_parent, ]
 
@@ -272,22 +281,23 @@ prepare_sequences <- function(data,
     # Keep promoter of ENSG sequences
     if (tech == "hg19") {
 
-        file_hg <- read.gff(paste0(dir_name, "/gencode.v19.annotation.gff3.gz"))
+        file_hg <- read.gff(paste0(dir_name, annotation_file))
 
     } else if (tech == "hg38") {
 
-        file_hg <- read.gff(paste0(dir_name, "/gencode.v36.annotation.gff3.gz"))
+        file_hg <- read.gff(paste0(dir_name, annotation_file))
 
     }
 
 
-    data_ensg <- data[data$parent == exp_parent, ]
+    data_ensg <- data[(data$parent == exp_parent) ,]
     data_ensg$partID <- unlist(lapply(strsplit(data_ensg$ID,";"), '[[', 2))
 
     gr <- GRanges(seqnames = Rle(paste("chr", data_ensg$chromosome_name,
                                         sep = "")),
                 ranges = IRanges(start = as.numeric(data_ensg$start_position),
                                     end = as.numeric(data_ensg$end_position)))
+
 
     hg <- GRanges(seqnames = Rle(file_hg$seqid),
                     ranges = IRanges(start = as.numeric(file_hg$start),
@@ -299,6 +309,7 @@ prepare_sequences <- function(data,
     overlaps_to <- overlaps@to
 
     file_hg <- as.data.table(file_hg)
+
     file_hg <- file_hg[ ,c("strand", "attributes")]
 
     strand_data <- cbind(data_ensg[overlaps_from, 1:7],
@@ -307,6 +318,7 @@ prepare_sequences <- function(data,
     strand_data <- strand_data[str_detect(strand_data$attributes,
                                             strand_data$partID), ]
 
+    strand_data <-  as.data.table(strand_data)
     data_ensg <- strand_data[, -c("attributes")]
 
     data_ensg <- unique(data_ensg)
@@ -327,7 +339,7 @@ prepare_sequences <- function(data,
                     chromosome_name, parent, ID)
 
     data <- rbind(data_cg, data_ensg)
-    data <- data[order(data$tad_name,data$start_position, decreasing = FALSE)]
+    data <- data[order(data$tad_name,data$start_position, decreasing = FALSE),]
     data$AA <- c(1:nrow(data))
 
     keep_parent_ID <- unique(data[,c("AA", "ID", "parent")])
@@ -375,7 +387,7 @@ prepare_sequences <- function(data,
                             "merged_from", "parent")
 
     write.table(new_data,
-                paste0(motif_output_folder,"/prepared sequences info.csv"),
+                paste0(output_folder,"/prepared sequences info.txt"),
                 sep = "\t", row.names = FALSE)
 
     rm(data_cg, data_ensg, data, file_hg, gr, hg, overlaps,
@@ -390,8 +402,8 @@ prepare_sequences <- function(data,
 #' get_dna_sequences
 #'
 #' @param input_data
-#' @param outputs_folder
-#' @param tech
+#' @param output_folder name or filepath of the output folder
+#' @param tech Human Genome Reference used
 #'
 #' @description
 #' It is used to query the Rest Ensembl API.
@@ -402,11 +414,10 @@ prepare_sequences <- function(data,
 #'
 #' @export
 #'
-#' @examples
 get_dna_sequences <- function(input_data,
-                                outputs_folder,
+                                output_folder,
                                 tech) {
-
+    #input_data <- motif_data
     if (tech == "hg19") {
 
         hg_version <- "GRCh37"
@@ -457,9 +468,8 @@ get_dna_sequences <- function(input_data,
         }
 
         if (!is.null(seq)) {
-
             write.fasta(sequences = as.list(seq$dna_seq), names = seq$tad,
-                        file.out = paste0(outputs_folder,"/seq_perTADs.fasta"),
+                        file.out = paste0(output_folder,"/seq_perTADs.fasta"),
                         open = "a")
 
             seq_tad_number$end[i] <- (nrow(seq) + seq_tad_number$start[i] - 1)

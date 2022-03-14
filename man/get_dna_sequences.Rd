@@ -5,10 +5,12 @@
 \title{This function is called by the \code{motifs_enrich} function.
 get_dna_sequences}
 \usage{
-get_dna_sequences(input_data, outputs_folder, tech)
+get_dna_sequences(input_data, output_folder, tech)
 }
 \arguments{
-\item{tech}{}
+\item{output_folder}{name or filepath of the output folder}
+
+\item{tech}{Human Genome Reference used}
 }
 \value{
 

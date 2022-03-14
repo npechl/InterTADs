@@ -21,11 +21,35 @@
 #' @export
 #'
 #' @examples
+#' result<- data_integration (
+#' counts_folder = system.file("extdata", "Datasets",
+#'                          "counts", package="InterTADs"),
+#' counts_fls = NULL,
+#' freq_folder = system.file("extdata", "Datasets",
+#'                          "freq", package="InterTADs"),
+#' freq_fls = NULL,
+#' mapping_file = system.file("extdata", "Datasets",
+#'                          "meta-data.csv", package="InterTADs"),
+#'
+#' tad_file =system.file("extdata", "Datasets",
+#'                      "hglft_genome_2dab_ec1330.bed", package="InterTADs"),
+#' tech = "hg38"
+#' )
+#'
+#' methylo_result <- prepare_methylation_values(
+#' integratedTADtable = result[[1]],
+#' mapping_file = system.file("extdata", "Datasets",
+#'                          "meta-data.csv", package="InterTADs"),
+#' meth_data = 2
+#' )
+#'
 #' result_evenDiff <- evenDiff(
 #' mapping_file = system.file("extdata", "Datasets",
 #' "meta-data.csv", package="InterTADs"),
 #' methylo_result = methylo_result,
-#' names.meta = c('group'))
+#' names.meta = c('group'),
+#' adj.PVal = 0.01,
+#' log_thr = 4)
 #'
 #' print(result_evenDiff)
 #'
@@ -35,7 +59,9 @@
 evenDiff <- function(
                     mapping_file = NULL,
                     methylo_result,
-                    names.meta = NULL){
+                    names.meta = NULL,
+                    adj.PVal = NULL,
+                    log_thr = NULL){
 
     data.all <- methylo_result
 
@@ -103,11 +129,11 @@ evenDiff <- function(
         fit <- limma::eBayes(fit)
 
         gc()
-        top.rank <- limma::topTable(fit, number = nrow(df), adjust.method = "fdr",
-                             sort.by = "p")
+        top.rank <- limma::topTable(fit, number = nrow(df),
+                            adjust.method = "fdr",sort.by = "p")
 
-        sign.table <- top.rank[which(top.rank$adj.P.Val <= 0.01 &
-                                       abs(top.rank$logFC) > 4), ]
+        sign.table <- top.rank[which(top.rank$adj.P.Val <= adj.PVal &
+                                       abs(top.rank$logFC) > log_thr), ]
 
         if (nrow(sign.table) == 0) {
 
@@ -161,12 +187,3 @@ evenDiff <- function(
 }
 
 
-# result_evenDiff <- evenDiff(
-# mapping_file = "/Users/aspaor/Downloads/bloodcancer/metaData_groups.csv",
-# methylo_result = methylo_result,
-# names.meta = c("IGHV","Gender"))
-# mapping_file = "/Users/aspaor/Downloads/bloodcancer/metaData_groups.csv"
-# methylo_result = methylo_result
-# names.meta = c("IGHV","Gender")
-# #
-# print(result_evenDiff)

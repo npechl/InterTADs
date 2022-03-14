@@ -2,7 +2,7 @@
 % Please edit documentation in R/go_pathway_enrich.R
 \name{data_analysis}
 \alias{data_analysis}
-\title{This function is called by the \verb{03_functional_analysis.R} script.
+\title{This function is called by the \code{functional_analysis.R} script.
 data_analysis}
 \usage{
 data_analysis(

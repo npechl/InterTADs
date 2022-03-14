@@ -1,0 +1,4 @@
+list(structure(list(rank = 1, target = "UW.Motif.0118", id = "UW.Motif.0118", 
+    raw.score = 22.3049724088172, p.value = 3.42385937345817e-06, 
+    top.motif.prop = 1, adjusted.p.value = 0.00783036638709883, 
+    tad = "TAD1023"), row.names = 1L, class = "data.frame"))

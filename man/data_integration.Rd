@@ -27,10 +27,12 @@ data_integration(
 
 \item{tad_file}{BED file containing information about TADs}
 
-\item{tech}{Homo sapiens (human) genome assembly}
+\item{tech}{Human Genome Reference used}
 }
 \value{
-
+A list of integratedTADtable and summary. IntegratedTADtable contains
+all data info about TADs and summary explains types of different events
+(methylation,mutation,expression).
 }
 \description{
 

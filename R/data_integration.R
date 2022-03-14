@@ -7,7 +7,7 @@
 #' @param freq_fls A vector of paths to files of freq NGS data
 #' @param mapping_file A meta-data file
 #' @param tad_file BED file containing information about TADs
-#' @param tech Homo sapiens (human) genome assembly
+#' @param tech Human Genome Reference used
 #'
 #' @import data.table
 #' @import systemPipeR
@@ -15,8 +15,10 @@
 #' @import TxDb.Hsapiens.UCSC.hg19.knownGene
 #' @import TxDb.Hsapiens.UCSC.hg38.knownGene
 #' @import annotables
-#' @import GenomicRanges
-#' @importFrom stringr str_detect str_replace
+#' @import IRanges
+#' @importFrom S4Vectors Rle queryHits subjectHits
+#' @importFrom  GenomicRanges GRanges
+#' @importFrom stringr str_detect str_replace str_to_lower str_remove
 #'
 #' @description
 #'
@@ -430,15 +432,5 @@ data_integration <- function(
 
 
 
-# result<- data_integration (
-# counts_folder = '/Users/aspaor/Downloads/bloodcancer/counts',
-# counts_fls = NULL,
-# freq_folder = "/Users/aspaor/Downloads/bloodcancer/freq",
-# freq_fls = NULL,
-# mapping_file = "/Users/aspaor/Downloads/bloodcancer/metaData_groups.csv",
-#
-# tad_file ='/Users/aspaor/Downloads/bloodcancer/hglft_genome_2dab_ec1330.bed',
-# tech = "hg38"
-# )
 
 

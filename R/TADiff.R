@@ -17,13 +17,42 @@
 #' @export
 #'
 #' @examples
+#'
+#' result<- data_integration (
+#' counts_folder = system.file("extdata", "Datasets",
+#'                          "counts", package="InterTADs"),
+#' counts_fls = NULL,
+#' freq_folder = system.file("extdata", "Datasets",
+#'                          "freq", package="InterTADs"),
+#' freq_fls = NULL,
+#' mapping_file = system.file("extdata", "Datasets",
+#'                          "meta-data.csv", package="InterTADs"),
+#'
+#' tad_file =system.file("extdata", "Datasets",
+#'                      "hglft_genome_2dab_ec1330.bed", package="InterTADs"),
+#' tech = "hg38"
+#' )
+#'
+#' methylo_result <- prepare_methylation_values(
+#' integratedTADtable = result[[1]],
+#' mapping_file = system.file("extdata", "Datasets",
+#'                          "meta-data.csv", package="InterTADs"),
+#' meth_data = 2
+#' )
+#'
 #' TADiff_result <- TADiff(
 #'
 #' mapping_file = system.file("extdata", "Datasets",
 #'                      "meta-data.csv", package="InterTADs"),
 #'                        methylo_result = methylo_result,
 #'                        names.meta = c("group"),
-#'                    expr_data = 3)
+#'                    expr_data = 3,
+#'                    adj.PVal = 0.01,
+#'                    log_thr = 2,
+#'                    tad_event = 4,
+#'                    pval_thr = 0.01,
+#'                    freq_thr = 15,
+#'                    mean_logFC_thr = 2)
 #' TADiff_result
 
 
@@ -31,7 +60,13 @@ TADiff<- function(
                   mapping_file = NULL,
                   methylo_result,
                   names.meta = NULL,
-                  expr_data = NULL){
+                  expr_data = NULL,
+                  adj.PVal = NULL,
+                  log_thr = NULL,
+                  tad_event = NULL,
+                  pval_thr = NULL,
+                  freq_thr = NULL,
+                  mean_logFC_thr = NULL){
 
 
     data.all <- methylo_result
@@ -96,8 +131,8 @@ TADiff<- function(
         top.rank <- topTable(fit, number = nrow(df), adjust.method = "fdr",
                             sort.by = "p")
 
-        sign.table <- top.rank[which(top.rank$adj.P.Val <= 0.01 &
-                                        abs(top.rank$logFC) > 2), ]
+        sign.table <- top.rank[which(top.rank$adj.P.Val <= adj.PVal &
+                                        abs(top.rank$logFC) > log_thr), ]
 
         if (nrow(sign.table) == 0) {
 
@@ -125,8 +160,6 @@ TADiff<- function(
             sign.tad.info <- sign.table %>%
             dplyr::group_by(tad_name) %>%
             dplyr::summarise(count = n())
-
-
 
             # annotate tad.info table
 
@@ -203,10 +236,10 @@ TADiff<- function(
                                         by = "tad_name" )
 
                 tad.all.info.f <- tad.all.info %>%
-                    dplyr::filter(count.x > 4) %>%
-                    dplyr::filter(pvalue < 0.01) %>%
-                    dplyr::filter(freq > 15) %>%
-                    dplyr::filter(mean_logFC > 2)
+                    dplyr::filter(count.x > tad_event) %>%
+                    dplyr::filter(pvalue < pval_thr) %>%
+                    dplyr::filter(freq > freq_thr) %>%
+                    dplyr::filter(mean_logFC > mean_logFC_thr)
 
                 sign_table[z,1] <- analysis
                 sign_table[z,2] <- as.character(nrow(tad.all.info.f))
@@ -248,12 +281,6 @@ TADiff<- function(
 }
 
 
-# TADiff_result <- TADiff(
-#
-# mapping_file = "/Users/aspaor/Downloads/bloodcancer/metaData_groups.csv",
-#                        methylo_result = methylo_result,
-#                        names.meta = c("IGHV","Gender"),
-#                    expr_data = 2)
-# TADiff_result
+
 
 
