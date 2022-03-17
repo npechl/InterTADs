@@ -117,8 +117,8 @@ data_integration <- function(
     freq_folder = NULL,
     freq_fls = NULL,
 
-    mapping_file = mapping_file,
-    tad_file = tad_file,
+    mapping_file,
+    tad_file,
     tech = "hg38"
 ) {
 
