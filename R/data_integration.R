@@ -55,52 +55,56 @@
 # 
 # # example 1
 # result<- data_integration (
-#     
+# 
 #     counts_folder = system.file(
 #         "extdata", "Datasets", "counts", package = "InterTADs"
 #     ),
-#     
+# 
 #     freq_folder = system.file(
 #         "extdata", "Datasets", "freq", package = "InterTADs"
 #     ),
-#     
+# 
 #     mapping_file = system.file(
 #         "extdata", "Datasets", "meta-data.csv", package = "InterTADs"
 #     ),
-#     
+# 
 #     tad_file =system.file(
-#         "extdata", "Datasets", 
+#         "extdata", "Datasets",
 #         "hglft_genome_2dab_ec1330.bed", package = "InterTADs"
 #     ),
-#     
+# 
 #     tech = "hg19"
 # )
 # 
 # 
 # # example 2
 # result<- data_integration (
-#     
+# 
 #     counts_fls = list.files(
 #         system.file(
 #             "extdata", "Datasets", "counts", package = "InterTADs"
-#         )
+#         ),
+# 
+#         full.names = TRUE
 #     ),
-#     
+# 
 #     freq_fls =  list.files(
 #         system.file(
 #             "extdata", "Datasets", "freq", package = "InterTADs"
-#         )
+#         ),
+# 
+#         full.names = TRUE
 #     ),
-#     
+# 
 #     mapping_file = system.file(
 #         "extdata", "Datasets", "meta-data.csv", package = "InterTADs"
 #     ),
-#     
+# 
 #     tad_file =system.file(
-#         "extdata", "Datasets", 
+#         "extdata", "Datasets",
 #         "hglft_genome_2dab_ec1330.bed", package = "InterTADs"
 #     ),
-#     
+# 
 #     tech = "hg19"
 # )
 
