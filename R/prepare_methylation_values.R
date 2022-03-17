@@ -1,43 +1,66 @@
 
 #' prepare_methylation_values
 #'
-#' @param meth_data Parent index of methylation data, from meta-data.csv.
-#' If no methylation is provided, place FALSE
-#' @param integratedTADtable IntegratedTADtable contains
-#' all data info about TADs
+#' @param meth_data 
+#' Parent index of methylation data, from meta-data.csv.
+#' 
+#' @param integratedTADtable 
+#' IntegratedTADtable contains all data info about TADs. This is the output
+#' integrated table from data_integration function.
 #'
-#' @param mapping_file A meta-data file
+#' @param mapping_file 
+#' A mapping file containing mapping betwen the columns of the input 
+#' NGS datasets. The first column corresponds to the sample ID that 
+#' will be used in the output file. The following columns correspond 
+#' to the column names of the input datasets. 
+#' The file also contains the related sample meta-data
 #'
 #' @import data.table
 #'
 #' @description
+#' 
+#' In case DNA methylation datasets are provided this function reverses 
+#' methylation values (0% -> 100%, 100% -> 0%). The user can skip this 
+#' function in case it is not suitable for the provided dataset. 
 #'
 #' @return
 #'
+#' An integrated TAD data table with the reversed methylation 
+#' values is returned.
 #'
 #' @export
 #'
 #' @examples
 #'
-#' result<- data_integration (
-#' counts_folder = system.file("extdata", "Datasets",
-#'                          "counts", package="InterTADs"),
-#' counts_fls = NULL,
-#' freq_folder = system.file("extdata", "Datasets",
-#'                          "freq", package="InterTADs"),
-#' freq_fls = NULL,
-#' mapping_file = system.file("extdata", "Datasets",
-#'                          "meta-data.csv", package="InterTADs"),
+#' result <- data_integration (
 #'
-#' tad_file =system.file("extdata", "Datasets",
-#'                      "hglft_genome_2dab_ec1330.bed", package="InterTADs"),
-#' tech = "hg38"
+#'     counts_folder = system.file(
+#'         "extdata", "Datasets", "counts", package = "InterTADs"
+#'     ),
+#' 
+#'     freq_folder = system.file(
+#'         "extdata", "Datasets", "freq", package = "InterTADs"
+#'     ),
+#' 
+#'     mapping_file = system.file(
+#'        "extdata", "Datasets", "meta-data.csv", package = "InterTADs"
+#'    ),
+#'
+#'     tad_file =system.file(
+#'        "extdata", "Datasets",
+#'        "hglft_genome_2dab_ec1330.bed", package = "InterTADs"
+#'     ),
+#' 
+#'     tech = "hg19"
 #' )
+#' 
+#' 
 #' methylo_result <- prepare_methylation_values(
-#' integratedTADtable = result[[1]],
-#' mapping_file = system.file("extdata", "Datasets",
-#'                          "meta-data.csv", package="InterTADs"),
-#' meth_data = 2
+#'     integratedTADtable = result[[1]],
+#'     mapping_file = system.file(
+#'         "extdata", "Datasets", "meta-data.csv", package = "InterTADs"
+#'     ),
+#'     meth_data = 2
 #' )
 
 
@@ -73,15 +96,6 @@ prepare_methylation_values <- function (
     other <- data.all[which(data.all$parent != meth_data), ]
 
     data.all <- rbind(meth.regulatory, other)
-
-
-    # write.table(data.all,
-    #             file = "./TESTintegrated-tad-table-methNormTEST.txt",
-    #
-    #             col.names = TRUE,
-    #             row.names = FALSE,
-    #             quote = FALSE,
-    #             sep = "\t")
 
     return(data.all)
 }

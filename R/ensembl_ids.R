@@ -1,71 +1,73 @@
-
 #' ensembl_ids
 #'
-#' @param expr_data Parent index of expression data.
-#' @param input_file
+#' @param expr_data 
+#' Parent index of expression data.
+#' 
+#' @param integratedTADtable
+#' IntegratedTADtable contains all data info about TADs. 
+#' This is the output integrated table 
+#' from data_integration function (or prepare_methylation_values function).
 #'
 #' @import biomaRt
 #' @import data.table
 #'
 #' @description
+#' Convert external gene IDs to ensembl IDs. 
+#' In case the user has no gene IDs or do not wish to convert 
+#' the provided gene IDs to ensembl IDs, is able to skip this function.
+#' Note the the functional analysis will perform only with ensembl IDs.
 #'
 #' @return
-#' A table with matched ensembl_ids
+#' A table with matched ensembl_ids.
 #'
 #'
 #' @export
 #'
 #' @examples
 #' result<- data_integration (
-#' counts_folder = system.file("extdata", "Datasets",
-#'                          "counts", package="InterTADs"),
-#' counts_fls = NULL,
-#' freq_folder = system.file("extdata", "Datasets",
-#'                          "freq", package="InterTADs"),
-#' freq_fls = NULL,
-#' mapping_file = system.file("extdata", "Datasets",
-#'                          "meta-data.csv", package="InterTADs"),
-#'
-#' tad_file =system.file("extdata", "Datasets",
-#'                      "hglft_genome_2dab_ec1330.bed", package="InterTADs"),
-#' tech = "hg38"
+#' 
+#'     counts_folder = system.file(
+#'         "extdata", "Datasets", "counts", package = "InterTADs"
+#'     ),
+#' 
+#'     freq_folder = system.file(
+#'         "extdata", "Datasets", "freq", package = "InterTADs"
+#'     ),
+#' 
+#'     mapping_file = system.file(
+#'         "extdata", "Datasets", "meta-data.csv", package = "InterTADs"
+#'     ),
+#' 
+#'     tad_file =system.file(
+#'         "extdata", "Datasets",
+#'         "hglft_genome_2dab_ec1330.bed", package = "InterTADs"
+#'     ),
+#' 
+#'     tech = "hg19"
 #' )
-#' methylo_result <- prepare_methylation_values(
-#' integratedTADtable = result[[1]],
-#' mapping_file = system.file("extdata", "Datasets",
-#'                          "meta-data.csv", package="InterTADs"),
-#' meth_data = 2
-#' )
-#'
+#' 
 #' result_ensmbl <- ensembl_ids(
-#' input_file= methylo_result,
-#' expr_data = 3)
-#'
-#'
+#'     input_file = results[[1]],
+#'     expr_data = 3
+#' )
 
 
+ensembl_ids <- function(
+    integratedTADtable,
+    expr_data
+) {
 
-
-ensembl_ids <- function(input_file,
-                        expr_data){
-
-    # data.all <- fread(paste(output_folder,
-    #                         input_file,
-    #                         sep = ""),sep = "\t")
-
-    #print(input_file)
-    data.all <- input_file
-
-
-    expression <- data.all[which(data.all$parent == expr_data), ]
+    expression <- integratedTADtable[which(integratedTADtable$parent == expr_data), ]
 
     ensembl.expression <- list()
 
 
     if( any(str_detect(expression$ID, "ENSG")) ) {
 
-        ensembl.expression[[1]] <- expression[which(str_detect(expression$ID,
-                                                               "ENSG")), ]
+        ensembl.expression[[1]] <- expression[which(
+            str_detect(expression$ID, "ENSG")
+        ), ]
+        
         expression <- expression[which(!str_detect(expression$ID, "ENSG")), ]
 
     }
@@ -73,19 +75,26 @@ ensembl_ids <- function(input_file,
 
     if(nrow(expression) > 0) {
 
-        ensembl <- useEnsembl(biomart = "genes",
-                            dataset = "hsapiens_gene_ensembl")
+        ensembl <- useEnsembl(
+            biomart = "genes",
+            dataset = "hsapiens_gene_ensembl"
+        )
 
-        new_gene_ids <- getBM(attributes = c('entrezgene_id','ensembl_gene_id'),
-                                filters = 'entrezgene_id',
-                                values = expression$ID,
-                                mart = ensembl)
+        new_gene_ids <- getBM(
+            attributes = c('entrezgene_id','ensembl_gene_id'),
+            filters = 'entrezgene_id',
+            values = expression$ID,
+            mart = ensembl
+        )
 
         who <- match(new_gene_ids$entrezgene_id, expression$ID)
+        
         expression[who,]$ID <- new_gene_ids$ensembl_gene_id
 
-        ensembl.expression[[2]] <- expression[which(str_detect(expression$ID,
-                                                               "ENSG")), ]
+        ensembl.expression[[2]] <- expression[which(
+            str_detect(expression$ID, "ENSG")
+        ), ]
+        
         expression <- expression[which(!str_detect(expression$ID, "ENSG")), ]
 
     }
@@ -94,17 +103,20 @@ ensembl_ids <- function(input_file,
 
     if(nrow(expression) > 0) {
 
-        new_gene_ids <- getBM(attributes = c('external_gene_name',
-                                             'ensembl_gene_id'),
-                                filters = 'external_gene_name',
-                                values = expression$ID,
-                                mart = ensembl)
+        new_gene_ids <- getBM(
+            attributes = c('external_gene_name', 'ensembl_gene_id'),
+            filters = 'external_gene_name',
+            values = expression$ID,
+            mart = ensembl
+        )
 
         who <- match(new_gene_ids$external_gene_name, expression$ID)
         expression[who,]$ID <- new_gene_ids$ensembl_gene_id
 
-        ensembl.expression[[3]] <- expression[which(str_detect(expression$ID,
-                                                               "ENSG")), ]
+        ensembl.expression[[3]] <- expression[which(
+            str_detect(expression$ID, "ENSG")
+        ), ]
+        
         expression <- expression[which(!str_detect(expression$ID, "ENSG")), ]
 
     }
@@ -115,33 +127,22 @@ ensembl_ids <- function(input_file,
     ensembl.expression <- rbindlist(ensembl.expression)
 
 
-    other <- data.all[which(data.all$parent != expr_data), ]
+    other <- integratedTADtable[which(integratedTADtable$parent != expr_data), ]
 
 
-    data.all <- rbind(expression, other)
+    integratedTADtable <- rbind(expression, other)
 
 
-    # write.table(data.all,
-    #             file = paste(output_folder,
-    #                          "/integrated-tad-table-methNorm-ensembl.txt",
-    #                          sep = ""),
-    #             col.names = TRUE,
-    #             row.names = FALSE,
-    #             quote = FALSE,
-    #             sep = "\t")
-    if (length(ensembl.expression$chromosome_name)==0){
-        message("None ensembl id was mached")
-        return(NULL)
-    }
-    else{
+    if (length(ensembl.expression$chromosome_name) == 0){
+        
+        message("None ensembl IDs were matched")
+        return(integratedTADtable)
+        
+    } else {
 
-        return(data.all)
+        return(integratedTADtable)
     }
 
 }
-
-# new_result_ensmbl <- ensembl_ids(
-# input_file= methylo_result,
-# expr_data = 2)
 
 
