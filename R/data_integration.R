@@ -1,13 +1,35 @@
 #'
-#' Input parameters for Data Integration part
+#' Data Integration part
 #'
-#' @param counts_folder Path to a repository of counts NGS data
-#' @param counts_fls A vector of paths to files of counts NGS data
-#' @param freq_folder Path to a repository of freq NGS data
-#' @param freq_fls A vector of paths to files of freq NGS data
-#' @param mapping_file A meta-data file
-#' @param tad_file BED file containing information about TADs
-#' @param tech Human Genome Reference used
+#' @param counts_folder 
+#' A stringr-path to a repository containing files 
+#' with NGS counts data (e.g. expression count table).
+#' 
+#' @param counts_fls 
+#' A character vector of paths to files 
+#' with NGS counts data (e.g. expression count table).
+#' 
+#' @param freq_folder 
+#' A stringr-path to a repository containing files 
+#' with NGS frequency data (e.g. DNA methylation table).
+#' 
+#' @param freq_fls 
+#' A character vector of paths to files 
+#' with NGS frequency data (e.g. DNA methylation table).
+#' 
+#' @param mapping_file 
+#' A mapping file containing mapping betwen the columns of the input 
+#' NGS datasets. The first column corresponds to the sample ID that 
+#' will be used in the output file. The following columns correspond 
+#' to the column names of the input datasets. 
+#' The file also contains the related sample meta-data
+#' 
+#' @param tad_file 
+#' A BED file containing information 
+#' about the desired TADs' chromosomal location.
+#' 
+#' @param tech 
+#' Human Genome Reference technology, either "hg19" or "hg38" can be used.
 #'
 #' @import data.table
 #' @import systemPipeR
@@ -15,34 +37,73 @@
 #' @import TxDb.Hsapiens.UCSC.hg19.knownGene
 #' @import TxDb.Hsapiens.UCSC.hg38.knownGene
 #' @import annotables
-#' @import IRanges
+#' @import IRanges 
 #' @importFrom S4Vectors Rle queryHits subjectHits
 #' @importFrom  GenomicRanges GRanges
 #' @importFrom stringr str_detect str_replace str_to_lower str_remove
 #'
 #' @description
 #'
-#' @return A list of integratedTADtable and summary. IntegratedTADtable contains
-#' all data info about TADs and summary explains types of different events
-#' (methylation,mutation,expression).
+#' @return 
+#' A list of integratedTADtable and summary. 
+#' IntegratedTADtable contains all data info about TADs and 
+#' summary explains types of different events (methylation, expression etc.).
 #'
 #' @export
 #'
 #' @examples
-#' result<- data_integration (
-#' counts_folder = system.file("extdata", "Datasets",
-#'                          "counts", package="InterTADs"),
-#' counts_fls = NULL,
-#' freq_folder = system.file("extdata", "Datasets",
-#'                          "freq", package="InterTADs"),
-#' freq_fls = NULL,
-#' mapping_file = system.file("extdata", "Datasets",
-#'                          "meta-data.csv", package="InterTADs"),
-#'
-#' tad_file =system.file("extdata", "Datasets",
-#'                      "hglft_genome_2dab_ec1330.bed", package="InterTADs"),
-#' tech = "hg38"
-#' )
+# 
+# # example 1
+# result<- data_integration (
+#     
+#     counts_folder = system.file(
+#         "extdata", "Datasets", "counts", package = "InterTADs"
+#     ),
+#     
+#     freq_folder = system.file(
+#         "extdata", "Datasets", "freq", package = "InterTADs"
+#     ),
+#     
+#     mapping_file = system.file(
+#         "extdata", "Datasets", "meta-data.csv", package = "InterTADs"
+#     ),
+#     
+#     tad_file =system.file(
+#         "extdata", "Datasets", 
+#         "hglft_genome_2dab_ec1330.bed", package = "InterTADs"
+#     ),
+#     
+#     tech = "hg19"
+# )
+# 
+# 
+# # example 2
+# result<- data_integration (
+#     
+#     counts_fls = list.files(
+#         system.file(
+#             "extdata", "Datasets", "counts", package = "InterTADs"
+#         )
+#     ),
+#     
+#     freq_fls =  list.files(
+#         system.file(
+#             "extdata", "Datasets", "freq", package = "InterTADs"
+#         )
+#     ),
+#     
+#     mapping_file = system.file(
+#         "extdata", "Datasets", "meta-data.csv", package = "InterTADs"
+#     ),
+#     
+#     tad_file =system.file(
+#         "extdata", "Datasets", 
+#         "hglft_genome_2dab_ec1330.bed", package = "InterTADs"
+#     ),
+#     
+#     tech = "hg19"
+# )
+
 
 
 data_integration <- function(
@@ -58,7 +119,7 @@ data_integration <- function(
 ) {
 
 
-    # Reading sample_metadata data file
+    # Reading sample_metadata data file ---------------------
     sample_metadata <- fread(
         mapping_file, fill = TRUE
     )
@@ -66,7 +127,7 @@ data_integration <- function(
 
 
 
-    # Get input files
+    # Get input files ---------------------------
 
     if(is.null(freq_folder) & is.null(freq_fls)) {
 
@@ -105,7 +166,8 @@ data_integration <- function(
     biodata <- list()
     parent = 0
 
-    # Reading input frequency tables
+    # Reading input frequency tables ----------------------
+    
     if(length(freq_fls) > 0) {
 
         for(i in 1:length(freq_fls)) {
@@ -157,7 +219,7 @@ data_integration <- function(
 
     }
 
-    # Reading input counts tables
+    # Reading input counts tables -----------------------
     if(length(counts_fls) > 0) {
 
         for(i in 1:length(counts_fls)){
@@ -305,7 +367,7 @@ data_integration <- function(
     #
     # index1 --- MYC, exon
     # index1 --- RUNX1T1, intron
-    # --------------------------
+    # ...........................
     # index1 --- MYC|RUNX1T1, exon|intron
 
     features <- biodata[, .(
@@ -360,7 +422,7 @@ data_integration <- function(
     )
 
 
-    # Completely overlapping
+    # Completely overlapping ----------------------------
     df0 <- findOverlaps(query = TAD_gr, subject = biodata_gr)
     df1 <- cbind(TAD[queryHits(df0),], data.over[subjectHits(df0),])
     df1 <- df1[,c(2,3,4,8)]
@@ -392,38 +454,16 @@ data_integration <- function(
     # Generating outputs -----------------------------
 
 
-    #eventsNEW<-as.data.table(full$ID)
+    sum_table <- full[, by = parent, 
+                      .(IDs = paste(sample(ID, 3), collapse = ", "))]
 
-    sum_table <- data.table()
-
-
-    for(i in unique(biodata$parent)){
-        temp <- biodata[which(biodata$parent == i), ]$ID
-
-        temp <- temp[sample(1:length(temp), 3)]
-
-        temp <- paste(temp, collapse = ", ")
-
-
-        sum_table<- data.table(sum_table,rbind(i,temp))
-
-        #setnames(sum_table,'parent_file','ID')
-
-        #setnames(sum_table,c('i',"temp"),c('parent_file','ID'),skip_absent=TRUE)
-
-        # cat(c("File", i, ":", temp, "...", "\n\n"),
-        #     file = paste(output_folder, "/summary.txt", sep = ""),
-        #     append = TRUE)
-
-    }
-    sum_table <- as.data.table(t(sum_table))
-    setnames(sum_table,c('parent_file','ID'))
 
     return(
         list(
             "IntegratedTADtable" = full,
             "summary" = sum_table
-        ))
+        )
+    )
 
 }
 
