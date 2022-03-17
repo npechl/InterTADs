@@ -1,163 +1,197 @@
-# Loading libraries ------------------------------------------------------------
-
-
-# source("R/libraries.R")
-#
-# start_tad_time <- Sys.time()
 
 #' evenDiff
 #'
-#' @param names.meta meta data columns to process (names or indexes)
-#' @param mapping_file A meta-data file
-#' @param methylo_result
+#' @param names.meta 
+#' meta data columns to process (names or indexes).
+#' @param integratedTADtable 
+#' IntegratedTADtable contains all data info about TADs. 
+#' This is the output integrated table 
+#' from data_integration, prepare_methylation or
+#' exnsembl_ids functions.
+#' @param adj.PVal 
+#' Significant events adjusted p value theshold. Defaults to 0.05.
+#' @param log_thr 
+#' LogFC theshold. Defaults to 2.
+#' @param seed 
+#' A number used to initialize a pseudorandom number generator.
+#' @param mapping_file 
+#' A mapping file containing mapping betwen the columns of the input 
+#' NGS datasets. The first column corresponds to the sample ID that 
+#' will be used in the output file. The following columns correspond 
+#' to the column names of the input datasets. 
+#' The file also contains the related sample meta-data
 #'
 #' @import data.table
 #' @import limma
 #'
 #' @description
+#' evenDiff performs differential analysis of multi-omics 
+#' events (expression, methylation etc.).
 #'
 #' @return
+#' A list of data tables containing significant events along with 
+#' a summary file
 #'
 #' @export
 #'
 #' @examples
-#' result<- data_integration (
-#' counts_folder = system.file("extdata", "Datasets",
-#'                          "counts", package="InterTADs"),
-#' counts_fls = NULL,
-#' freq_folder = system.file("extdata", "Datasets",
-#'                          "freq", package="InterTADs"),
-#' freq_fls = NULL,
-#' mapping_file = system.file("extdata", "Datasets",
-#'                          "meta-data.csv", package="InterTADs"),
+#' 
+#' result <- data_integration (
 #'
-#' tad_file =system.file("extdata", "Datasets",
-#'                      "hglft_genome_2dab_ec1330.bed", package="InterTADs"),
-#' tech = "hg38"
+#'     counts_folder = system.file(
+#'         "extdata", "Datasets", "counts", package = "InterTADs"
+#'     ),
+#' 
+#'     freq_folder = system.file(
+#'         "extdata", "Datasets", "freq", package = "InterTADs"
+#'     ),
+#' 
+#'     mapping_file = system.file(
+#'        "extdata", "Datasets", "meta-data.csv", package = "InterTADs"
+#'    ),
+#'
+#'     tad_file =system.file(
+#'        "extdata", "Datasets",
+#'        "hglft_genome_2dab_ec1330.bed", package = "InterTADs"
+#'     ),
+#' 
+#'     tech = "hg19"
 #' )
-#'
+#' 
+#' 
 #' methylo_result <- prepare_methylation_values(
-#' integratedTADtable = result[[1]],
-#' mapping_file = system.file("extdata", "Datasets",
-#'                          "meta-data.csv", package="InterTADs"),
-#' meth_data = 2
+#'     integratedTADtable = result[[1]],
+#'     mapping_file = system.file(
+#'         "extdata", "Datasets", "meta-data.csv", package = "InterTADs"
+#'     ),
+#'     meth_data = 2
+#' )
+#' 
+#' result_ensmbl <- ensembl_ids(
+#'     input_file = methylo_result[[1]],
+#'     expr_data = 3
 #' )
 #'
 #' result_evenDiff <- evenDiff(
-#' mapping_file = system.file("extdata", "Datasets",
-#' "meta-data.csv", package="InterTADs"),
-#' methylo_result = methylo_result,
-#' names.meta = c('group'),
-#' adj.PVal = 0.01,
-#' log_thr = 4)
-#'
-#' print(result_evenDiff)
-#'
-#'
+#'     
+#'     mapping_file = system.file(
+#'         "extdata", "Datasets", "meta-data.csv", package = "InterTADs"
+#'     ),
+#'     methylo_result = result_ensmbl,
+#'     names.meta = c('group'),
+#'     adj.PVal = 0.01,
+#'     log_thr = 4
+#' )
 
 
 evenDiff <- function(
-                    mapping_file = NULL,
-                    methylo_result,
-                    names.meta = NULL,
-                    adj.PVal = NULL,
-                    log_thr = NULL){
+    integratedTADtable,
+    mapping_file,
+    names.meta,
+    adj.PVal = 0.05,
+    log_thr = 2,
+    seed = 6
+) {
 
-    data.all <- methylo_result
-
-    data.all$ID <- paste(data.all$tad_name, data.all$ID, sep = ";")
+    integratedTADtable$ID <- paste(
+        integratedTADtable$tad_name, integratedTADtable$ID, sep = ";"
+    )
 
     meta <- fread(mapping_file)
-    who <- meta == ""
-    who <- apply(who, 1, sum, na.rm = TRUE)
-    meta <- meta[which(who == 0), ]
-
 
     sample.list <- meta[[1]]
 
-    who <- c("ID", "Gene_id", "parent")
-
-    gene.parents <- data.all[,..who]
+    gene.parents <- integratedTADtable[, c(
+        "ID", "Gene_id", "parent"
+    ), with = FALSE]
 
     colnames(gene.parents) <- c("ID", "gene_ID", "parents")
 
 
-    diffevent <- matrix(data = "0",
-                        nrow = length(names.meta),
-                        ncol = (length(unique(data.all$parent)) + 1))
+    diffevent <- matrix(
+        data = "0",
+        nrow = length(names.meta),
+        ncol = (length(unique(integratedTADtable$parent)) + 1)
+    )
 
-    colnames(diffevent) <- c("Analysis", paste("p_", unique(data.all$parent),
-                                               sep = ""))
+    colnames(diffevent) <- c(
+        "Analysis", paste0("p_", unique(integratedTADtable$parent))
+    )
 
-    rm(who)
     Diff_list <- list()
+    
     for (z in 1:length(names.meta)){
-
-        #print(names.meta[["IGHV"]])
-        cat(c(names.meta[z], "\n"))
+        
+        message(names.meta[z])
 
         analysis <- names.meta[z]
-        groups <- as.character(meta[[analysis]])
-        groups <- unique(groups)
+        
+        groups <- unique(as.character(meta[[analysis]]))
         groups <- groups[which(groups != "")]
         groups <- groups[!is.na(groups)]
 
-        group1 <- groups[1]
-        group2 <- groups[2]
-
-
-        meta.keep <- meta[which(meta[[analysis]] == group1 | meta[[analysis]] ==
-                                  group2), ]
+        meta.keep <- meta[which(
+            meta[[analysis]] == groups[1] | meta[[analysis]] == groups[2]
+        ), ]
 
 
         sample.list <- meta.keep[[1]]
 
-        df <- data.all[,..sample.list]
+        df <- integratedTADtable[, sample.list, with = FALSE]
 
-        df <- as.data.frame(df)
-        row.names(df) <- data.all$ID
+        df <- setDF(df, rownames = integratedTADtable$ID)
 
         pheno <- as.factor(meta.keep[[analysis]])
 
-        phenoMat <- model.matrix(~pheno)
+        phenoMat <- model.matrix(~ pheno)
         colnames(phenoMat) <- sub("^pheno", "", colnames(phenoMat))
 
-        fit <- limma::lmFit(object = df, design = phenoMat)
+        fit <- lmFit(object = df, design = phenoMat)
 
-        gc()
         set.seed(6)
-        fit <- limma::eBayes(fit)
+        fit <- eBayes(fit)
 
-        gc()
-        top.rank <- limma::topTable(fit, number = nrow(df),
-                            adjust.method = "fdr",sort.by = "p")
+        top.rank <- topTable(
+            fit, 
+            number = nrow(df),
+            adjust.method = "fdr",
+            sort.by = "p"
+        )
 
-        sign.table <- top.rank[which(top.rank$adj.P.Val <= adj.PVal &
-                                       abs(top.rank$logFC) > log_thr), ]
+        sign.table <- top.rank[which(
+            top.rank$adj.P.Val <= adj.PVal &
+                abs(top.rank$logFC) > log_thr
+        ), ]
 
         if (nrow(sign.table) == 0) {
 
-            cat(c("No statistical significant events for:",
-                    names.meta[z], "\n"))
+            message(c(
+                "No statistical significant events for:",
+                names.meta[z]
+            ))
 
-            diffevent[z,1] <- analysis }
-
-        else {
+            diffevent[z,1] <- analysis 
+            
+        } else {
 
             # annotate sign.table
 
             sign.table$ID <- row.names(sign.table)
 
-            sign.genes <- merge(gene.parents,
-                                sign.table,
-                                by.x = "ID",
-                                by.y = "ID")
+            sign.genes <- merge(
+                gene.parents,
+                sign.table,
+                by.x = "ID",
+                by.y = "ID"
+            )
 
 
-            sign.table <- merge(sign.table,
-                                data.all,
-                                by.x = "ID",
-                                by.y = "ID")
+            sign.table <- merge(
+                sign.table,
+                integratedTADtable,
+                by.x = "ID",
+                by.y = "ID"
+            )
 
             sign <- sign.genes %>% dplyr::count(parents)
 
@@ -173,16 +207,22 @@ evenDiff <- function(
     diffevent <- as.data.frame(diffevent)
 
     for(i in 2:ncol(diffevent)){
+        
         diffevent[,i] <- as.numeric(diffevent[,i])
-        #print(diffevent[,i])
+        
     }
 
 
-    diffevent$`total events` <- rowSums(diffevent[,2:ncol(diffevent)]) #rowSums
+    diffevent$`total events` <- rowSums(diffevent[,2:ncol(diffevent)]) 
 
 
 
-    return(list(Diff_list,diffevent))
+    return(
+        list(
+            Diff_list,
+            diffevent
+        )
+    )
 
 }
 
