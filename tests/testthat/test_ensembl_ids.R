@@ -1,0 +1,27 @@
+test_that('Test ensembl ids runs properly',{
+    result<- data_integration (
+        counts_folder = system.file(
+            "extdata", "Datasets", "counts", package = "InterTADs"
+        ),
+
+        freq_folder = system.file(
+            "extdata", "Datasets", "freq", package = "InterTADs"
+        ),
+
+        mapping_file = system.file(
+            "extdata", "Datasets", "meta-data.csv", package = "InterTADs"
+        ),
+
+        tad_file =system.file(
+            "extdata", "Datasets",
+            "hglft_genome_2dab_ec1330.bed", package = "InterTADs"
+        ),
+
+        tech = "hg19"
+    )
+
+    expect_message( ensembl_ids(
+        integratedTADtable = result[[1]],
+        expr_data = 3)
+    )
+})
