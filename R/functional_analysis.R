@@ -533,7 +533,7 @@ functional_analysis<- function(annotation_file = NULL,
         }
 
 
-    return(NULL)
+    return(TRUE)
 }
 
 

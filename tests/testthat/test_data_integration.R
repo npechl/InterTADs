@@ -1,5 +1,5 @@
 test_that('Test data integration runs properly',{
-  expect_vector( data_integration (
+    expect_vector( data_integration (
 
         counts_folder = system.file(
             "extdata", "Datasets", "counts", package = "InterTADs"
@@ -21,18 +21,18 @@ test_that('Test data integration runs properly',{
         tech = "hg19"
     ))
   
-  expect_error( data_integration (
+    expect_error( data_integration (
     
-    counts_folder = NULL,
+        counts_folder = NULL,
     
-    freq_folder = NULL,
+        freq_folder = NULL,
     
-    mapping_file =NULL,
+        mapping_file =NULL,
     
-    tad_file =NULL,
+        tad_file =NULL,
     
-    tech =NULL
-  ))
+        tech =NULL
+    ))
   
   
 })

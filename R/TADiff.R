@@ -80,13 +80,13 @@
 #' )
 #' 
 #' result_ensmbl <- ensembl_ids(
-#'     input_file = methylo_result[[1]],
+#'     input_file = methylo_result,
 #'     expr_data = 3
 #' )
 #'
 #' TADiff_result <- TADiff(
 #'     
-#'     methylo_result = result_ensmbl,
+#'     integratedTADtable = result_ensmbl,
 #'     mapping_file = system.file(
 #'         "extdata", "Datasets", "meta-data.csv", package = "InterTADs"
 #'     ),
