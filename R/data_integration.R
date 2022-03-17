@@ -119,7 +119,7 @@ data_integration <- function(
 
     mapping_file = mapping_file,
     tad_file = tad_file,
-    tech = NULL
+    tech = "hg38"
 ) {
 
 
