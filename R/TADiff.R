@@ -231,7 +231,7 @@ TADiff <- function(
             }
 
 
-            if(expr_data != FALSE){
+            if(!is.null(expr_data)){
 
                 # get expression data
 
@@ -305,6 +305,10 @@ TADiff <- function(
                 )
 
                 Diff_list[[analysis]] = full.tads
+
+            } else {
+
+                Diff_list[[analysis]] = sign.tad.info
 
             }
 
