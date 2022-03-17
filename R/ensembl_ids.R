@@ -47,7 +47,7 @@
 #' )
 #' 
 #' result_ensmbl <- ensembl_ids(
-#'     input_file = results[[1]],
+#'      integratedTADtable = result[[1]],
 #'     expr_data = 3
 #' )
 
