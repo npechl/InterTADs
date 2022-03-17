@@ -72,3 +72,6 @@ Imports:
     ggplot2,
     rlang
 URL: https://github.com/BiodataAnalysisGroup/InterTADs
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
