@@ -4,7 +4,7 @@
 \alias{map_entrez_ids}
 \title{Title}
 \usage{
-map_entrez_ids(entrez.ids, tech = "h19")
+map_entrez_ids(entrez.ids, tech = "hg19")
 }
 \arguments{
 \item{tech}{}

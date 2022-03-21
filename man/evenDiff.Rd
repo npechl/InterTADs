@@ -5,58 +5,87 @@
 \title{evenDiff}
 \usage{
 evenDiff(
-  mapping_file = NULL,
-  methylo_result,
-  names.meta = NULL,
-  adj.PVal = NULL,
-  log_thr = NULL
+  integratedTADtable,
+  mapping_file,
+  names.meta,
+  adj.PVal = 0.05,
+  log_thr = 2,
+  seed = 6
 )
 }
 \arguments{
-\item{mapping_file}{A meta-data file}
+\item{integratedTADtable}{IntegratedTADtable contains all data info about TADs.
+This is the output integrated table
+from data_integration, prepare_methylation or
+exnsembl_ids functions.}
 
-\item{methylo_result}{}
+\item{mapping_file}{A mapping file containing mapping betwen the columns of the input
+NGS datasets. The first column corresponds to the sample ID that
+will be used in the output file. The following columns correspond
+to the column names of the input datasets.
+The file also contains the related sample meta-data}
 
-\item{names.meta}{meta data columns to process (names or indexes)}
+\item{names.meta}{meta data columns to process (names or indexes).}
+
+\item{adj.PVal}{Significant events adjusted p value theshold. Defaults to 0.05.}
+
+\item{log_thr}{LogFC theshold. Defaults to 2.}
+
+\item{seed}{A number used to initialize a pseudorandom number generator.}
 }
 \value{
-
+A list of data tables containing significant events along with
+a summary file
 }
 \description{
-
+evenDiff performs differential analysis of multi-omics
+events (expression, methylation etc.).
 }
 \examples{
-result<- data_integration (
-counts_folder = system.file("extdata", "Datasets",
-                         "counts", package="InterTADs"),
-counts_fls = NULL,
-freq_folder = system.file("extdata", "Datasets",
-                         "freq", package="InterTADs"),
-freq_fls = NULL,
-mapping_file = system.file("extdata", "Datasets",
-                         "meta-data.csv", package="InterTADs"),
 
-tad_file =system.file("extdata", "Datasets",
-                     "hglft_genome_2dab_ec1330.bed", package="InterTADs"),
-tech = "hg38"
+result <- data_integration (
+
+    counts_folder = system.file(
+        "extdata", "Datasets", "counts", package = "InterTADs"
+    ),
+
+    freq_folder = system.file(
+        "extdata", "Datasets", "freq", package = "InterTADs"
+    ),
+
+    mapping_file = system.file(
+       "extdata", "Datasets", "meta-data.csv", package = "InterTADs"
+   ),
+
+    tad_file =system.file(
+       "extdata", "Datasets",
+       "hglft_genome_2dab_ec1330.bed", package = "InterTADs"
+    ),
+
+    tech = "hg19"
 )
 
+
 methylo_result <- prepare_methylation_values(
-integratedTADtable = result[[1]],
-mapping_file = system.file("extdata", "Datasets",
-                         "meta-data.csv", package="InterTADs"),
-meth_data = 2
+    integratedTADtable = result[[1]],
+    mapping_file = system.file(
+        "extdata", "Datasets", "meta-data.csv", package = "InterTADs"
+    ),
+    meth_data = 2
+)
+
+result_ensmbl <- ensembl_ids(
+    integratedTADtable = methylo_result,
+    expr_data = 3
 )
 
 result_evenDiff <- evenDiff(
-mapping_file = system.file("extdata", "Datasets",
-"meta-data.csv", package="InterTADs"),
-methylo_result = methylo_result,
-names.meta = c('group'),
-adj.PVal = 0.01,
-log_thr = 4)
-
-print(result_evenDiff)
-
-
+    integratedTADtable = result_ensmbl,
+    mapping_file = system.file(
+        "extdata", "Datasets", "meta-data.csv", package = "InterTADs"
+    ),
+    names.meta = c('group'),
+    adj.PVal = 0.01,
+    log_thr = 4
+)
 }

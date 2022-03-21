@@ -7,40 +7,56 @@
 prepare_methylation_values(integratedTADtable, mapping_file, meth_data)
 }
 \arguments{
-\item{integratedTADtable}{IntegratedTADtable contains
-all data info about TADs}
+\item{integratedTADtable}{IntegratedTADtable contains all data info about TADs. This is the output
+integrated table from data_integration function.}
 
-\item{mapping_file}{A meta-data file}
+\item{mapping_file}{A mapping file containing mapping betwen the columns of the input
+NGS datasets. The first column corresponds to the sample ID that
+will be used in the output file. The following columns correspond
+to the column names of the input datasets.
+The file also contains the related sample meta-data}
 
-\item{meth_data}{Parent index of methylation data, from meta-data.csv.
-If no methylation is provided, place FALSE}
+\item{meth_data}{Parent index of methylation data, from meta-data.csv.}
 }
 \value{
-
+An integrated TAD data table with the reversed methylation
+values is returned.
 }
 \description{
-
+In case DNA methylation datasets are provided this function reverses
+methylation values (0\% -> 100\%, 100\% -> 0\%). The user can skip this
+function in case it is not suitable for the provided dataset.
 }
 \examples{
 
-result<- data_integration (
-counts_folder = system.file("extdata", "Datasets",
-                         "counts", package="InterTADs"),
-counts_fls = NULL,
-freq_folder = system.file("extdata", "Datasets",
-                         "freq", package="InterTADs"),
-freq_fls = NULL,
-mapping_file = system.file("extdata", "Datasets",
-                         "meta-data.csv", package="InterTADs"),
+result <- data_integration (
 
-tad_file =system.file("extdata", "Datasets",
-                     "hglft_genome_2dab_ec1330.bed", package="InterTADs"),
-tech = "hg38"
+    counts_folder = system.file(
+        "extdata", "Datasets", "counts", package = "InterTADs"
+    ),
+
+    freq_folder = system.file(
+        "extdata", "Datasets", "freq", package = "InterTADs"
+    ),
+
+    mapping_file = system.file(
+       "extdata", "Datasets", "meta-data.csv", package = "InterTADs"
+   ),
+
+    tad_file =system.file(
+       "extdata", "Datasets",
+       "hglft_genome_2dab_ec1330.bed", package = "InterTADs"
+    ),
+
+    tech = "hg19"
 )
+
+
 methylo_result <- prepare_methylation_values(
-integratedTADtable = result[[1]],
-mapping_file = system.file("extdata", "Datasets",
-                         "meta-data.csv", package="InterTADs"),
-meth_data = 2
+    integratedTADtable = result[[1]],
+    mapping_file = system.file(
+        "extdata", "Datasets", "meta-data.csv", package = "InterTADs"
+    ),
+    meth_data = 2
 )
 }

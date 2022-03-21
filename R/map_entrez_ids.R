@@ -5,10 +5,10 @@
 #' @param tech
 #'
 #' @importFrom AnnotationDbi select
-#' @importFrom annotables grch37 grch38
-#' 
+#' @import  annotables
+#'
 #' @return
-#' @exports
+#' @export
 #'
 #' @examples
 
@@ -31,15 +31,15 @@ map_entrez_ids <- function(entrez.ids, tech = "hg19"){
     mapping <- mapping[which(!(is.na(mapping$hgnc.symbol))), ]
 
     if(length(not.found) > 0){
-        
-        if(tech == "h19"){
-            
-            x <- grch37
-            
+
+        if(tech == "hg19"){
+
+            x <- annotables::grch37
+
         } else {
-            
-            x <- grch38
-            
+
+            x <- annotables::grch38
+
         }
 
         x <- as.data.table(x)
@@ -54,13 +54,13 @@ map_entrez_ids <- function(entrez.ids, tech = "hg19"){
       }
 
     mapping <- rbind(
-        mapping, 
+        mapping,
         data.table(
             "entrez.id" = not.found,
             "hgnc.symbol" = NA
         )
     )
-    
+
     mapping <- mapping[order(mapping$hgnc.symbol), ]
 
     mapping <- unique(mapping)

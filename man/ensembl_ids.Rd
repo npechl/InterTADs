@@ -4,44 +4,49 @@
 \alias{ensembl_ids}
 \title{ensembl_ids}
 \usage{
-ensembl_ids(input_file, expr_data)
+ensembl_ids(integratedTADtable, expr_data)
 }
 \arguments{
-\item{input_file}{}
+\item{integratedTADtable}{IntegratedTADtable contains all data info about TADs.
+This is the output integrated table
+from data_integration function (or prepare_methylation_values function).}
 
 \item{expr_data}{Parent index of expression data.}
 }
 \value{
-A table with matched ensembl_ids
+A table with matched ensembl_ids.
 }
 \description{
-
+Convert external gene IDs to ensembl IDs.
+In case the user has no gene IDs or do not wish to convert
+the provided gene IDs to ensembl IDs, is able to skip this function.
+Note the the functional analysis will perform only with ensembl IDs.
 }
 \examples{
 result<- data_integration (
-counts_folder = system.file("extdata", "Datasets",
-                         "counts", package="InterTADs"),
-counts_fls = NULL,
-freq_folder = system.file("extdata", "Datasets",
-                         "freq", package="InterTADs"),
-freq_fls = NULL,
-mapping_file = system.file("extdata", "Datasets",
-                         "meta-data.csv", package="InterTADs"),
 
-tad_file =system.file("extdata", "Datasets",
-                     "hglft_genome_2dab_ec1330.bed", package="InterTADs"),
-tech = "hg38"
-)
-methylo_result <- prepare_methylation_values(
-integratedTADtable = result[[1]],
-mapping_file = system.file("extdata", "Datasets",
-                         "meta-data.csv", package="InterTADs"),
-meth_data = 2
+    counts_folder = system.file(
+        "extdata", "Datasets", "counts", package = "InterTADs"
+    ),
+
+    freq_folder = system.file(
+        "extdata", "Datasets", "freq", package = "InterTADs"
+    ),
+
+    mapping_file = system.file(
+        "extdata", "Datasets", "meta-data.csv", package = "InterTADs"
+    ),
+
+    tad_file =system.file(
+        "extdata", "Datasets",
+        "hglft_genome_2dab_ec1330.bed", package = "InterTADs"
+    ),
+
+    tech = "hg19"
 )
 
 result_ensmbl <- ensembl_ids(
-input_file= methylo_result,
-expr_data = 3)
-
-
+     integratedTADtable = result[[1]],
+    expr_data = 3
+)
 }

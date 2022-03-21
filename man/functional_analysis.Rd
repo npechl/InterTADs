@@ -87,23 +87,22 @@ mapping_file = system.file("extdata", "Datasets",
 meth_data = 2
 )
 TADiff_result <- TADiff(
-
-mapping_file = system.file("extdata", "Datasets",
-                     "meta-data.csv", package="InterTADs"),
-                       methylo_result = methylo_result,
-                       names.meta = c("group"),
-                   expr_data = 3,
-                   adj.PVal = 0.01,
-                   log_thr = 2,
-                   tad_event = 4,
-                   pval_thr = 0.01,
-                   freq_thr = 15,
-                   mean_logFC_thr = 2)
-
-result_evenDiff <- evenDiff(
+integratedTADtable = methylo_result,
 mapping_file = system.file("extdata", "Datasets",
 "meta-data.csv", package="InterTADs"),
-methylo_result = methylo_result,
+names.meta = c("group"),
+expr_data = 3,
+adj.PVal = 0.01,
+log_thr = 2,
+tad_event = 4,
+pval_thr = 0.01,
+freq_thr = 15,
+mean_logFC_thr = 2)
+
+result_evenDiff <- evenDiff(
+integratedTADtable = methylo_result,
+mapping_file = system.file("extdata", "Datasets",
+"meta-data.csv", package="InterTADs"),
 names.meta = c('group'),
 adj.PVal = 0.01,
 log_thr = 4)
@@ -113,6 +112,7 @@ annotation_file = "/gencode.v36.annotation.gff3.gz",
 tech = "hg38",
 files_evenDiff = result_evenDiff[[1]],
 files_TADiff = TADiff_result[[1]],
+names.meta =NULL,
 exp_parent = 3,
 dbs = c("GO_Molecular_Function_2018",
 "GO_Biological_Process_2018",

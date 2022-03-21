@@ -2,37 +2,46 @@
 % Please edit documentation in R/data_integration.R
 \name{data_integration}
 \alias{data_integration}
-\title{Input parameters for Data Integration part}
+\title{Data Integration part}
 \usage{
 data_integration(
   counts_folder = NULL,
   counts_fls = NULL,
   freq_folder = NULL,
   freq_fls = NULL,
-  mapping_file = mapping_file,
-  tad_file = tad_file,
+  mapping_file,
+  tad_file,
   tech = "hg38"
 )
 }
 \arguments{
-\item{counts_folder}{Path to a repository of counts NGS data}
+\item{counts_folder}{A stringr-path to a repository containing files
+with NGS counts data (e.g. expression count table).}
 
-\item{counts_fls}{A vector of paths to files of counts NGS data}
+\item{counts_fls}{A character vector of paths to files
+with NGS counts data (e.g. expression count table).}
 
-\item{freq_folder}{Path to a repository of freq NGS data}
+\item{freq_folder}{A stringr-path to a repository containing files
+with NGS frequency data (e.g. DNA methylation table).}
 
-\item{freq_fls}{A vector of paths to files of freq NGS data}
+\item{freq_fls}{A character vector of paths to files
+with NGS frequency data (e.g. DNA methylation table).}
 
-\item{mapping_file}{A meta-data file}
+\item{mapping_file}{A mapping file containing mapping betwen the columns of the input
+NGS datasets. The first column corresponds to the sample ID that
+will be used in the output file. The following columns correspond
+to the column names of the input datasets.
+The file also contains the related sample meta-data}
 
-\item{tad_file}{BED file containing information about TADs}
+\item{tad_file}{A BED file containing information
+about the desired TADs' chromosomal location.}
 
-\item{tech}{Human Genome Reference used}
+\item{tech}{Human Genome Reference technology, either "hg19" or "hg38" can be used.}
 }
 \value{
-A list of integratedTADtable and summary. IntegratedTADtable contains
-all data info about TADs and summary explains types of different events
-(methylation,mutation,expression).
+A list of integratedTADtable and summary.
+IntegratedTADtable contains all data info about TADs and
+summary explains types of different events (methylation, expression etc.).
 }
 \description{
 

@@ -1,51 +1,51 @@
 
 #' evenDiff
 #'
-#' @param names.meta 
+#' @param names.meta
 #' meta data columns to process (names or indexes).
-#' @param integratedTADtable 
-#' IntegratedTADtable contains all data info about TADs. 
-#' This is the output integrated table 
+#' @param integratedTADtable
+#' IntegratedTADtable contains all data info about TADs.
+#' This is the output integrated table
 #' from data_integration, prepare_methylation or
 #' exnsembl_ids functions.
-#' @param adj.PVal 
+#' @param adj.PVal
 #' Significant events adjusted p value theshold. Defaults to 0.05.
-#' @param log_thr 
+#' @param log_thr
 #' LogFC theshold. Defaults to 2.
-#' @param seed 
+#' @param seed
 #' A number used to initialize a pseudorandom number generator.
-#' @param mapping_file 
-#' A mapping file containing mapping betwen the columns of the input 
-#' NGS datasets. The first column corresponds to the sample ID that 
-#' will be used in the output file. The following columns correspond 
-#' to the column names of the input datasets. 
+#' @param mapping_file
+#' A mapping file containing mapping betwen the columns of the input
+#' NGS datasets. The first column corresponds to the sample ID that
+#' will be used in the output file. The following columns correspond
+#' to the column names of the input datasets.
 #' The file also contains the related sample meta-data
 #'
 #' @import data.table
 #' @import limma
 #'
 #' @description
-#' evenDiff performs differential analysis of multi-omics 
+#' evenDiff performs differential analysis of multi-omics
 #' events (expression, methylation etc.).
 #'
 #' @return
-#' A list of data tables containing significant events along with 
+#' A list of data tables containing significant events along with
 #' a summary file
 #'
 #' @export
 #'
 #' @examples
-#' 
+#'
 #' result <- data_integration (
 #'
 #'     counts_folder = system.file(
 #'         "extdata", "Datasets", "counts", package = "InterTADs"
 #'     ),
-#' 
+#'
 #'     freq_folder = system.file(
 #'         "extdata", "Datasets", "freq", package = "InterTADs"
 #'     ),
-#' 
+#'
 #'     mapping_file = system.file(
 #'        "extdata", "Datasets", "meta-data.csv", package = "InterTADs"
 #'    ),
@@ -54,11 +54,11 @@
 #'        "extdata", "Datasets",
 #'        "hglft_genome_2dab_ec1330.bed", package = "InterTADs"
 #'     ),
-#' 
+#'
 #'     tech = "hg19"
 #' )
-#' 
-#' 
+#'
+#'
 #' methylo_result <- prepare_methylation_values(
 #'     integratedTADtable = result[[1]],
 #'     mapping_file = system.file(
@@ -66,7 +66,7 @@
 #'     ),
 #'     meth_data = 2
 #' )
-#' 
+#'
 #' result_ensmbl <- ensembl_ids(
 #'     integratedTADtable = methylo_result,
 #'     expr_data = 3
@@ -118,13 +118,13 @@ evenDiff <- function(
     )
 
     Diff_list <- list()
-    
+
     for (z in 1:length(names.meta)){
-        
+
         message(names.meta[z])
 
         analysis <- names.meta[z]
-        
+
         groups <- unique(as.character(meta[[analysis]]))
         groups <- groups[which(groups != "")]
         groups <- groups[!is.na(groups)]
@@ -151,7 +151,7 @@ evenDiff <- function(
         fit <- eBayes(fit)
 
         top.rank <- topTable(
-            fit, 
+            fit,
             number = nrow(df),
             adjust.method = "fdr",
             sort.by = "p"
@@ -169,8 +169,8 @@ evenDiff <- function(
                 names.meta[z]
             ))
 
-            diffevent[z,1] <- analysis 
-            
+            diffevent[z,1] <- analysis
+
         } else {
 
             # annotate sign.table
@@ -192,7 +192,8 @@ evenDiff <- function(
                 by.y = "ID"
             )
 
-            sign <- sign.genes %>% dplyr::count(parents)
+            #sign <- sign.genes %>% dplyr::count(parents)
+            sign <- sign.genes[,.N,by = parents]
 
 
             diffevent[z, 1] <- analysis
@@ -206,13 +207,13 @@ evenDiff <- function(
     diffevent <- as.data.frame(diffevent)
 
     for(i in 2:ncol(diffevent)){
-        
+
         diffevent[,i] <- as.numeric(diffevent[,i])
-        
+
     }
 
 
-    diffevent$`total events` <- rowSums(diffevent[,2:ncol(diffevent)]) 
+    diffevent$`total events` <- rowSums(diffevent[,2:ncol(diffevent)])
 
 
 
