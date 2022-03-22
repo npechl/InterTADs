@@ -126,34 +126,26 @@ data_integration <- function(
 ) {
 
 
-    # Reading sample_metadata data file ---------------------
-    sample_metadata <- fread(
-        mapping_file, fill = TRUE
-    )
-
-
-
-
     # Get input files ---------------------------
 
-    if(is.null(freq_folder) & is.null(freq_fls)) {
+    if((is.null(freq_folder) & is.null(freq_fls)) ||
+        (!is.null(freq_folder) & !is.null(freq_fls))) {
+        stop('Please provide valid NGS frequency data.')
 
 
-    } else if(is.null(freq_fls)) {
+    }
+    else if(is.null(freq_fls)) {
 
         freq_fls = list.files(
             freq_folder,
             full.names = TRUE
-        )
-
-    } else {
-
-
-    }
+        )}
 
 
 
-    if(is.null(counts_folder) & is.null(counts_fls)) {
+    if((is.null(counts_folder) & is.null(counts_fls)) ||
+        (!is.null(counts_folder) & !is.null(counts_fls))) {
+            stop('Please provide valid NGS counts data.')
 
 
     } else if(is.null(counts_fls)) {
@@ -163,11 +155,18 @@ data_integration <- function(
 
         )
 
-    } else {
-
-
-
     }
+
+    if ((is.null(mapping_file)) || (is.null(tad_file))) {
+        stop("Please provide all the input parameters.")
+    }
+    
+    
+    # Reading sample_metadata data file ---------------------
+    sample_metadata <- fread(
+        mapping_file, fill = TRUE
+    )
+
 
 
     biodata <- list()
