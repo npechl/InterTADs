@@ -43,6 +43,9 @@
 #' @importFrom stringr str_detect str_replace str_to_lower str_remove
 #'
 #' @description
+#' During the data integration parth different NGS datasets are
+#' combined into the same data table alonng with the related input 
+#' data for the topologically associating domains (TADs).
 #'
 #' @return 
 #' A list of integratedTADtable and summary. 
