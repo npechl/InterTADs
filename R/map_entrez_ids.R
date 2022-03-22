@@ -1,5 +1,4 @@
-
-#' Title
+#' map_entrez_ids
 #'
 #' @param entrez.ids
 #' @param tech
