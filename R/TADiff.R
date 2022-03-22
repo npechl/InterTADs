@@ -1,63 +1,63 @@
 
 #' TADiff
 #'
-#' @param names.meta 
+#' @param names.meta
 #' meta data columns to process (names or indexes)
-#' @param expr_data 
+#' @param expr_data
 #' Parent index of expression data.
-#' @param integratedTADtable 
-#' IntegratedTADtable contains all data info about TADs. 
-#' This is the output integrated table 
+#' @param integratedTADtable
+#' IntegratedTADtable contains all data info about TADs.
+#' This is the output integrated table
 #' from data_integration, prepare_methylation or
 #' exnsembl_ids functions.
-#' @param adj.PVal 
+#' @param adj.PVal
 #' Significant events adjusted p value theshold. Defaults to 0.05.
-#' @param log_thr 
+#' @param log_thr
 #' LogFC theshold. Defaults to 2
-#' @param tad_event 
+#' @param tad_event
 #' Number of events for each TAD. Defaults to 4.
-#' @param pval_thr 
+#' @param pval_thr
 #' Significant TADs p value threshold. Defaults to 0.05.
-#' @param freq_thr 
+#' @param freq_thr
 #' Percentage theshold of significant events to all events for each TAD, Defaults to 20 (20%).
-#' @param mean_logFC_thr 
+#' @param mean_logFC_thr
 #' Mean logFC threshold for each TAD.
-#' @param seed 
+#' @param seed
 #' A number used to initialize a pseudorandom number generator.
-#' @param mapping_file 
-#' A mapping file containing mapping betwen the columns of the input 
-#' NGS datasets. The first column corresponds to the sample ID that 
-#' will be used in the output file. The following columns correspond 
-#' to the column names of the input datasets. 
+#' @param mapping_file
+#' A mapping file containing mapping betwen the columns of the input
+#' NGS datasets. The first column corresponds to the sample ID that
+#' will be used in the output file. The following columns correspond
+#' to the column names of the input datasets.
 #' The file also contains the related sample meta-data
-#' 
-#' 
+#'
+#'
 #' @import data.table
 #' @import limma
-#' 
+#'
 #' @description
-#' TADiff performs differential analysis of events (expression, methylation etc.) 
-#' by taking into account the chromatin configuration of the genome, 
+#' TADiff performs differential analysis of events (expression, methylation etc.)
+#' by taking into account the chromatin configuration of the genome,
 #' i.e. the topologically associating domains (TADs).
 #'
 #' @return
-#' A list of data tables containing significant TADs along with 
+#' A list of data tables containing significant TADs along with
 #' a summary file
 #'
 #' @export
 #'
 #' @examples
-#' 
+#'
 #' result <- data_integration (
 #'
 #'     counts_folder = system.file(
 #'         "extdata", "Datasets", "counts", package = "InterTADs"
 #'     ),
-#' 
+#'
 #'     freq_folder = system.file(
 #'         "extdata", "Datasets", "freq", package = "InterTADs"
 #'     ),
-#' 
+#'
 #'     mapping_file = system.file(
 #'        "extdata", "Datasets", "meta-data.csv", package = "InterTADs"
 #'    ),
@@ -66,11 +66,11 @@
 #'        "extdata", "Datasets",
 #'        "hglft_genome_2dab_ec1330.bed", package = "InterTADs"
 #'     ),
-#' 
+#'
 #'     tech = "hg19"
 #' )
-#' 
-#' 
+#'
+#'
 #' methylo_result <- prepare_methylation_values(
 #'     integratedTADtable = result[[1]],
 #'     mapping_file = system.file(
@@ -78,14 +78,14 @@
 #'     ),
 #'     meth_data = 2
 #' )
-#' 
+#'
 #' result_ensmbl <- ensembl_ids(
-#'     input_file = methylo_result,
+#'     integratedTADtable = methylo_result,
 #'     expr_data = 3
 #' )
 #'
 #' TADiff_result <- TADiff(
-#'     
+#'
 #'     integratedTADtable = result_ensmbl,
 #'     mapping_file = system.file(
 #'         "extdata", "Datasets", "meta-data.csv", package = "InterTADs"
@@ -134,13 +134,13 @@ TADiff <- function(
     sign_table <- matrix(0, nrow = length(names.meta), ncol = 2)
 
     Diff_list <- list()
-    
+
     for (z in 1:length(names.meta)){
 
         message(names.meta[z])
 
         analysis <- names.meta[z]
-        
+
         groups <- unique(as.character(meta[[analysis]]))
         groups <- groups[which(groups != "")]
         groups <- groups[!is.na(groups)]
@@ -159,7 +159,7 @@ TADiff <- function(
 
 
         phenoMat <- model.matrix(~ pheno)
-        
+
         colnames(phenoMat) <- sub(
             "^pheno", "", colnames(phenoMat)
         )
@@ -170,8 +170,8 @@ TADiff <- function(
         fit <- eBayes(fit)
 
         top.rank <- topTable(
-            fit, 
-            number = nrow(df), 
+            fit,
+            number = nrow(df),
             adjust.method = "fdr",
             sort.by = "p"
         )
@@ -183,14 +183,14 @@ TADiff <- function(
         if (nrow(sign.table) == 0) {
 
             message(c(
-                "No statistical significant events for:", names.meta[z]        
+                "No statistical significant events for:", names.meta[z]
             ))
 
             sign_table[z,1] <- analysis
             sign_table[z,2] <- "0"
 
             full.tads = list()
-            
+
         } else {
 
             sign.table$ID <- row.names(sign.table)
@@ -201,12 +201,12 @@ TADiff <- function(
                 by.x = "ID",
                 by.y = "ID"
             )
-            
+
             sign.tad.info <- sing.table[, by = tad_name, .(count = .N)]
 
             # annotate tad.info table
-            
-            tad.info <- integratedTADtable[, by = tad_name, .(count = .N)] 
+
+            tad.info <- integratedTADtable[, by = tad_name, .(count = .N)]
 
             sign.tad.info <- merge(
                 sign.tad.info,
@@ -214,7 +214,7 @@ TADiff <- function(
                 by = "tad_name"
             )
 
-            sign.tad.info$freq <- sign.tad.info$count.x / 
+            sign.tad.info$freq <- sign.tad.info$count.x /
                 sign.tad.info$count.y * 100
 
             sign.tad.info$pvalue <- 1
@@ -253,7 +253,7 @@ TADiff <- function(
                 # get top rank events
 
                 top.rank <- topTable(
-                    fit, 
+                    fit,
                     number = nrow(df),
                     adjust.method = "fdr"
                 )
@@ -281,9 +281,9 @@ TADiff <- function(
                 tad.all.info <- merge(
                     sign.tad.info,
                     sign.tad.expr,
-                    by = "tad_name" 
+                    by = "tad_name"
                 )
-                
+
                 tad.all.info.f <- tad.all.info[which(
                     count.x > tad_event &
                         pvalue < pval_thr &
