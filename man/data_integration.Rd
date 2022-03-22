@@ -11,7 +11,7 @@ data_integration(
   freq_fls = NULL,
   mapping_file,
   tad_file,
-  tech = "hg38"
+  tech
 )
 }
 \arguments{
