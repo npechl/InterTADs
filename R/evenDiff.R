@@ -84,14 +84,21 @@
 
 
 evenDiff <- function(
-    integratedTADtable,
-    mapping_file,
-    names.meta,
+    integratedTADtable = NULL,
+    mapping_file = NULL,
+    names.meta = NULL,
     adj.PVal = 0.05,
     log_thr = 2,
     seed = 6
 ) {
 
+    if ((is.null(integratedTADtable) ) || (is.null(mapping_file)) ||
+        (is.null(names.meta)))
+    {
+      stop("Please provide all the input parameters.")
+    }
+  
+  
     integratedTADtable$ID <- paste(
         integratedTADtable$tad_name, integratedTADtable$ID, sep = ";"
     )

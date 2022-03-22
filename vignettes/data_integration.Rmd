@@ -1,0 +1,41 @@
+---
+title: "data_integration User Guide"
+author:
+  - name: Nikolaos Pechlivanis
+    affiliation: Institute of Applied Biosciences, 
+      Centre for Research and Technology Hellas, Thessaloniki, GR
+    email: nikosp41@certh.gr
+  - name: Maria Tsagiopoulou
+    affiliation: Institute of Applied Biosciences, 
+      Centre for Research and Technology Hellas, Thessaloniki, GR
+  - name: Maria Christina Maniou
+    affiliation: Institute of Applied Biosciences, 
+      Centre for Research and Technology Hellas, Thessaloniki, GR
+  - name: Aspasia Orfanou
+    affiliation: Institute of Applied Biosciences, 
+      Centre for Research and Technology Hellas, Thessaloniki, GR
+  - name: Fotis E. Psomopoulos
+    affiliation: Institute of Applied Biosciences, 
+      Centre for Research and Technology Hellas, Thessaloniki, GR
+
+date: "`r BiocStyle::doc_date()`"
+package: "`r BiocStyle::pkg_ver('InterTADs')`"
+output: 
+  BiocStyle::html_document:
+    toc_float: true
+vignette: >
+  %\VignetteIndexEntry{data_integration User Guide}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(InterTADs)
+```

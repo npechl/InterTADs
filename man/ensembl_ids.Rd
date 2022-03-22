@@ -4,7 +4,7 @@
 \alias{ensembl_ids}
 \title{ensembl_ids}
 \usage{
-ensembl_ids(integratedTADtable, expr_data)
+ensembl_ids(integratedTADtable = NULL, expr_data = NULL)
 }
 \arguments{
 \item{integratedTADtable}{IntegratedTADtable contains all data info about TADs.

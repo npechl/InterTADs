@@ -102,10 +102,10 @@
 
 
 TADiff <- function(
-    integratedTADtable,
-    mapping_file,
-    names.meta,
-    expr_data = NULL,
+    integratedTADtable = NULL,
+    mapping_file =NULL,
+    names.meta =NULL,
+    expr_data =NULL,
     adj.PVal = 0.05,
     log_thr = 2,
     tad_event = 4,
@@ -115,6 +115,12 @@ TADiff <- function(
     seed = 6
 ) {
 
+    if ((is.null(integratedTADtable) ) || (is.null(mapping_file)) ||
+        (is.null(names.meta )) || ((is.null(expr_data)) ))
+    {
+      stop("Please provide all the input parameters in the correct type.")
+    }
+  
     integratedTADtable$ID <- paste(
         integratedTADtable$tad_name, integratedTADtable$ID, sep = ";"
     )

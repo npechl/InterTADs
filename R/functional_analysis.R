@@ -5,7 +5,7 @@
 #' Enrichment analysis with GO terms, KEGG pathways and motif enrichment
 #' with TFs.
 #' Optional step to be performed on the output files
-#' of the `02c_evenDiff.R` and `02d_TADiff.R` scripts.
+#' of the `evenDiff.R` and `TADiff.R` scripts.
 #'
 #'
 #' @param annotation_file
@@ -36,7 +36,7 @@
 #' @import GenomicRanges
 #' @import ape
 #' @import enrichR
-#' @return
+#' @return TRUE
 #'
 #' @export
 #'
@@ -53,7 +53,7 @@
 #'
 #' tad_file =system.file("extdata", "Datasets",
 #'                      "hglft_genome_2dab_ec1330.bed", package="InterTADs"),
-#' tech = "hg38"
+#' tech = "hg19"
 #' )
 #'
 #' methylo_result <- prepare_methylation_values(
@@ -84,11 +84,11 @@
 #' log_thr = 4)
 #'
 #' func_anal_res <- functional_analysis(
-#' annotation_file = "/gencode.v36.annotation.gff3.gz",
-#' tech = "hg38",
+#' annotation_file = "/gencode.v19.annotation.gff3.gz",
+#' tech = "hg19",
 #' files_evenDiff = result_evenDiff[[1]],
 #' files_TADiff = TADiff_result[[1]],
-#' names.meta =NULL,
+#' names.meta = c('group'),
 #' exp_parent = 3,
 #' dbs = c("GO_Molecular_Function_2018",
 #' "GO_Biological_Process_2018",
@@ -123,7 +123,28 @@ functional_analysis<- function(annotation_file = NULL,
                                 dir_name = NULL,
                                 output_folder = NULL){
 
-
+    input_params <- list(
+        annotation_file,
+        tech ,
+        files_evenDiff,
+        files_TADiff ,
+        names.meta ,
+        exp_parent ,
+        dbs ,
+        type ,
+        genes_cover ,
+        p_adjust_method ,
+        cut_off ,
+        criterio,
+        min_genes ,
+        system ,
+        dir_name ,
+        output_folder )
+    for (i in input_params){
+        if (is.null(i)){
+            stop("Please provide all the input parameters in the correct type.")
+        }
+    }
     # Set graph fonts --------------------
     # set_graph_fonts(system)
     #options(timeout=1000)

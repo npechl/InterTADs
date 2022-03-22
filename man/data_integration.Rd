@@ -44,5 +44,7 @@ IntegratedTADtable contains all data info about TADs and
 summary explains types of different events (methylation, expression etc.).
 }
 \description{
-
+During the data integration parth different NGS datasets are
+combined into the same data table alonng with the related input
+data for the topologically associating domains (TADs).
 }

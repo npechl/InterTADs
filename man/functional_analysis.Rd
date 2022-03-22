@@ -56,13 +56,13 @@ operating systems}
 \item{output_folder}{name or filepath of the output folder}
 }
 \value{
-
+TRUE
 }
 \description{
 Enrichment analysis with GO terms, KEGG pathways and motif enrichment
 with TFs.
 Optional step to be performed on the output files
-of the \verb{02c_evenDiff.R} and \verb{02d_TADiff.R} scripts.
+of the \code{evenDiff.R} and \code{TADiff.R} scripts.
 }
 \examples{
 result<- data_integration (
@@ -77,7 +77,7 @@ mapping_file = system.file("extdata", "Datasets",
 
 tad_file =system.file("extdata", "Datasets",
                      "hglft_genome_2dab_ec1330.bed", package="InterTADs"),
-tech = "hg38"
+tech = "hg19"
 )
 
 methylo_result <- prepare_methylation_values(
@@ -108,11 +108,11 @@ adj.PVal = 0.01,
 log_thr = 4)
 
 func_anal_res <- functional_analysis(
-annotation_file = "/gencode.v36.annotation.gff3.gz",
-tech = "hg38",
+annotation_file = "/gencode.v19.annotation.gff3.gz",
+tech = "hg19",
 files_evenDiff = result_evenDiff[[1]],
 files_TADiff = TADiff_result[[1]],
-names.meta =NULL,
+names.meta = c('group'),
 exp_parent = 3,
 dbs = c("GO_Molecular_Function_2018",
 "GO_Biological_Process_2018",

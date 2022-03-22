@@ -66,11 +66,19 @@
 
 
 prepare_methylation_values <- function (
-    integratedTADtable,
-    mapping_file,
-    meth_data
+    integratedTADtable = NULL,
+    mapping_file = NULL,
+    meth_data = NULL
 ) {
 
+    if ((is.null(integratedTADtable) ) || (is.null(mapping_file)) ||
+        ((is.null(meth_data)) ))
+    {
+      stop("Please provide all the input parameters.")
+    }
+
+  
+  
     data.all <- integratedTADtable
 
     meta <- fread(mapping_file)

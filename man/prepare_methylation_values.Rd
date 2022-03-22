@@ -4,7 +4,11 @@
 \alias{prepare_methylation_values}
 \title{prepare_methylation_values}
 \usage{
-prepare_methylation_values(integratedTADtable, mapping_file, meth_data)
+prepare_methylation_values(
+  integratedTADtable = NULL,
+  mapping_file = NULL,
+  meth_data = NULL
+)
 }
 \arguments{
 \item{integratedTADtable}{IntegratedTADtable contains all data info about TADs. This is the output

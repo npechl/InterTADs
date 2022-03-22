@@ -5,9 +5,9 @@
 \title{evenDiff}
 \usage{
 evenDiff(
-  integratedTADtable,
-  mapping_file,
-  names.meta,
+  integratedTADtable = NULL,
+  mapping_file = NULL,
+  names.meta = NULL,
   adj.PVal = 0.05,
   log_thr = 2,
   seed = 6

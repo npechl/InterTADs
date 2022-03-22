@@ -2,7 +2,7 @@
 % Please edit documentation in R/map_entrez_ids.R
 \name{map_entrez_ids}
 \alias{map_entrez_ids}
-\title{Title}
+\title{map_entrez_ids}
 \usage{
 map_entrez_ids(entrez.ids, tech = "hg19")
 }
@@ -13,5 +13,5 @@ map_entrez_ids(entrez.ids, tech = "hg19")
 
 }
 \description{
-Title
+map_entrez_ids
 }

@@ -53,10 +53,14 @@
 
 
 ensembl_ids <- function(
-    integratedTADtable,
-    expr_data
+    integratedTADtable = NULL,
+    expr_data = NULL
 ) {
 
+    if ((is.null(integratedTADtable) ) || ((is.null(expr_data)) )) {
+      stop("Please provide all the input parameters.")
+    }
+  
     expression <- integratedTADtable[which(integratedTADtable$parent == expr_data), ]
 
     ensembl.expression <- list()
