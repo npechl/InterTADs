@@ -15,7 +15,8 @@
 #' @param exp_parent number of the parent file of the expression data
 #'
 #' @importFrom utils data write.table
-#'
+#' @import PWMEnrich
+#' @import PWMEnrich.Hsapiens.background
 #' @description
 #' It performs enrichment analysis using the PWMEnrich tool.
 #' PWMEnrich input is the DNA sequences grouped per TAD.
@@ -245,6 +246,8 @@ motif_outputs <- function(report_list) {
 #' @param dir_name name or filepath of the input folder
 #'
 #' @import dplyr
+#' @import ape
+#' @import GenomicRanges
 #' @description
 #' It is used to find the sequences, that correspond to TFBS
 #' from the genomic coordinates of the events.
