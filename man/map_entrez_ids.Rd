@@ -7,7 +7,7 @@
 map_entrez_ids(entrez.ids, tech = "hg19")
 }
 \arguments{
-\item{tech}{}
+\item{tech}{Human Genome Reference used}
 }
 \value{
 

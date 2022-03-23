@@ -330,7 +330,8 @@ calculate_pvalue <- function(data_extended,
 #' produce_outputs
 #'
 #' @param data_with_p
-#' @param type
+#' @param type the prevously selected databases acronyms used for the names
+#'             of the outputs files e.g. GO_MF for GO_Molecular_Function_2018
 #'
 #' @description
 #' It manipulates the enriched data after the analysis and creates

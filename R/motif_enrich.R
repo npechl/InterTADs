@@ -404,7 +404,7 @@ prepare_sequences <- function(data,
 #' @param input_data
 #' @param output_folder name or filepath of the output folder
 #' @param tech Human Genome Reference used
-#'
+#' @import httr
 #' @description
 #' It is used to query the Rest Ensembl API.
 #' It gets the DNA sequences that correspond to the genomic

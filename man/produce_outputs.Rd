@@ -8,7 +8,8 @@ produce_outputs}
 produce_outputs(data_with_p, type)
 }
 \arguments{
-\item{type}{}
+\item{type}{the prevously selected databases acronyms used for the names
+of the outputs files e.g. GO_MF for GO_Molecular_Function_2018}
 }
 \value{
 

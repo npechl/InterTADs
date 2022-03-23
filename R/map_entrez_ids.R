@@ -1,7 +1,7 @@
 #' map_entrez_ids
 #'
 #' @param entrez.ids
-#' @param tech
+#' @param tech Human Genome Reference used
 #'
 #' @importFrom AnnotationDbi select
 #' @import  annotables
